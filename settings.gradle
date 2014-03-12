@@ -1,0 +1,1 @@
+include ':dga-core', ':dga-giraph', ':dga-graphx', ':dga-hama'
