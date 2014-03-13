@@ -52,7 +52,9 @@ object Main {
     }
     
     // set system properties
+   var minSplits = 8
     properties.foreach( {case (k,v)=>
+      if (k == "spark.default.parallelism") minSplits = v.toInt
       println(s"System.setProperty($k, $v)")
       System.setProperty(k, v)
     })
@@ -70,7 +72,7 @@ object Main {
    
     
     // read the input into a distributed edge list
-    val edgeRDD = sc.textFile(edgeFile).map(row=> {
+    val edgeRDD = sc.textFile(edgeFile,minSplits).map(row=> {
       val tokens = row.split("\t").map(_.trim().toLong)
       tokens.length match {
         case 2 => {new Edge(tokens(0),tokens(1),1L) }

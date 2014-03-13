@@ -186,9 +186,9 @@ object LouvainAlgorithm {
       state
     }).groupEdges(_+_)
     
+
     
-    
-    return louvainGraph
+    return louvainGraph.partitionBy(PartitionStrategy.EdgePartition2D)
    }
    
    
@@ -320,7 +320,7 @@ object LouvainAlgorithm {
     
     newVerts.unpersist(blocking=false)
     edges.unpersist(blocking=false)
-    return louvainGraph
+    return louvainGraph.partitionBy(PartitionStrategy.EdgePartition2D)
     
    
     
