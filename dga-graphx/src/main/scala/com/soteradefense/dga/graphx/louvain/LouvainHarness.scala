@@ -24,7 +24,7 @@ class LouvainHarness extends Logging{
 	  louvainGraph=currentGraph
 	  saveLevel(sc,level,currentQ,louvainGraph)
 	  
-	  if (currentQ > q){
+	  if (currentQ > q + 0.0005 ){ // stop when we've stopped making reasonable progress
 	    q = currentQ
 	    louvainGraph = LouvainAlgorithm.compressGraph(louvainGraph)
 	  }

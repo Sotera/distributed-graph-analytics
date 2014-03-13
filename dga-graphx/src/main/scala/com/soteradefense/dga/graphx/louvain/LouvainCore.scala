@@ -29,7 +29,10 @@ object LouvainAlgorithm {
     var louvainGraph = graph.cache()
     val minProgress = 2000
     val progressCounter = 1
-    var totalEdgeWeight = sc.broadcast(2* louvainGraph.edges.map(_.attr).reduce(_+_)) 
+    val edgeWeights =2* louvainGraph.edges.map(_.attr).reduce(_+_)
+    val internalWeights = louvainGraph.vertices.values.map(vdata=>vdata.internalWeight).reduce(_+_)
+    var totalEdgeWeight = sc.broadcast(edgeWeights+internalWeights) 
+    println("totalEdgeWeight: "+totalEdgeWeight.value)
     var msgRDD = louvainGraph.mapReduceTriplets(sendMsg,mergeMsg)
     var activeMessages = msgRDD.count()
      
@@ -104,12 +107,15 @@ object LouvainAlgorithm {
    // now we need to gather neighbor data one more time to calculate the actual Q of the graph.
    val newVerts = louvainGraph.vertices.innerJoin(msgRDD)((vid,vdata,msgs)=> {
      // sum the nodes internal weight and all of its edges that are in the community
+     val community = vdata.community
      var k_i_in = vdata.internalWeight
+     var sigmaTot = vdata.communitySigmaTot.toDouble
      msgs.foreach({ case( (communityId,sigmaTotal),communityEdgeWeight ) => 
        if (vdata.community == communityId) k_i_in += communityEdgeWeight})
      val M = totalEdgeWeight.value
      val k_i = vdata.nodeWeight + vdata.internalWeight
-     var q = (k_i_in.toDouble / M) -  ( (vdata.communitySigmaTot.toDouble *k_i) / math.pow(M, 2) )
+     var q = (k_i_in.toDouble / M) -  ( ( sigmaTot *k_i) / math.pow(M, 2) )
+      //println(s"vid: $vid community: $community $q = ($k_i_in / $M) -  ( ($sigmaTot * $k_i) / math.pow($M, 2) )")
      q = if (q < 0) 0 else q
      q
    })  
@@ -125,19 +131,20 @@ object LouvainAlgorithm {
   // calculate the change in modularity that would result from choosing a community
   private def q(currCommunityId:Long, testCommunityId:Long, testSigmaTot:Long, edgeWeightInCommunity:Long, nodeWeight:Long, internalWeight:Long, totalEdgeWeight:Long) : BigDecimal = {
 	  	val isCurrentCommunity = (currCommunityId.equals(testCommunityId));
-		val M = (totalEdgeWeight); 
+		val M = BigDecimal(totalEdgeWeight); 
 	  	val k_i_in_L =  if (isCurrentCommunity) edgeWeightInCommunity + internalWeight else edgeWeightInCommunity;
-		val k_i_in = (k_i_in_L);
-		val k_i = (nodeWeight + internalWeight);
-		var sigma_tot = (testSigmaTot);
+		val k_i_in = BigDecimal(k_i_in_L);
+		val k_i = BigDecimal(nodeWeight + internalWeight);
+		var sigma_tot = BigDecimal(testSigmaTot);
 		if (isCurrentCommunity) {
 		    sigma_tot = sigma_tot - k_i
 		}
-		var deltaQ =  (0.0);
+		var deltaQ =  BigDecimal(0.0);
 		if (!(isCurrentCommunity && sigma_tot.equals(deltaQ))) {
 			val dividend = k_i * sigma_tot;
 			deltaQ = k_i_in - (dividend / M)
-			//println("      "+deltaQ+" = "+k_i_in+" - ("+dividend+" / "+M+" )" )
+			//println(s"      $deltaQ = $k_i_in - ( $k_i * $sigma_tot / $M")
+			
 		}
 		return deltaQ;
   }
@@ -227,7 +234,7 @@ object LouvainAlgorithm {
 	      	val deltaQ = q(startingCommunityId, communityId, sigmaTotal, communityEdgeWeight, vdata.nodeWeight, vdata.internalWeight,totalEdgeWeight.value)
 	        //println("   communtiy: "+communityId+" sigma:"+sigmaTotal+" edgeweight:"+communityEdgeWeight+"  q:"+deltaQ)
 	      	
-	        if (deltaQ > maxDeltaQ || (deltaQ == maxDeltaQ && communityId > bestCommunity)){
+	        if (deltaQ > maxDeltaQ || (deltaQ > 0 && (deltaQ == maxDeltaQ && communityId > bestCommunity))){
 	          maxDeltaQ = deltaQ
 	          bestCommunity = communityId
 	          bestSigmaTot = sigmaTotal
@@ -260,7 +267,7 @@ object LouvainAlgorithm {
         // map
         et=>{ 
           if (et.srcAttr.community == et.dstAttr.community){
-            Iterator( ( et.srcAttr.community, et.attr) )  // count the weight from both nodes  // count the weight from both nodes
+            Iterator( ( et.srcAttr.community, 2*et.attr) )  // count the weight from both nodes  // count the weight from both nodes
           } 
           else Iterator.empty  
         },
@@ -271,9 +278,6 @@ object LouvainAlgorithm {
     var internalWeights = graph.vertices.values.map(vdata=> (vdata.community,vdata.internalWeight)).reduceByKey(_+_)
    
     // each community with its internal weights, node weights still need filled in
-    
-    internalEdgeWeights.filter( f=> f._1 == 6226L).foreach(f=>println("internalEdgeWeights has: "+f))
-    internalWeights.filter( f=> f._1 == 6226L).foreach(f=>println("internalWeights has: "+f))
     
     val newVerts = internalWeights.leftOuterJoin(internalEdgeWeights).map({case (vid,(weight1,weight2Option)) =>
       val weight2 = weight2Option.getOrElse(0L)
@@ -307,7 +311,7 @@ object LouvainAlgorithm {
     //val louvainGraph = compressedGraph. outerJoinVertices(nodeWeights)((vid,data,weightOption)=> { 
       if (debug && null == data) println(s"$vid: data is null")
       //val weight = weightOption.getOrElse(0L)
-      data.communitySigmaTot = weight
+      data.communitySigmaTot = weight +data.internalWeight
       data.nodeWeight = weight
       data
     }).cache()
