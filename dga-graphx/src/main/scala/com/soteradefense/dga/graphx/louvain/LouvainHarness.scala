@@ -7,7 +7,7 @@ import scala.reflect.ClassTag
 import org.apache.spark.Logging
 
 
-class LouvainHarness extends Logging{
+trait  LouvainHarness {
 
   
   def run[VD: ClassTag](sc:SparkContext,graph:Graph[VD,Long]) = {
@@ -18,7 +18,7 @@ class LouvainHarness extends Logging{
 	var halt = false
     do {
 	  level += 1
-	  logInfo(s"Starting Louvain level $level")
+	  println(s"\nStarting Louvain level $level")
 	  val (currentQ,currentGraph) = LouvainAlgorithm.louvain(sc, louvainGraph)
 	  louvainGraph.unpersistVertices(blocking=false)
 	  louvainGraph=currentGraph
@@ -43,7 +43,7 @@ class LouvainHarness extends Logging{
    * override to specify save behavior
    */
   def saveLevel(sc:SparkContext,level:Int,q:Double,graph:Graph[VertexState,Long]) = {
-	  logInfo(s"Level: $level Q: $q")
+    
   }
   
   /**
@@ -52,7 +52,7 @@ class LouvainHarness extends Logging{
    * override to specify save behavior
    */
   def finalSave(sc:SparkContext,level:Int,q:Double,graph:Graph[VertexState,Long]) = {
-    logInfo(s"Final Q: $q")
+    
   }
   
   

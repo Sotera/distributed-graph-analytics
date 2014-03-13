@@ -46,7 +46,7 @@ object LouvainAlgorithm {
        count += 1
 	   even = ! even
 	   
-	   println("\nCYCLE "+count)
+	   //println("\nCYCLE "+count)
 	   //printlouvain(louvainGraph)
        //printedgetriplets(louvainGraph)
 	   
@@ -92,7 +92,7 @@ object LouvainAlgorithm {
 	   if (even) updated = 0
 	   updated = updated + louvainGraph.vertices.filter(_._2.changed).count 
 	   if (!even) {
-	     println("VERTICES MOVED THIS PHASE: "+updated)
+	     println("  # vertices moved: "+updated)
 	     val delta = updatedLastPhase - updated
 	     if (delta > 0 && delta < minProgress) stop +=1
 	     updatedLastPhase = updated
