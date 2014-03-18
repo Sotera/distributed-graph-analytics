@@ -16,7 +16,7 @@ import scala.math.BigDecimal.double2bigDecimal
  * 
  * For details on the sequential algorithm see:  Fast unfolding of communities in large networks, Blondel 2008
  */
-object LouvainAlgorithm {
+object LouvainCore {
 
   
   
@@ -51,7 +51,7 @@ object LouvainAlgorithm {
    * Transform a graph from [VD,Long] to a a [VertexState,Long] graph and label each vertex with a community
    * to maximize global modularity (without compressing the graph)
    */
-  def louvainFromStandardGraph[VD: ClassTag](sc:SparkContext,graph:Graph[VD,Long], minProgress:Int=1,progressCounter:Int=1) : (Double,Graph[VertexState,Long]) = {
+  def louvainFromStandardGraph[VD: ClassTag](sc:SparkContext,graph:Graph[VD,Long], minProgress:Int=1,progressCounter:Int=1) : (Double,Graph[VertexState,Long],Int) = {
 	  val louvainGraph = createLouvainGraph(graph)
 	  return louvain(sc,louvainGraph,minProgress,progressCounter)
   }
@@ -62,16 +62,11 @@ object LouvainAlgorithm {
    * For a graph of type Graph[VertexState,Long] label each vertex with a community to maximize global modularity. 
    * (without compressing the graph)
    */
-  def louvain(sc:SparkContext, graph:Graph[VertexState,Long], minProgress:Int=1,progressCounter:Int=1) : (Double,Graph[VertexState,Long])= {
+  def louvain(sc:SparkContext, graph:Graph[VertexState,Long], minProgress:Int=1,progressCounter:Int=1) : (Double,Graph[VertexState,Long],Int)= {
     var louvainGraph = graph.cache()
-    
-    // Total edge weight of the graph is needed to calculate chagnes in modularity.
-    // This includes the edge from both directions as well as self / internal edges.
-    // we calculate this value and then broadcast it so it will be available for all vertices
-    val edgeWeights =2* louvainGraph.edges.map(_.attr).reduce(_+_)
-    val internalWeights = louvainGraph.vertices.values.map(vdata=>vdata.internalWeight).reduce(_+_)
-    var totalEdgeWeight = sc.broadcast(edgeWeights+internalWeights) 
-    println("totalEdgeWeight: "+totalEdgeWeight.value)
+    val graphWeight = louvainGraph.vertices.values.map(vdata=> vdata.internalWeight+vdata.nodeWeight).reduce(_+_)
+    var totalGraphWeight = sc.broadcast(graphWeight) 
+    println("totalEdgeWeight: "+totalGraphWeight.value)
     
     // gather community information from each vertex's local neighborhood
     var msgRDD = louvainGraph.mapReduceTriplets(sendMsg,mergeMsg)
@@ -88,7 +83,7 @@ object LouvainAlgorithm {
 	   even = ! even	   
 	  
 	   // label each vertex with its best community based on neighboring community information
-	   val labeledVerts = louvainVertJoin(louvainGraph,msgRDD,totalEdgeWeight,even).cache()   
+	   val labeledVerts = louvainVertJoin(louvainGraph,msgRDD,totalGraphWeight,even).cache()   
 	   
 	   // calculate new sigma total value for each community (total weight of each community)
 	   val communtiyUpdate = labeledVerts
@@ -151,7 +146,7 @@ object LouvainAlgorithm {
         var sigmaTot = vdata.communitySigmaTot.toDouble
         msgs.foreach({ case( (communityId,sigmaTotal),communityEdgeWeight ) => 
           if (vdata.community == communityId) k_i_in += communityEdgeWeight})
-        val M = totalEdgeWeight.value
+        val M = totalGraphWeight.value
         val k_i = vdata.nodeWeight + vdata.internalWeight
         var q = (k_i_in.toDouble / M) -  ( ( sigmaTot *k_i) / math.pow(M, 2) )
         //println(s"vid: $vid community: $community $q = ($k_i_in / $M) -  ( ($sigmaTot * $k_i) / math.pow($M, 2) )")
@@ -161,7 +156,7 @@ object LouvainAlgorithm {
     
     // return the modularity value of the graph along with the 
     // graph. vertices are labeled with their community
-    return (actualQ,louvainGraph)
+    return (actualQ,louvainGraph,count%2)
    
   }
   

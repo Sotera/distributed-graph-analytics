@@ -39,7 +39,7 @@ class  LouvainHarness(minProgress:Int,progressCounter:Int) {
   
   def run[VD: ClassTag](sc:SparkContext,graph:Graph[VD,Long]) = {
     
-    var louvainGraph = LouvainAlgorithm.createLouvainGraph(graph)
+    var louvainGraph = LouvainCore.createLouvainGraph(graph)
     
     var level = -1  // number of times the graph has been compressed
 	var q = -1.0    // current modularity value
@@ -49,15 +49,16 @@ class  LouvainHarness(minProgress:Int,progressCounter:Int) {
 	  println(s"\nStarting Louvain level $level")
 	  
 	  // label each vertex with its best community choice at this level of compression
-	  val (currentQ,currentGraph) = LouvainAlgorithm.louvain(sc, louvainGraph,minProgress,progressCounter)
+	  val (currentQ,currentGraph,passes) = LouvainCore.louvain(sc, louvainGraph,minProgress,progressCounter)
 	  louvainGraph.unpersistVertices(blocking=false)
 	  louvainGraph=currentGraph
 	  saveLevel(sc,level,currentQ,louvainGraph)
 	  
-	  // If modularity was increased by at least 0.0005 compress the graph and repeat
-	  if (currentQ > q + 0.0005 ){ 
+	  // If modularity was increased by at least 0.001 compress the graph and repeat
+	  // halt immediately if the community labeling took less than 3 passes
+	  if (passes < 3 || currentQ > q + 0.001 ){ 
 	    q = currentQ
-	    louvainGraph = LouvainAlgorithm.compressGraph(louvainGraph)
+	    louvainGraph = LouvainCore.compressGraph(louvainGraph)
 	  }
 	  else {
 	    halt = true
