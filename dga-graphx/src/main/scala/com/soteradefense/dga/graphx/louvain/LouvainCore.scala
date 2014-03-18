@@ -258,24 +258,21 @@ object LouvainAlgorithm {
   def compressGraph(graph:Graph[VertexState,Long],debug:Boolean=true) : Graph[VertexState,Long] = {
 
     // aggregate the edge weights of self loops. edges with both src and dst in the same community.
-    val internalEdgeWeights = graph.mapReduceTriplets (
-        // map
-        et=>{ 
-          if (et.srcAttr.community == et.dstAttr.community){
+	// WARNING  can not use graph.mapReduceTriplets because we are mapping to new vertexIds
+    val internalEdgeWeights = graph.triplets.flatMap(et=>{
+    	if (et.srcAttr.community == et.dstAttr.community){
             Iterator( ( et.srcAttr.community, 2*et.attr) )  // count the weight from both nodes  // count the weight from both nodes
           } 
           else Iterator.empty  
-        },
-        // reduce
-        (w1:Long,w2:Long) => w1+w2 )
+    }).reduceByKey(_+_)
     
+     
     // aggregate the internal weights of all nodes in each community
     var internalWeights = graph.vertices.values.map(vdata=> (vdata.community,vdata.internalWeight)).reduceByKey(_+_)
    
     // join internal weights and self edges to find new interal weight of each community
     val newVerts = internalWeights.leftOuterJoin(internalEdgeWeights).map({case (vid,(weight1,weight2Option)) =>
       val weight2 = weight2Option.getOrElse(0L)
-      if (debug && vid.toLong == 6226L) println(s"$vid: created new state node weights: $weight1,$weight2")
       val state = new VertexState()
       state.community = vid
       state.changed = false
@@ -294,9 +291,11 @@ object LouvainAlgorithm {
        else Iterator.empty
     }).cache()
     
+    
     // generate a new graph where each community of the previous
     // graph is now represented as a single vertex
-    var compressedGraph = Graph(newVerts,edges).partitionBy(PartitionStrategy.EdgePartition2D).groupEdges(_+_)
+    val compressedGraph = Graph(newVerts,edges)
+      .partitionBy(PartitionStrategy.EdgePartition2D).groupEdges(_+_)
     
     // calculate the weighted degree of each node
     val nodeWeightMapFunc = (e:EdgeTriplet[VertexState,Long]) => Iterator((e.srcId,e.attr), (e.dstId,e.attr))
@@ -304,10 +303,9 @@ object LouvainAlgorithm {
     val nodeWeights = compressedGraph.mapReduceTriplets(nodeWeightMapFunc,nodeWeightReduceFunc)
     
     // fill in the weighted degree of each node
-    val louvainGraph = compressedGraph.joinVertices(nodeWeights)((vid,data,weight)=> { 
-    //val louvainGraph = compressedGraph. outerJoinVertices(nodeWeights)((vid,data,weightOption)=> { 
-      if (debug && null == data) println(s"$vid: data is null")
-      //val weight = weightOption.getOrElse(0L)
+   // val louvainGraph = compressedGraph.joinVertices(nodeWeights)((vid,data,weight)=> { 
+   val louvainGraph = compressedGraph.outerJoinVertices(nodeWeights)((vid,data,weightOption)=> { 
+      val weight = weightOption.getOrElse(0L)
       data.communitySigmaTot = weight +data.internalWeight
       data.nodeWeight = weight
       data
