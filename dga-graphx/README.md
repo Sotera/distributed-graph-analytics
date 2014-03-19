@@ -1,4 +1,6 @@
- - Graph X Algorithms
+# dga-graphx 
+
+- GraphX Algorithms
 
 The dga-graphX package contains several pre-built executable graph algorithms built on Spark using the GraphX framework.  
 
