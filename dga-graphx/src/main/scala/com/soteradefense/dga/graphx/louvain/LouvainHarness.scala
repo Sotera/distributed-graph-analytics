@@ -56,6 +56,7 @@ class  LouvainHarness(minProgress:Int,progressCounter:Int) {
 	  
 	  // If modularity was increased by at least 0.001 compress the graph and repeat
 	  // halt immediately if the community labeling took less than 3 passes
+	  //println(s"if ($passes > 2 && $currentQ > $q + 0.001 )")
 	  if (passes > 2 && currentQ > q + 0.001 ){ 
 	    q = currentQ
 	    louvainGraph = LouvainCore.compressGraph(louvainGraph)

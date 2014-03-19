@@ -127,7 +127,7 @@ object LouvainCore {
 	   if (even) updated = 0
 	   updated = updated + louvainGraph.vertices.filter(_._2.changed).count 
 	   if (!even) {
-	     println("  # vertices moved: "+updated)
+	     println("  # vertices moved: "+java.text.NumberFormat.getInstance().format(updated))
 	     val delta = updatedLastPhase - updated
 	     if (count > 1 && delta >= 0 && delta < minProgress) stop +=1
 	     updatedLastPhase = updated
@@ -156,7 +156,7 @@ object LouvainCore {
     
     // return the modularity value of the graph along with the 
     // graph. vertices are labeled with their community
-    return (actualQ,louvainGraph,count%2)
+    return (actualQ,louvainGraph,count/2)
    
   }
   
