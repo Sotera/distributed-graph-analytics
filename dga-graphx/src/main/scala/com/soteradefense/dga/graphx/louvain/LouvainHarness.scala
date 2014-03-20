@@ -52,6 +52,7 @@ class  LouvainHarness(minProgress:Int,progressCounter:Int) {
 	  val (currentQ,currentGraph,passes) = LouvainCore.louvain(sc, louvainGraph,minProgress,progressCounter)
 	  louvainGraph.unpersistVertices(blocking=false)
 	  louvainGraph=currentGraph
+	  
 	  saveLevel(sc,level,currentQ,louvainGraph)
 	  
 	  // If modularity was increased by at least 0.001 compress the graph and repeat

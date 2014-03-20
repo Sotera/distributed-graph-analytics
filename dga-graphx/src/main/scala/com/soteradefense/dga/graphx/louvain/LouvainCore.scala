@@ -128,8 +128,7 @@ object LouvainCore {
 	   updated = updated + louvainGraph.vertices.filter(_._2.changed).count 
 	   if (!even) {
 	     println("  # vertices moved: "+java.text.NumberFormat.getInstance().format(updated))
-	     val delta = updatedLastPhase - updated
-	     if (count > 1 && delta >= 0 && delta < minProgress) stop +=1
+	     if (updated >= updatedLastPhase - minProgress) stop += 1
 	     updatedLastPhase = updated
 	   }
 
