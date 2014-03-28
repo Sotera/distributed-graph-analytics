@@ -1,13 +1,17 @@
 # Attribute Graph Viewer
 
-This project is a simple graph viewer intended to build medium sized ( < 2000 nodes ) bi partite attribute graphs.
+This project is a simple graph viewer intended to display  medium sized ( < 2000 nodes ) bi partite attribute graphs.
 
 # Features
 
 -pan/zoom
+
 -select a node type to list / hightlight all ndoes of that type
+
 -hover over node to view its text
+
 -click a node to show text for it and all connected nodes
+
 -show all node text
 
 
