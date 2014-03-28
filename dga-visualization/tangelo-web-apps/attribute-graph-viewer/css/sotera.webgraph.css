@@ -1,0 +1,45 @@
+html, body, #graph {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+ padding-top: 50px;
+}
+
+#control-panel {
+  background-color: lightgray;
+}
+    
+#graph {
+ position: fixed;
+ top: 0px;
+}
+    
+    
+.node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+
+.link {
+  fill: none;
+  stroke: #bbb;
+}
+
+    
+.result_thead, .result_tbody { display: block; }
+
+
+.nomargin {
+    margin: 0;
+}
+
+
+
+
+
+
+
+
