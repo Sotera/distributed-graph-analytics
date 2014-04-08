@@ -8,7 +8,7 @@ allowed = ['list','get']
 
 def run(operation, name='', csvFile = None):
   print 'in run with operation ',operation
-  if(csvFile is not None and name != ''): return createNewGraph(name,csvFile)
+  if(csvFile is not None and name != '' and operation == 'post'): return createNewGraph(name,csvFile)
   if ('list' == operation): return listGraphs()
   if ('get' == operation) :return getGraph(name)
 
