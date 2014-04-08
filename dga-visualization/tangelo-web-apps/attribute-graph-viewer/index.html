@@ -85,13 +85,13 @@
             </div>
             <div class=col-md-5>
                 <div class=row>
-
                     <p>Upload File</p>
-                    <form id="csvUpload" enctype="multipart/form-data" method="post" action="graphservice/post">
+                    <form id="csvUpload" enctype="multipart/form-data" target="upload_target" method="post" action="graphservice/post">
                         <input id="graphName" name="name" type="text" />
                         <input id="fileupload" name="csvFile" type="file" accept="text/csv" />
-                        <input type="submit" value="submit" />
+                        <input id="fileSubmit" type="submit" value="submit" onclick="$(this).submit();window.location.reload()" />
                     </form>
+                    <iframe id="upload_target" name="upload_target" src="#" style="width:0;height:0;border:0px solid #fff;"></iframe>
                 </div>
             </div>
             <div class=col-md-7>
