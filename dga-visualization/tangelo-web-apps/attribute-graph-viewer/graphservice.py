@@ -1,6 +1,7 @@
 import tangelo
 import os
 import csv
+import mimetypes
 
 allowed = ['list','get']
 
@@ -14,14 +15,17 @@ def run(operation, name='', csvFile = None):
 
 def createNewGraph(name, csvFile):
     newPath = "/graphs/"+name
-    if not os.path.exists(newPath):
-        os.makedirs(os.getcwd() +newPath)
-        fullFilePath = os.getcwd() + newPath + "/"+"edges.csv"
-        with open(fullFilePath,"w+") as edgeFile:
-            edgeFile.writelines(csvFile.file.readlines())
-        return "File Uploaded Successfully"
+    if csvFile.content_type.value.find("csv") > -1:
+        if not os.path.exists(newPath):
+            os.makedirs(os.getcwd() +newPath)
+            fullFilePath = os.getcwd() + newPath + "/"+"edges.csv"
+            with open(fullFilePath,"w+") as edgeFile:
+                edgeFile.writelines(csvFile.file.readlines())
+            return "File Uploaded Successfully"
+        else:
+            raise ValueError("graph already named " + name)
     else:
-        raise ValueError("graph already named " + name)
+        raise ValueError("invalid file uploaded " + csvFile.content_type)
 
 def listGraphs():
   return  os.listdir('graphs')
