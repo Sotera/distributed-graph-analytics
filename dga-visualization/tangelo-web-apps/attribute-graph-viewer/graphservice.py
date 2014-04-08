@@ -5,12 +5,24 @@ import csv
 allowed = ['list','get']
 
 
-def run(operation, name=''):
+def run(operation, name='', csvFile = None):
   print 'in run with operation ',operation
+  if(csvFile is not None and name != ''): return createNewGraph(name,csvFile)
   if ('list' == operation): return listGraphs()
   if ('get' == operation) :return getGraph(name)
-  
-  
+
+
+def createNewGraph(name, csvFile):
+    newPath = "/graphs/"+name
+    if not os.path.exists(newPath):
+        os.makedirs(os.getcwd() +newPath)
+        fullFilePath = os.getcwd() + newPath + "/"+"edges.csv"
+        with open(fullFilePath,"w+") as edgeFile:
+            edgeFile.writelines(csvFile.file.readlines())
+        return "File Uploaded Successfully"
+    else:
+        raise ValueError("graph already named " + name)
+
 def listGraphs():
   return  os.listdir('graphs')
   

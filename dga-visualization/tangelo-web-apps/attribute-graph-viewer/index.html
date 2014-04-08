@@ -29,6 +29,7 @@
                 <p>Generic attribute graph viewer
 
                 <p>Select a graph from the list to display it
+
     		</div>
 
             <div class=modal-footer>
@@ -82,7 +83,17 @@
 
                 </div>
             </div>
+            <div class=col-md-5>
+                <div class=row>
 
+                    <p>Upload File</p>
+                    <form id="csvUpload" enctype="multipart/form-data" method="post" action="graphservice/post">
+                        <input id="graphName" name="name" type="text" />
+                        <input id="fileupload" name="csvFile" type="file" />
+                        <input type="submit" value="submit" />
+                    </form>
+                </div>
+            </div>
             <div class=col-md-7>
                 <div id="search_status"></div>
                 <table id="result_table" class="table table-striped" style="margin: auto; width: 100%;">
