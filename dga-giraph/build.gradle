@@ -1,8 +1,25 @@
 description = 'dga-giraph'
 
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'eu.appsatori:gradle-fatjar-plugin:0.2-rc1'
+    }
+}
+
+apply plugin: 'fatjar'
+
 dependencies {
     compile project(':dga-core')
     compile 'org.apache.giraph:giraph-core:1.1.0-SNAPSHOT'
-    compile 'org.apache.hadoop:hadoop-common:2.2.0-cdh5.0.0-beta-2'
-    compile 'org.apache.hadoop:hadoop-mapreduce-client-common:2.2.0-cdh5.0.0-beta-2'
+    compile 'org.apache.hadoop:hadoop-client:2.2.0-mr1-cdh5.0.0-beta-1' , {
+        ext {
+            fatJarExclude = true
+        }
+    }
+    testCompile 'junit:junit:4.11'
+    testCompile 'org.mockito:mockito-core:1.9.5'
+    testCompile 'commons-httpclient:commons-httpclient:3.0.1'
 }

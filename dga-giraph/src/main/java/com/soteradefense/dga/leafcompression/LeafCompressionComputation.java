@@ -11,14 +11,14 @@ import org.apache.hadoop.util.ToolRunner;
 import java.io.IOException;
 
 
-public class LeafCompressionComputation extends BasicComputation<Text, VIntWritable, Text, Text> {
+public class LeafCompressionComputation extends BasicComputation<Text, VIntWritable, VIntWritable, Text> {
 
     public static void main(String[] args) throws Exception {
         System.exit(ToolRunner.run(new GiraphRunner(), args));
     }
 
     @Override
-    public void compute(Vertex<Text, VIntWritable, Text> vertex, Iterable<Text> messages) throws IOException {
+    public void compute(Vertex<Text, VIntWritable, VIntWritable> vertex, Iterable<Text> messages) throws IOException {
         try {
             // Check to see if we received any messages from connected nodes notifying us
             // that they have only a single edge, and can subsequently be pruned from the graph
@@ -39,9 +39,9 @@ public class LeafCompressionComputation extends BasicComputation<Text, VIntWrita
         }
     }
 
-    private void sendEdges(Vertex<Text, VIntWritable, Text> vertex) {
+    private void sendEdges(Vertex<Text, VIntWritable, VIntWritable> vertex) {
         if (vertex.getNumEdges() == 1 && vertex.getValue().get() != -1) {
-            for (Edge<Text, Text> edge : vertex.getEdges()) {
+            for (Edge<Text, VIntWritable> edge : vertex.getEdges()) {
                 sendMessage(edge.getTargetVertexId(), new Text(vertex.getId().toString() + ":" + vertex.getValue().toString()));
             }
             vertex.setValue(new VIntWritable(-1));
