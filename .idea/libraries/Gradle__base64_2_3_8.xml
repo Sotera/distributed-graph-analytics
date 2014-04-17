@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: base64-2.3.8">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/net/iharder/base64/2.3.8/base64-2.3.8.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

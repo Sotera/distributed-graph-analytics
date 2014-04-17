@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: metrics-json-3.0.0">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/com/codahale/metrics/metrics-json/3.0.0/metrics-json-3.0.0.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

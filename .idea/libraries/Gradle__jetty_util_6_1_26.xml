@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: jetty-util-6.1.26">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/mortbay/jetty/jetty-util/6.1.26/jetty-util-6.1.26.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: reflectasm-1.07-shaded">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/com/esotericsoftware/reflectasm/reflectasm/1.07/reflectasm-1.07-shaded.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

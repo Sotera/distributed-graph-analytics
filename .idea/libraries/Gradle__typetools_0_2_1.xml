@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: typetools-0.2.1">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/jodah/typetools/0.2.1/typetools-0.2.1.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
