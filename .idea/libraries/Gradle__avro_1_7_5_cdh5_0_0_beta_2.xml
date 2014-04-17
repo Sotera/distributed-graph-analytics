@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: avro-1.7.5-cdh5.0.0-beta-2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/avro/avro/1.7.5-cdh5.0.0-beta-2/avro-1.7.5-cdh5.0.0-beta-2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: akka-actor_2.10-2.2.3-shaded-protobuf">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spark-project.akka/akka-actor_2.10/2.2.3-shaded-protobuf/f8960d359989ad5105d8c449642b3e7350b96657/akka-actor_2.10-2.2.3-shaded-protobuf.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spark-project.akka/akka-actor_2.10/2.2.3-shaded-protobuf/f5413ab95821b9a71333dcc5dd40740c5a094538/akka-actor_2.10-2.2.3-shaded-protobuf-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

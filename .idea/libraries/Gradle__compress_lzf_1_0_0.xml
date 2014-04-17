@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: compress-lzf-1.0.0">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ning/compress-lzf/1.0.0/f2a7519a5c98f0fc06d90a2f4a131b201dbf690d/compress-lzf-1.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.ning/compress-lzf/1.0.0/34ded54551c6bfff08e08e6092ee2db7c04be65f/compress-lzf-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

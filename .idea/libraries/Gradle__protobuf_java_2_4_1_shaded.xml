@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: protobuf-java-2.4.1-shaded">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spark-project.protobuf/protobuf-java/2.4.1-shaded/806ebdb2828ace30fb70518d9955574ba287147b/protobuf-java-2.4.1-shaded.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spark-project.protobuf/protobuf-java/2.4.1-shaded/2ac2c8b92f9f23160525e165c868cc6070bb7a33/protobuf-java-2.4.1-shaded-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

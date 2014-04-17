@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: stax-api-1.0-2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/javax/xml/stream/stax-api/1.0-2/stax-api-1.0-2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

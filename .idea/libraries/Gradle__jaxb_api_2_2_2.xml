@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: jaxb-api-2.2.2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/javax/xml/bind/jaxb-api/2.2.2/jaxb-api-2.2.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

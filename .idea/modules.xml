@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/dga-core/dga-core.iml" filepath="$PROJECT_DIR$/dga-core/dga-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dga-giraph/dga-giraph.iml" filepath="$PROJECT_DIR$/dga-giraph/dga-giraph.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dga-graphx/dga-graphx.iml" filepath="$PROJECT_DIR$/dga-graphx/dga-graphx.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dga-hama/dga-hama.iml" filepath="$PROJECT_DIR$/dga-hama/dga-hama.iml" />
+      <module fileurl="file://$PROJECT_DIR$/distributed-graph-analytics.iml" filepath="$PROJECT_DIR$/distributed-graph-analytics.iml" />
+    </modules>
+  </component>
+</project>
+

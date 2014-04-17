@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: akka-slf4j_2.10-2.2.3-shaded-protobuf">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spark-project.akka/akka-slf4j_2.10/2.2.3-shaded-protobuf/17f92b7c5e6123b00d0f9ba4a77abefa495a384c/akka-slf4j_2.10-2.2.3-shaded-protobuf.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spark-project.akka/akka-slf4j_2.10/2.2.3-shaded-protobuf/dfb202a03df665ed4806f12e52b0988bfaf3dad5/akka-slf4j_2.10-2.2.3-shaded-protobuf-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

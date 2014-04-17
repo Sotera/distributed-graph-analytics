@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: metrics-core-2.2.0">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/yammer/metrics/metrics-core/2.2.0/metrics-core-2.2.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

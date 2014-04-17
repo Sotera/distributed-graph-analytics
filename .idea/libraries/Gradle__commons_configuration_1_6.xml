@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: commons-configuration-1.6">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/commons-configuration/commons-configuration/1.6/commons-configuration-1.6.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

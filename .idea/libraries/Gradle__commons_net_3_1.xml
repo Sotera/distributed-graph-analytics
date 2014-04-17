@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: commons-net-3.1">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/commons-net/commons-net/3.1/commons-net-3.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
