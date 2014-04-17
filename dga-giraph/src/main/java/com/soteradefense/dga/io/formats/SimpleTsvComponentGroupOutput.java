@@ -9,7 +9,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import java.io.IOException;
 import java.util.Map;
 
-public class SimpleTsvEdgeOutputFormat extends TextEdgeOutputFormat<Text, Text, VIntWritable> {
+public class SimpleTsvComponentGroupOutput extends TextEdgeOutputFormat<Text, Text, VIntWritable> {
 
     public static final String LINE_TOKENIZE_VALUE = "simple.tsv.edge.delimiter";
 

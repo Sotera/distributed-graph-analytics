@@ -15,7 +15,7 @@ import java.io.IOException;
 /**
  *
  */
-public class SimpleTsvEdgeInputFormat extends TextEdgeInputFormat<Text, VIntWritable> {
+public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text, VIntWritable> {
 
     public static final String LINE_TOKENIZE_VALUE = "simple.tsv.edge.delimiter";
 
