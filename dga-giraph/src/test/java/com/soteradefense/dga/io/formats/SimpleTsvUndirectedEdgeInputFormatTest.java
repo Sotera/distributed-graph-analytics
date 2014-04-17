@@ -55,6 +55,6 @@ public class SimpleTsvUndirectedEdgeInputFormatTest extends SimpleTsvUndirectedE
 
         ter.setConf(conf);
         ter.initialize(null, tac);
-
+        assertEquals(ter.getCurrentSourceId(), new Text("1"));
     }
 }
