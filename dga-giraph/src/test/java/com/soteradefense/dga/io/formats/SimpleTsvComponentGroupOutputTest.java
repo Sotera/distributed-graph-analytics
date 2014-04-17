@@ -48,17 +48,17 @@ public class SimpleTsvComponentGroupOutputTest extends SimpleTsvComponentGroupOu
     @Test
     public void testValidOutput() throws IOException, InterruptedException {
         Text expected = new Text("email@email.com\tanother@email.com\temail@email.com");
-        TestWriter(expected);
+        testWriter(expected);
     }
 
     @Test
     public void testNewDelimitor() throws IOException, InterruptedException {
         conf.set(LINE_TOKENIZE_VALUE, "\n");
         Text expected = new Text("email@email.com\nanother@email.com\nemail@email.com");
-        TestWriter(expected);
+        testWriter(expected);
     }
 
-    private void TestWriter(Text expected) throws IOException, InterruptedException {
+    private void testWriter(Text expected) throws IOException, InterruptedException {
         TaskAttemptContext tac = mock(TaskAttemptContext.class);
         when(tac.getConfiguration()).thenReturn(conf);
 
