@@ -65,21 +65,26 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
         Text expected = new Text("email@email.com\tanother@email.com\temail@email.com");
         TestWriter(expected);
     }
+
     @Test
     public void testNewDelimitor() throws IOException, InterruptedException {
         conf.set(LINE_TOKENIZE_VALUE, "\n");
         Text expected = new Text("email@email.com\nanother@email.com\nemail@email.com");
         TestWriter(expected);
     }
-    protected abstract class DummyVertex implements Vertex<Text,Text,VIntWritable>{
+
+    protected abstract class DummyVertex implements Vertex<Text, Text, VIntWritable> {
 
     }
-    protected abstract class DummyEdge implements Edge<Text, VIntWritable>{
+
+    protected abstract class DummyEdge implements Edge<Text, VIntWritable> {
 
     }
-    protected abstract class DummyRecordWriter extends RecordWriter<Text,Text>{
+
+    protected abstract class DummyRecordWriter extends RecordWriter<Text, Text> {
 
     }
+
     private void TestWriter(Text expected) throws IOException, InterruptedException {
         TaskAttemptContext tac = mock(TaskAttemptContext.class);
         when(tac.getConfiguration()).thenReturn(conf);
