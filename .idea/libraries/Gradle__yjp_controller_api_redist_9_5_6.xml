@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: yjp-controller-api-redist-9.5.6">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/com/facebook/thirdparty/yourkit-api/yjp-controller-api-redist/9.5.6/yjp-controller-api-redist-9.5.6.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

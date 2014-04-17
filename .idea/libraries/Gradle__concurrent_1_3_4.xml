@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: concurrent-1.3.4">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/concurrent/concurrent/1.3.4/concurrent-1.3.4.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
