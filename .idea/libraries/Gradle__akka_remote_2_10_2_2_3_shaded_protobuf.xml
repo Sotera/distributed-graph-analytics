@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: akka-remote_2.10-2.2.3-shaded-protobuf">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spark-project.akka/akka-remote_2.10/2.2.3-shaded-protobuf/1e525f96cd1613f68f41c37d50eca36aa19c2c60/akka-remote_2.10-2.2.3-shaded-protobuf.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spark-project.akka/akka-remote_2.10/2.2.3-shaded-protobuf/78e667e84b5fd774bbad89e876436c5081121f9b/akka-remote_2.10-2.2.3-shaded-protobuf-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

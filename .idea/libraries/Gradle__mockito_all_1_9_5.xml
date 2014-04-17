@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: mockito-all-1.9.5">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

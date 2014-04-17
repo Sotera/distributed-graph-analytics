@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: servlet-api-2.5-20081211">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/mortbay/jetty/servlet-api/2.5-20081211/servlet-api-2.5-20081211.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

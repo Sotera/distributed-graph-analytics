@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: annotations-2.0.2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/code/findbugs/annotations/2.0.2/annotations-2.0.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

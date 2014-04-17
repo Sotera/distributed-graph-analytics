@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: jersey-server-1.9">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/sun/jersey/jersey-server/1.9/jersey-server-1.9.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

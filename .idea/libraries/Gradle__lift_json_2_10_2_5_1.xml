@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: lift-json_2.10-2.5.1">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.liftweb/lift-json_2.10/2.5.1/eebbb964a160245b2c831fcdf0cc2cde87c817e4/lift-json_2.10-2.5.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.liftweb/lift-json_2.10/2.5.1/898532bac3acbacc2f065a32bd3dd92ea18ca3c5/lift-json_2.10-2.5.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

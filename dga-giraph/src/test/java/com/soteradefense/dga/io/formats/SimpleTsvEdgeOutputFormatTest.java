@@ -61,7 +61,7 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
     }
 
     @Test
-    public void test1() throws IOException, InterruptedException {
+    public void testValidOutput() throws IOException, InterruptedException {
         Text expected = new Text("email@email.com\tanother@email.com\temail@email.com");
         TestWriter(expected);
     }

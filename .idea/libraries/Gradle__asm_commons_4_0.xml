@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: asm-commons-4.0">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-commons/4.0/a839ec6737d2b5ba7d1878e1a596b8f58aa545d9/asm-commons-4.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-commons/4.0/4a33d6206d6d442446a8edbd2b0798ecfaebc229/asm-commons-4.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

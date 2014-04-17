@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: colt-1.2.0">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/colt/colt/1.2.0/colt-1.2.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

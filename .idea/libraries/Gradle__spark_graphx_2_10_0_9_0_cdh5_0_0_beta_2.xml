@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: spark-graphx_2.10-0.9.0-cdh5.0.0-beta-2">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.spark/spark-graphx_2.10/0.9.0-cdh5.0.0-beta-2/1815e2d28a0a49df02eaaea215705054747bb416/spark-graphx_2.10-0.9.0-cdh5.0.0-beta-2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.spark/spark-graphx_2.10/0.9.0-cdh5.0.0-beta-2/db3fb8d76f98f97bd3d4b904c516966f4a916b70/spark-graphx_2.10-0.9.0-cdh5.0.0-beta-2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

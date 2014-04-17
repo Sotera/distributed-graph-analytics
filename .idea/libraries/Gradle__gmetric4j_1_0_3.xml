@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: gmetric4j-1.0.3">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/info/ganglia/gmetric4j/gmetric4j/1.0.3/gmetric4j-1.0.3.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

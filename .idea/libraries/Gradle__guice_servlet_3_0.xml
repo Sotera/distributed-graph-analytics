@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: guice-servlet-3.0">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/inject/extensions/guice-servlet/3.0/guice-servlet-3.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

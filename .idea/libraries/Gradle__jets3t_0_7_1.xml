@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: jets3t-0.7.1">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.java.dev.jets3t/jets3t/0.7.1/2d10b62398360c674b4039ea4f2d1c697f46f6cd/jets3t-0.7.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.java.dev.jets3t/jets3t/0.7.1/1f14497d3b31b46e33252071a87e32b2e6d6be1/jets3t-0.7.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

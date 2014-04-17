@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: xmlenc-0.52">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/xmlenc/xmlenc/0.52/xmlenc-0.52.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

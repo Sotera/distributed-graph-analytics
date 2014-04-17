@@ -1,6 +1,5 @@
-package com.soteradefense.dga.WeaklyConnectedComponents;
+package com.soteradefense.dga.weaklyconnectedcomponents;
 
-import com.kenai.jaffl.struct.Struct;
 import org.apache.giraph.GiraphRunner;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.BasicComputation;
