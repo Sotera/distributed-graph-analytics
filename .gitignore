@@ -1,6 +1,10 @@
 *.class
-
+.DS_Store
 # Package Files #
 *.war
 *.ear
 *.iml
+build
+.idea
+out
+.gradle/

@@ -65,6 +65,12 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
         Text expected = new Text("email@email.com\tanother@email.com\temail@email.com");
         TestWriter(expected);
     }
+    @Test
+    public void testNewDelimitor() throws IOException, InterruptedException {
+        conf.set(LINE_TOKENIZE_VALUE, "\n");
+        Text expected = new Text("email@email.com\nanother@email.com\nemail@email.com");
+        TestWriter(expected);
+    }
     protected abstract class DummyVertex implements Vertex<Text,Text,VIntWritable>{
 
     }
