@@ -22,6 +22,8 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
 
     public static final int MIN_NUMBER_OF_COLUMNS = 2;
 
+    public static final int EXPECTED_NUMBER_OF_COLUMNS = 4;
+
     @Override
     public EdgeReader<Text, NullWritable> createEdgeReader(InputSplit split, TaskAttemptContext context) throws IOException {
         return new ReverseEdgeDuplicator<Text, NullWritable>(new SimpleTsvEdgeReader());
@@ -46,7 +48,7 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
         protected Text getTargetVertexId(Text line) throws IOException {
             String value = line.toString();
             String splitValues[] = value.split(delimiter);
-            if (splitValues.length < MIN_NUMBER_OF_COLUMNS)
+            if (splitValues.length < MIN_NUMBER_OF_COLUMNS && splitValues.length != EXPECTED_NUMBER_OF_COLUMNS)
                 throw new IOException("Row of data, after tokenized based on delimiter [ " + delimiter + "], had " + splitValues.length + " tokens, but this format requires 4 values.  Data row was [" + value + "]");
             return new Text(splitValues[1].trim());
         }
@@ -55,7 +57,7 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
         protected Text getSourceVertexId(Text line) throws IOException {
             String value = line.toString();
             String splitValues[] = value.split(delimiter);
-            if (splitValues.length < MIN_NUMBER_OF_COLUMNS)
+            if (splitValues.length < MIN_NUMBER_OF_COLUMNS && splitValues.length != EXPECTED_NUMBER_OF_COLUMNS)
                 throw new IOException("Row of data, after tokenized based on delimiter [ " + delimiter + "], had " + splitValues.length + " tokens, but this format requires 4 values.  Data row was [" + value + "]");
             return new Text(splitValues[0].trim());
         }
