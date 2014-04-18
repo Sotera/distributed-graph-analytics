@@ -33,8 +33,6 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
 
         public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
             super.initialize(inputSplit, context);
-            //System.out.println(context.getConfiguration() != null);
-            //System.out.println(getConf() != null);
             delimiter = context.getConfiguration().get(LINE_TOKENIZE_VALUE, LINE_TOKENIZE_VALUE_DEFAULT);
             defaultEdgeWeight = NullWritable.get();
         }
