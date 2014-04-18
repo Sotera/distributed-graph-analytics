@@ -1,12 +1,11 @@
 package com.soteradefense.dga.io.formats;
 
 
-import org.apache.giraph.edge.Edge;
 import org.apache.giraph.io.EdgeReader;
 import org.apache.giraph.io.ReverseEdgeDuplicator;
 import org.apache.giraph.io.formats.TextEdgeInputFormat;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.VIntWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
@@ -15,38 +14,29 @@ import java.io.IOException;
 /**
  *
  */
-public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text, VIntWritable> {
+public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text, NullWritable> {
 
     public static final String LINE_TOKENIZE_VALUE = "simple.tsv.edge.delimiter";
 
     public static final String LINE_TOKENIZE_VALUE_DEFAULT = "\t";
 
-    public static final int NUMBER_OF_COLUMNS = 2;
-
-    public static final String EDGE_WEIGHT_VALUE = "simple.tsv.edge.weight.default";
-
-    public static final String EDGE_WEIGHT_VALUE_DEFAULT = "1";
+    public static final int MIN_NUMBER_OF_COLUMNS = 2;
 
     @Override
-    public EdgeReader<Text, VIntWritable> createEdgeReader(InputSplit split, TaskAttemptContext context) throws IOException {
-        return new ReverseEdgeDuplicator<Text, VIntWritable>(new SimpleTsvEdgeReader());
+    public EdgeReader<Text, NullWritable> createEdgeReader(InputSplit split, TaskAttemptContext context) throws IOException {
+        return new ReverseEdgeDuplicator<Text, NullWritable>(new SimpleTsvEdgeReader());
     }
 
-    protected class SimpleTsvEdgeReader extends TextEdgeInputFormat<Text, VIntWritable>.TextEdgeReaderFromEachLineProcessed<Text> {
+    protected class SimpleTsvEdgeReader extends TextEdgeInputFormat<Text, NullWritable>.TextEdgeReaderFromEachLineProcessed<Text> {
         private String delimiter;
-        private VIntWritable defaultEdgeWeight;
+        private NullWritable defaultEdgeWeight;
 
         public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
             super.initialize(inputSplit, context);
-            delimiter = getConf().get(LINE_TOKENIZE_VALUE, LINE_TOKENIZE_VALUE_DEFAULT);
-            String edgeWeight = getConf().get(EDGE_WEIGHT_VALUE, EDGE_WEIGHT_VALUE_DEFAULT);
-
-            try {
-                defaultEdgeWeight = new VIntWritable(Integer.parseInt(edgeWeight));
-            } catch (NumberFormatException e) {
-                throw new IOException("The default edge weight provided (configuration parameter: " + EDGE_WEIGHT_VALUE +", value: " + edgeWeight + ", could not be cast to integer.");
-            }
-
+            //System.out.println(context.getConfiguration() != null);
+            //System.out.println(getConf() != null);
+            delimiter = context.getConfiguration().get(LINE_TOKENIZE_VALUE, LINE_TOKENIZE_VALUE_DEFAULT);
+            defaultEdgeWeight = NullWritable.get();
         }
 
         @Override
@@ -58,7 +48,7 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
         protected Text getTargetVertexId(Text line) throws IOException {
             String value = line.toString();
             String splitValues[] = value.split(delimiter);
-            if (splitValues.length < NUMBER_OF_COLUMNS)
+            if (splitValues.length < MIN_NUMBER_OF_COLUMNS)
                 throw new IOException("Row of data, after tokenized based on delimiter [ " + delimiter + "], had " + splitValues.length + " tokens, but this format requires 4 values.  Data row was [" + value + "]");
             return new Text(splitValues[1].trim());
         }
@@ -67,25 +57,14 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
         protected Text getSourceVertexId(Text line) throws IOException {
             String value = line.toString();
             String splitValues[] = value.split(delimiter);
-            if (splitValues.length < NUMBER_OF_COLUMNS)
+            if (splitValues.length < MIN_NUMBER_OF_COLUMNS)
                 throw new IOException("Row of data, after tokenized based on delimiter [ " + delimiter + "], had " + splitValues.length + " tokens, but this format requires 4 values.  Data row was [" + value + "]");
             return new Text(splitValues[0].trim());
         }
 
         @Override
-        protected VIntWritable getValue(Text line) throws IOException {
-            String value = line.toString();
-            String splitValues[] = value.split(delimiter);
-            if (splitValues.length < NUMBER_OF_COLUMNS)
-                throw new IOException("Row of data, after tokenized based on delimiter [ " + delimiter + "], had " + splitValues.length + " tokens, but this format requires 4 values.  Data row was [" + value + "]");
-            try {
-                if(splitValues.length == 4)
-                    return new VIntWritable(Integer.parseInt(splitValues[3].trim()));
-                else
-                    return defaultEdgeWeight;
-            } catch (NumberFormatException e) {
-                throw new IOException("Row of data contained an invalid edge weight, [" + splitValues[3].trim() + "]");
-            }
+        protected NullWritable getValue(Text line) throws IOException {
+            return defaultEdgeWeight;
         }
     }
 }

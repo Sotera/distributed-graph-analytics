@@ -6,6 +6,7 @@ import com.soteradefense.dga.utils.DummyRecordWriter;
 import com.soteradefense.dga.utils.DummyVertex;
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.VIntWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
@@ -26,12 +27,12 @@ public class SimpleTsvComponentGroupOutputTest extends SimpleTsvComponentGroupOu
      * Test configuration
      */
     private ImmutableClassesGiraphConfiguration<
-            Text, Text, VIntWritable> conf;
+            Text, Text, NullWritable> conf;
 
     @Override
-    public TextEdgeWriter<Text, Text, VIntWritable> createEdgeWriter(TaskAttemptContext context) throws IOException, InterruptedException {
+    public TextEdgeWriter<Text, Text, NullWritable> createEdgeWriter(TaskAttemptContext context) throws IOException, InterruptedException {
         super.createEdgeWriter(context);
-        final TextEdgeWriter<Text, Text, VIntWritable> tw = mock(TextEdgeWriter.class);
+        final TextEdgeWriter<Text, Text, NullWritable> tw = mock(TextEdgeWriter.class);
         return tw;
     }
 
@@ -42,7 +43,7 @@ public class SimpleTsvComponentGroupOutputTest extends SimpleTsvComponentGroupOu
         GiraphConfiguration giraphConfiguration = new GiraphConfiguration();
         giraphConfiguration.setComputationClass(DummyComputation.class);
         conf = new ImmutableClassesGiraphConfiguration<Text, Text,
-                VIntWritable>(giraphConfiguration);
+                NullWritable>(giraphConfiguration);
     }
 
     @Test
@@ -52,7 +53,7 @@ public class SimpleTsvComponentGroupOutputTest extends SimpleTsvComponentGroupOu
     }
 
     @Test
-    public void testNewDelimitor() throws IOException, InterruptedException {
+    public void testNewDelimiter() throws IOException, InterruptedException {
         conf.set(LINE_TOKENIZE_VALUE, "\n");
         Text expected = new Text("email@email.com\nanother@email.com\nemail@email.com");
         testWriter(expected);

@@ -5,6 +5,7 @@ import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.giraph.io.EdgeReader;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.VIntWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -37,7 +38,7 @@ public class SimpleTsvUndirectedEdgeInputFormatTest extends SimpleTsvUndirectedE
         when(tac.getConfiguration()).thenReturn(conf);
     }
 
-    public EdgeReader<Text, VIntWritable> createEdgeReader(final RecordReader<LongWritable, Text> rr) throws IOException {
+    public EdgeReader<Text, NullWritable> createEdgeReader(final RecordReader<LongWritable, Text> rr) throws IOException {
         return new SimpleTsvEdgeReader(){
             @Override
             protected RecordReader<LongWritable, Text> createLineRecordReader(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
