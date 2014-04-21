@@ -38,7 +38,6 @@ public class WeaklyConnectedComponentsTest {
         assertEquals("6", graph.getVertex(new Text("6")).getValue().toString());
     }
     private TestGraph<Text,Text,NullWritable> getGraph(GiraphConfiguration conf){
-        Text defaultVal = new Text("");
         TestGraph<Text, Text, NullWritable> testGraph = new TestGraph<Text, Text, NullWritable>(conf);
         testGraph.addEdge(new Text("1"), new Text("2"), NullWritable.get());
         testGraph.addEdge(new Text("2"), new Text("1"), NullWritable.get());
