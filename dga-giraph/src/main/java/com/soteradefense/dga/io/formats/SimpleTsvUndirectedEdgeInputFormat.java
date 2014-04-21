@@ -20,9 +20,9 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
 
     public static final String LINE_TOKENIZE_VALUE_DEFAULT = "\t";
 
-    public static final int MIN_NUMBER_OF_COLUMNS = 2;
+    public static final String EXPECTED_NUMBER_OF_COLUMNS_KEY = "simple.tsv.edge.column.count";
 
-    public static final int EXPECTED_NUMBER_OF_COLUMNS = 4;
+    public static final String EXPECTED_NUMBER_OF_COLUMNS = "4";
 
     @Override
     public EdgeReader<Text, NullWritable> createEdgeReader(InputSplit split, TaskAttemptContext context) throws IOException {
@@ -32,10 +32,12 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
     protected class SimpleTsvEdgeReader extends TextEdgeInputFormat<Text, NullWritable>.TextEdgeReaderFromEachLineProcessed<Text> {
         private String delimiter;
         private NullWritable defaultEdgeWeight;
+        private int numberOfExpectedColumns;
 
         public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
             super.initialize(inputSplit, context);
             delimiter = context.getConfiguration().get(LINE_TOKENIZE_VALUE, LINE_TOKENIZE_VALUE_DEFAULT);
+            numberOfExpectedColumns = Integer.parseInt(context.getConfiguration().get(EXPECTED_NUMBER_OF_COLUMNS_KEY, EXPECTED_NUMBER_OF_COLUMNS));
             defaultEdgeWeight = NullWritable.get();
         }
 
@@ -48,8 +50,8 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
         protected Text getTargetVertexId(Text line) throws IOException {
             String value = line.toString();
             String splitValues[] = value.split(delimiter);
-            if (splitValues.length < MIN_NUMBER_OF_COLUMNS && splitValues.length != EXPECTED_NUMBER_OF_COLUMNS)
-                throw new IOException("Row of data, after tokenized based on delimiter [ " + delimiter + "], had " + splitValues.length + " tokens, but this format requires 4 values.  Data row was [" + value + "]");
+            if (splitValues.length != numberOfExpectedColumns)
+                throw new IOException("Row of data, after tokenized based on delimiter [ " + delimiter + "], had " + splitValues.length + " tokens, but this format requires " + String.valueOf(numberOfExpectedColumns) + " values.  Data row was [" + value + "]");
             return new Text(splitValues[1].trim());
         }
 
@@ -57,8 +59,8 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
         protected Text getSourceVertexId(Text line) throws IOException {
             String value = line.toString();
             String splitValues[] = value.split(delimiter);
-            if (splitValues.length < MIN_NUMBER_OF_COLUMNS && splitValues.length != EXPECTED_NUMBER_OF_COLUMNS)
-                throw new IOException("Row of data, after tokenized based on delimiter [ " + delimiter + "], had " + splitValues.length + " tokens, but this format requires 4 values.  Data row was [" + value + "]");
+            if (splitValues.length != numberOfExpectedColumns)
+                throw new IOException("Row of data, after tokenized based on delimiter [ " + delimiter + "], had " + splitValues.length + " tokens, but this format requires " + String.valueOf(numberOfExpectedColumns) + " values.  Data row was [" + value + "]");
             return new Text(splitValues[0].trim());
         }
 

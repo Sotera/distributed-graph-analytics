@@ -6,15 +6,12 @@ import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.VIntWritable;
 import org.apache.hadoop.util.ToolRunner;
 
 import java.io.IOException;
 
 
 public class WeaklyConnectedComponents extends BasicComputation<Text, Text, NullWritable, Text> {
-
-    public static final String DEFAULT_VALUE_VERTEX = "";
 
     public static void main(String[] args) throws Exception {
         System.exit(ToolRunner.run(new GiraphRunner(), args));
@@ -25,7 +22,7 @@ public class WeaklyConnectedComponents extends BasicComputation<Text, Text, Null
         try {
             boolean changed = false;
             String maxId = vertex.getValue().toString();
-            if(maxId.equals(DEFAULT_VALUE_VERTEX)){
+            if(maxId == null || maxId.compareTo(vertex.getId().toString()) < 0){
                 maxId = vertex.getId().toString();
                 changed = true;
             }

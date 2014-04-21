@@ -3,6 +3,7 @@ package com.soteradefense.dga.io.formats;
 import com.soteradefense.dga.utils.DummyComputation;
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
+import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.io.EdgeReader;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -32,7 +33,7 @@ public class SimpleTsvUndirectedEdgeInputFormatTest extends SimpleTsvUndirectedE
     public void setUp() throws IOException, InterruptedException {
         rr = mock(RecordReader.class);
         GiraphConfiguration giraphConf = new GiraphConfiguration();
-        giraphConf.setComputationClass(DummyComputation.class);
+        giraphConf.setComputationClass(BasicComputation.class);
         conf = new ImmutableClassesGiraphConfiguration<Text, Text, VIntWritable>(giraphConf);
         tac = mock(TaskAttemptContext.class);
         when(tac.getConfiguration()).thenReturn(conf);
@@ -53,7 +54,7 @@ public class SimpleTsvUndirectedEdgeInputFormatTest extends SimpleTsvUndirectedE
         String input = "1\t2";
         when(rr.getCurrentValue()).thenReturn(new Text(input));
         EdgeReader ter = createEdgeReader(rr);
-
+        conf.set(SimpleTsvUndirectedEdgeInputFormat.EXPECTED_NUMBER_OF_COLUMNS_KEY, "2");
         ter.setConf(conf);
         ter.initialize(null, tac);
         assertEquals(ter.getCurrentSourceId(), new Text("1"));

@@ -1,14 +1,12 @@
 package com.soteradefense.dga.io.formats;
 
 import com.soteradefense.dga.utils.DummyComputation;
-import com.soteradefense.dga.utils.DummyEdge;
-import com.soteradefense.dga.utils.DummyRecordWriter;
-import com.soteradefense.dga.utils.DummyVertex;
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
+import org.apache.giraph.edge.Edge;
+import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.VIntWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.junit.Before;
@@ -63,13 +61,13 @@ public class SimpleTsvComponentGroupOutputTest extends SimpleTsvComponentGroupOu
         TaskAttemptContext tac = mock(TaskAttemptContext.class);
         when(tac.getConfiguration()).thenReturn(conf);
 
-        DummyVertex vertex = mock(DummyVertex.class);
+        Vertex<Text,Text,NullWritable> vertex = mock(Vertex.class);
         when(vertex.getId()).thenReturn(new Text("email@email.com"));
         when(vertex.getValue()).thenReturn(new Text("email@email.com"));
-        DummyEdge edge = mock(DummyEdge.class);
+        Edge<Text,NullWritable> edge = mock(Edge.class);
         when(edge.getTargetVertexId()).thenReturn(new Text("another@email.com"));
         // Create empty iterator == no edges
-        final DummyRecordWriter tw = mock(DummyRecordWriter.class);
+        final RecordWriter<Text,Text> tw = mock(RecordWriter.class);
         IdGroupWriter writer = new IdGroupWriter() {
             @Override
             protected RecordWriter<Text, Text> createLineRecordWriter(
