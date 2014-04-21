@@ -1,9 +1,9 @@
 package com.soteradefense.dga.io.formats;
 
-import com.soteradefense.dga.utils.DummyComputation;
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.giraph.edge.Edge;
+import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -39,7 +39,7 @@ public class SimpleTsvComponentGroupOutputTest extends SimpleTsvComponentGroupOu
     @Before
     public void setUp() throws Exception {
         GiraphConfiguration giraphConfiguration = new GiraphConfiguration();
-        giraphConfiguration.setComputationClass(DummyComputation.class);
+        giraphConfiguration.setComputationClass(BasicComputation.class);
         conf = new ImmutableClassesGiraphConfiguration<Text, Text,
                 NullWritable>(giraphConfiguration);
     }

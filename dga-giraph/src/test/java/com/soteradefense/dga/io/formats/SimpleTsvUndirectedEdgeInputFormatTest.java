@@ -1,6 +1,5 @@
 package com.soteradefense.dga.io.formats;
 
-import com.soteradefense.dga.utils.DummyComputation;
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.giraph.graph.BasicComputation;
@@ -50,7 +49,7 @@ public class SimpleTsvUndirectedEdgeInputFormatTest extends SimpleTsvUndirectedE
     }
 
     @Test
-    public void test1() throws IOException, InterruptedException {
+    public void testInputParserWithTwoColumnsSet() throws IOException, InterruptedException {
         String input = "1\t2";
         when(rr.getCurrentValue()).thenReturn(new Text(input));
         EdgeReader ter = createEdgeReader(rr);

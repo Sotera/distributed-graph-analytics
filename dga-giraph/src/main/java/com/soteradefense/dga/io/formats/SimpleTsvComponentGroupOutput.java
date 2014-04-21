@@ -31,7 +31,7 @@ public class SimpleTsvComponentGroupOutput extends TextEdgeOutputFormat<Text, Te
 
         @Override
         protected Text convertEdgeToLine(Text sourceId, Text sourceValue, Edge<Text, NullWritable> edge) throws IOException {
-            return new Text(sourceId.toString().trim() + delimiter + edge.getTargetVertexId() + delimiter + sourceValue.toString().trim());
+            return new Text(sourceId.toString().trim() + delimiter + edge.getTargetVertexId().toString().trim() + delimiter + sourceValue.toString().trim());
         }
     }
 }
