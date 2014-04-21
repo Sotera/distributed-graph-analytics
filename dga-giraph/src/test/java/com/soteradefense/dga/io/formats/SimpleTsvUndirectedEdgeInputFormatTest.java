@@ -58,4 +58,15 @@ public class SimpleTsvUndirectedEdgeInputFormatTest extends SimpleTsvUndirectedE
         ter.initialize(null, tac);
         assertEquals(ter.getCurrentSourceId(), new Text("1"));
     }
+    @Test
+    public void testInputParserWithTwoColumnsSetAndComma() throws IOException, InterruptedException {
+        String input = "1,2";
+        when(rr.getCurrentValue()).thenReturn(new Text(input));
+        EdgeReader ter = createEdgeReader(rr);
+        conf.set(SimpleTsvUndirectedEdgeInputFormat.EXPECTED_NUMBER_OF_COLUMNS_KEY, "2");
+        conf.set(SimpleTsvUndirectedEdgeInputFormat.LINE_TOKENIZE_VALUE, ",");
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+        assertEquals(ter.getCurrentSourceId(), new Text("1"));
+    }
 }
