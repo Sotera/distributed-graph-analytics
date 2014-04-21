@@ -46,12 +46,6 @@ public class WeaklyConnectedComponentsTest {
         testGraph.addEdge(new Text("4"), new Text("3"), NullWritable.get());
         testGraph.addEdge(new Text("5"), new Text("6"), NullWritable.get());
         testGraph.addEdge(new Text("6"), new Text("5"), NullWritable.get());
-        testGraph.getVertex(new Text("1")).setValue(defaultVal);
-        testGraph.getVertex(new Text("2")).setValue(defaultVal);
-        testGraph.getVertex(new Text("3")).setValue(defaultVal);
-        testGraph.getVertex(new Text("4")).setValue(defaultVal);
-        testGraph.getVertex(new Text("5")).setValue(defaultVal);
-        testGraph.getVertex(new Text("6")).setValue(defaultVal);
         return testGraph;
     }
 }
