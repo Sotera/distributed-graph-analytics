@@ -31,7 +31,7 @@ public class WeaklyConnectedComponentsTest {
         conf.setVertexOutputFormatClass(InMemoryVertexOutputFormat.class);
         conf.set(SimpleTsvUndirectedEdgeInputFormat.EXPECTED_NUMBER_OF_COLUMNS_KEY, "2");
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
-        Iterable<String> results = InternalVertexRunner.run(conf, null, data);
+        InternalVertexRunner.run(conf, null, data);
         TestGraph<Text, Text, NullWritable> graph = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(6, graph.getVertices().size());
         assertEquals("2", graph.getVertex(new Text("1")).getValue().toString());
