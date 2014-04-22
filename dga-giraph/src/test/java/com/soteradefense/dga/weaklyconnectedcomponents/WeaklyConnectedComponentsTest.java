@@ -3,17 +3,12 @@ package com.soteradefense.dga.weaklyconnectedcomponents;
 
 import com.soteradefense.dga.io.formats.SimpleTsvUndirectedEdgeInputFormat;
 import org.apache.giraph.conf.GiraphConfiguration;
-import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.giraph.io.formats.InMemoryVertexOutputFormat;
-import org.apache.giraph.utils.InMemoryVertexInputFormat;
 import org.apache.giraph.utils.InternalVertexRunner;
 import org.apache.giraph.utils.TestGraph;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.junit.Test;
-
-
-import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
 

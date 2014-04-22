@@ -20,30 +20,38 @@ public class WeaklyConnectedComponents extends BasicComputation<Text, Text, Null
     @Override
     public void compute(Vertex<Text, Text, NullWritable> vertex, Iterable<Text> messages) throws IOException {
         try {
+            if (getSuperstep() == 0) {
+                broadcastGreatestNeighbor(vertex);
+                return;
+            }
             boolean changed = false;
             String maxId = vertex.getValue().toString();
-            if(maxId == null || maxId.compareTo(vertex.getId().toString()) < 0){
-                maxId = vertex.getId().toString();
-                changed = true;
-            }
             for (Text incomingMessage : messages) {
-                if(maxId.compareTo(incomingMessage.toString()) < 0){
+                if (maxId.compareTo(incomingMessage.toString()) < 0) {
                     maxId = incomingMessage.toString();
                     changed = true;
                 }
             }
-            vertex.setValue(new Text(maxId));
-            broadcastUpdates(vertex, changed);
+            broadcastUpdates(vertex, changed, maxId);
         } catch (Exception e) {
             System.err.print(e.toString());
         }
     }
 
-    private void broadcastUpdates(Vertex<Text,Text,NullWritable> vertex, boolean changed){
-        if(changed) {
-            for (Edge<Text, NullWritable> edge : vertex.getEdges()) {
-                sendMessage(edge.getTargetVertexId(), new Text(vertex.getValue().toString()));
+    private void broadcastGreatestNeighbor(Vertex<Text, Text, NullWritable> vertex) {
+        String maxId = vertex.getId().toString();
+        for (Edge<Text, NullWritable> edge : vertex.getEdges()) {
+            if(maxId.compareTo(edge.getTargetVertexId().toString()) < 0){
+                maxId = edge.getTargetVertexId().toString();
             }
+        }
+        broadcastUpdates(vertex, true, maxId);
+    }
+
+    private void broadcastUpdates(Vertex<Text, Text, NullWritable> vertex, boolean changed, String maxId) {
+        if (changed) {
+            vertex.setValue(new Text(maxId));
+            sendMessageToAllEdges(vertex, new Text(vertex.getValue().toString()));
         }
         vertex.voteToHalt();
     }
