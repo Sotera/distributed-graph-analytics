@@ -4,7 +4,7 @@
 *.war
 *.ear
 *.iml
-build/
+build
 .idea
 out
 .gradle/
