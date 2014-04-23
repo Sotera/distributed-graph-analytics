@@ -1,3 +1,20 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements. See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership. The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License. You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package com.soteradefense.dga.io.formats;
 
 
@@ -12,34 +29,36 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import java.io.IOException;
 
 /**
- * Edge Import Class that parses off of a delimiter set in the config as well as the column number.
- * This also does Reverse Edges to make the graph undirected.
+ * SimpleTsvUndirectedEdgeInputFormat is a class that reads in an edge list specified by source, target, and other values.
+ * The delimiter and expected number of columns are specified in the {@link org.apache.giraph.conf.GiraphConfiguration}.
+ *
+ * Configurable values and their default value setting:
+ *      * simple.tsv.edge.delimiter = "\t"
+ *      * simple.tsv.edge.column.count = 4
+ *
+ * If the reader detects that the line doesn't have the expected number of columns, it will throw an IOException.
+ *
+ * This input writer ignores the weight of an edge and makes the graph undirected by duplicating each edge read in.
  */
 public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text, NullWritable> {
 
+    /** Key in {@link org.apache.giraph.conf.GiraphConfiguration} to specify the delimiter */
     public static final String LINE_TOKENIZE_VALUE = "simple.tsv.edge.delimiter";
 
+    /** The default delimiter value that is returned if the key is not set in {@link org.apache.giraph.conf.GiraphConfiguration} */
     public static final String LINE_TOKENIZE_VALUE_DEFAULT = "\t";
 
+    /** Key in {@link org.apache.giraph.conf.GiraphConfiguration} to specify the expected column count */
     public static final String EXPECTED_NUMBER_OF_COLUMNS_KEY = "simple.tsv.edge.column.count";
 
+    /** The default column count if no count is specified in {@link org.apache.giraph.conf.GiraphConfiguration} */
     public static final String EXPECTED_NUMBER_OF_COLUMNS = "4";
 
-    /**
-     *
-     * @param split
-     * @param context
-     * @return A Reverse Edge Duplicator to make the graph undirected.
-     * @throws IOException
-     */
     @Override
     public EdgeReader<Text, NullWritable> createEdgeReader(InputSplit split, TaskAttemptContext context) throws IOException {
         return new ReverseEdgeDuplicator<Text, NullWritable>(new SimpleTsvEdgeReader());
     }
 
-    /**
-     * This reads the delimited file line by line, parses it on the delimiter and returns the Id, Value, etc.
-     */
     protected class SimpleTsvEdgeReader extends TextEdgeInputFormat<Text, NullWritable>.TextEdgeReaderFromEachLineProcessed<Text> {
         private String delimiter;
         private NullWritable defaultEdgeWeight;

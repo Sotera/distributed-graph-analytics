@@ -1,3 +1,20 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements. See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership. The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License. You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package com.soteradefense.dga.weaklyconnectedcomponents;
 
 import org.apache.giraph.GiraphRunner;
@@ -11,18 +28,13 @@ import org.apache.hadoop.util.ToolRunner;
 import java.io.IOException;
 
 /**
- * This computes Weakly Connected Components in a specified graph.
+ * WeaklyConnectedComponents is the concept of finding how many uniquely connected nodes there are in a specific data set.
  */
-public class WeaklyConnectedComponents extends BasicComputation<Text, Text, NullWritable, Text> {
-
-    public static void main(String[] args) throws Exception {
-        System.exit(ToolRunner.run(new GiraphRunner(), args));
-    }
+public class WeaklyConnectedComponentCompute extends BasicComputation<Text, Text, NullWritable, Text> {
 
     @Override
     public void compute(Vertex<Text, Text, NullWritable> vertex, Iterable<Text> messages) throws IOException {
         try {
-            // First superstep is important.
             if (getSuperstep() == 0) {
                 broadcastGreatestNeighbor(vertex);
                 return;
@@ -42,14 +54,14 @@ public class WeaklyConnectedComponents extends BasicComputation<Text, Text, Null
     }
 
     /**
-     * Handles the First Superstep.
+     * Only called during the first superstep.
      * For Each Edge, find the one who has the greatest id and broadcast that to all neighbors.
      * @param vertex
      */
     private void broadcastGreatestNeighbor(Vertex<Text, Text, NullWritable> vertex) {
         String maxId = vertex.getId().toString();
         for (Edge<Text, NullWritable> edge : vertex.getEdges()) {
-            if(maxId.compareTo(edge.getTargetVertexId().toString()) < 0){
+            if (maxId.compareTo(edge.getTargetVertexId().toString()) < 0){
                 maxId = edge.getTargetVertexId().toString();
             }
         }
@@ -65,7 +77,7 @@ public class WeaklyConnectedComponents extends BasicComputation<Text, Text, Null
     private void broadcastUpdates(Vertex<Text, Text, NullWritable> vertex, boolean changed, String maxId) {
         if (changed) {
             vertex.setValue(new Text(maxId));
-            sendMessageToAllEdges(vertex, new Text(vertex.getValue().toString()));
+            sendMessageToAllEdges(vertex, new Text( vertex.getValue().toString() ));
         }
         vertex.voteToHalt();
     }
