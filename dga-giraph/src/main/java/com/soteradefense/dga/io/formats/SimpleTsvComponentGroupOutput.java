@@ -10,6 +10,7 @@ import java.io.IOException;
 
 /**
  * This is a class that returns a TextEdgeWriter that outputs each edge line by line.
+ *
  */
 public class SimpleTsvComponentGroupOutput extends TextEdgeOutputFormat<Text, Text, NullWritable> {
 
