@@ -4,12 +4,13 @@ import org.apache.giraph.edge.Edge;
 import org.apache.giraph.io.formats.TextEdgeOutputFormat;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.VIntWritable;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import java.io.IOException;
-import java.util.Map;
 
+/**
+ * This is a class that returns a TextEdgeWriter that outputs each edge line by line.
+ */
 public class SimpleTsvComponentGroupOutput extends TextEdgeOutputFormat<Text, Text, NullWritable> {
 
     public static final String LINE_TOKENIZE_VALUE = "simple.tsv.edge.delimiter";
@@ -20,6 +21,9 @@ public class SimpleTsvComponentGroupOutput extends TextEdgeOutputFormat<Text, Te
     public TextEdgeWriter<Text, Text, NullWritable> createEdgeWriter(TaskAttemptContext context) throws IOException, InterruptedException {
         return new IdGroupWriter();
     }
+    /**
+     * This class outputs the edges and another column which is the component it belongs to.
+     */
     protected class IdGroupWriter extends TextEdgeWriterToEachLine<Text,Text,NullWritable>{
         private String delimiter;
 

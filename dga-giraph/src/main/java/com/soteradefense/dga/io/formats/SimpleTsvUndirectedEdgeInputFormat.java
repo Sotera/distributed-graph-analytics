@@ -12,7 +12,8 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import java.io.IOException;
 
 /**
- *
+ * Edge Import Class that parses off of a delimiter set in the config as well as the column number.
+ * This also does Reverse Edges to make the graph undirected.
  */
 public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text, NullWritable> {
 
@@ -24,11 +25,21 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
 
     public static final String EXPECTED_NUMBER_OF_COLUMNS = "4";
 
+    /**
+     *
+     * @param split
+     * @param context
+     * @return A Reverse Edge Duplicator to make the graph undirected.
+     * @throws IOException
+     */
     @Override
     public EdgeReader<Text, NullWritable> createEdgeReader(InputSplit split, TaskAttemptContext context) throws IOException {
         return new ReverseEdgeDuplicator<Text, NullWritable>(new SimpleTsvEdgeReader());
     }
 
+    /**
+     * This reads the delimited file line by line, parses it on the delimiter and returns the Id, Value, etc.
+     */
     protected class SimpleTsvEdgeReader extends TextEdgeInputFormat<Text, NullWritable>.TextEdgeReaderFromEachLineProcessed<Text> {
         private String delimiter;
         private NullWritable defaultEdgeWeight;
@@ -52,6 +63,8 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
             String splitValues[] = value.split(delimiter);
             if (splitValues.length != numberOfExpectedColumns)
                 throw new IOException("Row of data, after tokenized based on delimiter [ " + delimiter + "], had " + splitValues.length + " tokens, but this format requires " + String.valueOf(numberOfExpectedColumns) + " values.  Data row was [" + value + "]");
+            if(splitValues[1].trim().length() == 0)
+                throw new IOException("The target vertex is empty! The row is: " + value);
             return new Text(splitValues[1].trim());
         }
 
@@ -61,6 +74,8 @@ public class SimpleTsvUndirectedEdgeInputFormat extends TextEdgeInputFormat<Text
             String splitValues[] = value.split(delimiter);
             if (splitValues.length != numberOfExpectedColumns)
                 throw new IOException("Row of data, after tokenized based on delimiter [ " + delimiter + "], had " + splitValues.length + " tokens, but this format requires " + String.valueOf(numberOfExpectedColumns) + " values.  Data row was [" + value + "]");
+            if(splitValues[0].trim().length() == 0)
+                throw new IOException("The source vertex is empty! The row is: " + value);
             return new Text(splitValues[0].trim());
         }
 

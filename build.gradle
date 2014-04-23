@@ -10,7 +10,9 @@ allprojects {
 
 subprojects {
 	apply plugin: 'java'
-	
+    task myJavadocs(type: Javadoc) {
+        source = sourceSets.main.allJava
+    }
 	repositories {
 		mavenLocal()
 		mavenCentral()

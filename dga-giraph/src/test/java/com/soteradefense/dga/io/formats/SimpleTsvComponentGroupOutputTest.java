@@ -14,16 +14,12 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 public class SimpleTsvComponentGroupOutputTest extends SimpleTsvComponentGroupOutput {
 
-    /**
-     * Test configuration
-     */
+
     private ImmutableClassesGiraphConfiguration<
             Text, Text, NullWritable> conf;
 

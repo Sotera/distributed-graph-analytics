@@ -10,7 +10,9 @@ import org.apache.hadoop.util.ToolRunner;
 
 import java.io.IOException;
 
-
+/**
+ * This computes Weakly Connected Components in a specified graph.
+ */
 public class WeaklyConnectedComponents extends BasicComputation<Text, Text, NullWritable, Text> {
 
     public static void main(String[] args) throws Exception {
@@ -20,6 +22,7 @@ public class WeaklyConnectedComponents extends BasicComputation<Text, Text, Null
     @Override
     public void compute(Vertex<Text, Text, NullWritable> vertex, Iterable<Text> messages) throws IOException {
         try {
+            // First superstep is important.
             if (getSuperstep() == 0) {
                 broadcastGreatestNeighbor(vertex);
                 return;
@@ -38,6 +41,11 @@ public class WeaklyConnectedComponents extends BasicComputation<Text, Text, Null
         }
     }
 
+    /**
+     * Handles the First Superstep.
+     * For Each Edge, find the one who has the greatest id and broadcast that to all neighbors.
+     * @param vertex
+     */
     private void broadcastGreatestNeighbor(Vertex<Text, Text, NullWritable> vertex) {
         String maxId = vertex.getId().toString();
         for (Edge<Text, NullWritable> edge : vertex.getEdges()) {
@@ -48,6 +56,12 @@ public class WeaklyConnectedComponents extends BasicComputation<Text, Text, Null
         broadcastUpdates(vertex, true, maxId);
     }
 
+    /**
+     * Sends a message to all neighbors if the greatest value has changed.
+     * @param vertex The current vertex.
+     * @param changed Has the greatest value changed?
+     * @param maxId The current id that has the greatest value.
+     */
     private void broadcastUpdates(Vertex<Text, Text, NullWritable> vertex, boolean changed, String maxId) {
         if (changed) {
             vertex.setValue(new Text(maxId));
