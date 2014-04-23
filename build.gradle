@@ -9,17 +9,17 @@ allprojects {
 }
 
 subprojects {
-	apply plugin: 'java'
+    apply plugin: 'java'
     task myJavadocs(type: Javadoc) {
         source = sourceSets.main.allJava
         source("org.apache.giraph:giraph-core:1.1.0-SNAPSHOT")
     }
-	repositories {
-		mavenLocal()
-		mavenCentral()
-		mavenRepo url: "http://repo.spray.cc"
-		mavenRepo url: "http://repo.typesafe.com/typesafe/repo"
-		mavenRepo url: "http://oss.sonatype.org/content/repositories/snapshots"
-		mavenRepo url: "https://repository.cloudera.com/artifactory/cloudera-repos"
-	}
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        mavenRepo url: "http://repo.spray.cc"
+        mavenRepo url: "http://repo.typesafe.com/typesafe/repo"
+        mavenRepo url: "http://oss.sonatype.org/content/repositories/snapshots"
+        mavenRepo url: "https://repository.cloudera.com/artifactory/cloudera-repos"
+    }
 }
