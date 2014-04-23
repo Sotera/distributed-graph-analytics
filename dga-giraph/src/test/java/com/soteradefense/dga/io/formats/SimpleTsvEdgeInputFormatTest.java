@@ -15,100 +15,209 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.soteradefense.dga.io.formats;
 
-import com.google.common.collect.Maps;
+import org.apache.giraph.conf.GiraphConfiguration;
+import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
+import org.apache.giraph.io.EdgeReader;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.VIntWritable;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.*;
+
 import java.io.IOException;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-public class SimpleTsvEdgeInputFormatTest {
+public class SimpleTsvEdgeInputFormatTest extends SimpleTsvEdgeInputFormat {
+
+    private RecordReader<LongWritable, Text> rr;
+    private ImmutableClassesGiraphConfiguration conf;
+    private TaskAttemptContext tac;
+
+    public EdgeReader<Text, VIntWritable> createEdgeReader(final RecordReader<LongWritable, Text> rr) throws IOException {
+        return new SimpleTsvEdgeReader() {
+            @Override
+            protected RecordReader<LongWritable, Text> createLineRecordReader(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
+                return rr;
+            }
+        };
+    }
+
+    @Before
+    public void setUp() throws IOException, InterruptedException {
+        rr = mock(RecordReader.class);
+        when(rr.nextKeyValue()).thenReturn(true);
+        GiraphConfiguration giraphConf = new GiraphConfiguration();
+        conf = new ImmutableClassesGiraphConfiguration(giraphConf);
+        tac = mock(TaskAttemptContext.class);
+        when(tac.getConfiguration()).thenReturn(conf);
+    }
 
     @Test
     public void testEdgesWithoutWeight() throws Exception {
-        String[] edges = new String[]{
-                "1\t2",
-                "1\t3",
-                "1\t4",
-                "1\t5",
-                "1\t6",
-                "2\t3",
-                "2\t4",
-                "2\t5",
-                "2\t1",
-                "3\t4",
-                "3\t5",
-                "3\t20",
-                "3\t1",
-                "3\t2",
-                "4\t5",
-                "4\t1",
-                "4\t2",
-                "4\t3",
-                "5\t1",
-                "5\t2",
-                "5\t3",
-                "5\t4",
-                "6\t1",
-                "6\t8",
-                "8\t6",
-                "8\t10",
-                "10\t8",
-                "10\t12",
-                "12\t10",
-                "15\t17",
-                "15\t19",
-                "17\t15",
-                "19\t15",
-                "19\t20",
-                "20\t3",
-                "20\t19"
-        };
+        String line1 = "1\t2";
+        String line2 = "2\t4";
+        when(rr.getCurrentValue()).thenReturn(new Text(line1)).thenReturn(new Text(line2));
+        EdgeReader ter = createEdgeReader(rr);
 
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+
+        ter.nextEdge();
+        assertEquals(new Text("1"), ter.getCurrentSourceId());
+        assertEquals(new Text("2"), ter.getCurrentEdge().getTargetVertexId());
+        assertEquals(new VIntWritable(1), ter.getCurrentEdge().getValue());
+
+        ter.nextEdge();
+        assertEquals(new Text("2"), ter.getCurrentSourceId());
+        assertEquals(new Text("4"), ter.getCurrentEdge().getTargetVertexId());
+        assertEquals(new VIntWritable(1), ter.getCurrentEdge().getValue());
     }
 
-    public void testEdgesWithWeight() {
+    @Test
+    public void testEdgesWithWeight() throws Exception {
+        String line1 = "1\t2\t2";
+        String line2 = "2\t4\t1";
+        when(rr.getCurrentValue()).thenReturn(new Text(line1)).thenReturn(new Text(line2));
+        EdgeReader ter = createEdgeReader(rr);
 
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+
+        ter.nextEdge();
+        assertEquals(new Text("1"), ter.getCurrentSourceId());
+        assertEquals(new Text("2"), ter.getCurrentEdge().getTargetVertexId());
+        assertEquals(new VIntWritable(2), ter.getCurrentEdge().getValue());
+
+        ter.nextEdge();
+        assertEquals(new Text("2"), ter.getCurrentSourceId());
+        assertEquals(new Text("4"), ter.getCurrentEdge().getTargetVertexId());
+        assertEquals(new VIntWritable(1), ter.getCurrentEdge().getValue());
     }
 
     @Test(expected = IOException.class)
-    public void testEdgesWithInvalidWeight() {
+    public void testEdgesWithInvalidWeight() throws Exception {
+        String line1 = "1\t2\talphabet";
+        String line2 = "2\t4\t1";
+        when(rr.getCurrentValue()).thenReturn(new Text(line1)).thenReturn(new Text(line2));
+        EdgeReader ter = createEdgeReader(rr);
 
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+
+        ter.nextEdge();
+        ter.getCurrentEdge(); // throws IOException because "alphabet" isn't a valid int
+        fail("Should throw IOException before this point");
     }
 
-    public void testEdgesWithWeightInSomeRowsAndNoWeightInOthers() {
+    @Test
+    public void testEdgesWithWeightInSomeRowsAndNoWeightInOthers() throws Exception {
+        String line1 = "1\t2\t2";
+        String line2 = "2\t4";
+        when(rr.getCurrentValue()).thenReturn(new Text(line1)).thenReturn(new Text(line2));
+        EdgeReader ter = createEdgeReader(rr);
 
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+
+        ter.nextEdge();
+        assertEquals(new Text("1"), ter.getCurrentSourceId());
+        assertEquals(new Text("2"), ter.getCurrentEdge().getTargetVertexId());
+        assertEquals(new VIntWritable(2), ter.getCurrentEdge().getValue());
+
+        ter.nextEdge();
+        assertEquals(new Text("2"), ter.getCurrentSourceId());
+        assertEquals(new Text("4"), ter.getCurrentEdge().getTargetVertexId());
+        assertEquals(new VIntWritable(1), ter.getCurrentEdge().getValue());
     }
 
     @Test(expected = IOException.class)
-    public void testInvalidEdges() {
+    public void testInvalidEdges() throws Exception {
+        String line1 = "1\t";
+        when(rr.getCurrentValue()).thenReturn(new Text(line1));
+        EdgeReader ter = createEdgeReader(rr);
 
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+
+        ter.nextEdge();
+        ter.getCurrentEdge(); // should throw IOException
+        fail("Should throw IOException before this point");
     }
 
-    public void testEdgesWithConfiguredDelimiter() {
+    @Test
+    public void testEdgesWithConfiguredDelimiter() throws Exception {
+        String line1 = "1,2,2";
+        String line2 = "2,4,3";
+        when(rr.getCurrentValue()).thenReturn(new Text(line1)).thenReturn(new Text(line2));
+        EdgeReader ter = createEdgeReader(rr);
 
+        GiraphConfiguration giraphConf = new GiraphConfiguration();
+        giraphConf.set(SimpleTsvEdgeInputFormat.LINE_TOKENIZE_VALUE, ",");
+
+        ter.setConf(new ImmutableClassesGiraphConfiguration(giraphConf));
+        ter.initialize(null, tac);
+
+        ter.nextEdge();
+        assertEquals(new Text("1"), ter.getCurrentSourceId());
+        assertEquals(new Text("2"), ter.getCurrentEdge().getTargetVertexId());
+        assertEquals(new VIntWritable(2), ter.getCurrentEdge().getValue());
+
+        ter.nextEdge();
+        assertEquals(new Text("2"), ter.getCurrentSourceId());
+        assertEquals(new Text("4"), ter.getCurrentEdge().getTargetVertexId());
+        assertEquals(new VIntWritable(3), ter.getCurrentEdge().getValue());
     }
 
-    public void testEdgesWithConfiguredDefaultWeight() {
+    @Test
+    public void testEdgesWithConfiguredDefaultWeight() throws Exception {
+        String line1 = "1\t2";
+        String line2 = "2\t4";
+        when(rr.getCurrentValue()).thenReturn(new Text(line1)).thenReturn(new Text(line2));
+        EdgeReader ter = createEdgeReader(rr);
 
+        GiraphConfiguration giraphConf = new GiraphConfiguration();
+        giraphConf.set(SimpleTsvEdgeInputFormat.EDGE_WEIGHT_VALUE, "100");
+
+        ter.setConf(new ImmutableClassesGiraphConfiguration(giraphConf));
+        ter.initialize(null, tac);
+
+        ter.nextEdge();
+        assertEquals(new Text("1"), ter.getCurrentSourceId());
+        assertEquals(new Text("2"), ter.getCurrentEdge().getTargetVertexId());
+        assertEquals(new VIntWritable(100), ter.getCurrentEdge().getValue());
+
+        ter.nextEdge();
+        assertEquals(new Text("2"), ter.getCurrentSourceId());
+        assertEquals(new Text("4"), ter.getCurrentEdge().getTargetVertexId());
+        assertEquals(new VIntWritable(100), ter.getCurrentEdge().getValue());
     }
 
     @Test(expected = IOException.class)
-    public void testEdgesWithInvalidConfiguredDefaultWeight() throws IOException {
+    public void testEdgesWithInvalidConfiguredDefaultWeight() throws Exception {
 
-    }
+        String line1 = "1,2";
+        String line2 = "2,4";
+        when(rr.getCurrentValue()).thenReturn(new Text(line1)).thenReturn(new Text(line2));
+        EdgeReader ter = createEdgeReader(rr);
 
-    private static Map<String, String> parseResults(Iterable<String> results) {
-        Map<String, String> values = Maps.newHashMap();
-        for (String line : results) {
-            String[] tokens = line.split("\\s+");
-            values.put(tokens[0], tokens[1]);
-        }
-        return values;
+        GiraphConfiguration giraphConf = new GiraphConfiguration();
+        giraphConf.set(SimpleTsvEdgeInputFormat.EDGE_WEIGHT_VALUE, "HAM");
+
+        ter.setConf(new ImmutableClassesGiraphConfiguration(giraphConf));
+        ter.initialize(null, tac);
+
+        ter.nextEdge();
+        ter.getCurrentEdge();
+        fail("Should have thrown an IOException by this point, as HAM is not a valid int, even if it is delicious");
     }
 
 }
