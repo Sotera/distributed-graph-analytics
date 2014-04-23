@@ -1,22 +1,22 @@
 task wrapper(type: Wrapper) {
-	gradleVersion = '1.9'
+    gradleVersion = '1.9'
 }
 
 allprojects {
-	apply plugin: 'maven'
-	group = 'com.soteradefense'
-	version = '0.0.1-SNAPSHOT'
+    apply plugin: 'maven'
+    group = 'com.soteradefense'
+    version = '0.0.1-SNAPSHOT'
 }
 
 subprojects {
-	apply plugin: 'java'
+    apply plugin: 'java'
 	
-	repositories {
-		mavenLocal()
-		mavenCentral()
-		mavenRepo url: "http://repo.spray.cc"
-		mavenRepo url: "http://repo.typesafe.com/typesafe/repo"
-		mavenRepo url: "http://oss.sonatype.org/content/repositories/snapshots"
-		mavenRepo url: "https://repository.cloudera.com/artifactory/cloudera-repos"
-	}
+    repositories {
+        mavenRepo url: "http://repo.maven.apache.org/maven2"
+        mavenRepo url: "http://oss.sonatype.org/content/repositories/snapshots"
+        mavenRepo url: "https://repository.cloudera.com/artifactory/cloudera-repos"
+        mavenRepo url: "http://repo.spray.cc"
+        mavenRepo url: "http://repo.typesafe.com/typesafe/repo"
+        mavenLocal()
+    }
 }
