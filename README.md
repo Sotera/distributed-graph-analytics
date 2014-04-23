@@ -9,7 +9,7 @@ Currently, DGA supports the following analytics:
 - Weakly Connected Components
 - Leaf Compression
 
-###### Hama
+###### GraphX
 - Louvain Modularity
 
 Eventually, the following analytics will be supported:
