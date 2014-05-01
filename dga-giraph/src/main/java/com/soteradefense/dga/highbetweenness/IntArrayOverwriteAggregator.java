@@ -1,4 +1,4 @@
-package com.soteradefense.dga.compute;
+package com.soteradefense.dga.highbetweenness;
 
 import org.apache.giraph.aggregators.BasicAggregator;
 import org.apache.hadoop.io.IntWritable;

@@ -1,4 +1,4 @@
-package com.soteradefense.dga.compute;
+package com.soteradefense.dga.highbetweenness;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -15,7 +15,7 @@ import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 
-import com.soteradefense.dga.compute.HBSEMasterCompute.State;
+import com.soteradefense.dga.highbetweenness.HBSEMasterCompute.State;
 
 
 /**

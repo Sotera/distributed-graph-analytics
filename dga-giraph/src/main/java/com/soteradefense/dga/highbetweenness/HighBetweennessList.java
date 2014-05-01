@@ -1,4 +1,4 @@
-package com.soteradefense.dga.compute;
+package com.soteradefense.dga.highbetweenness;
 
 import java.io.DataInput;
 import java.io.DataOutput;

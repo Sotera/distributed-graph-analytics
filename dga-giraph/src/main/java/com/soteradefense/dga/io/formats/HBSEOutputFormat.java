@@ -2,7 +2,7 @@ package com.soteradefense.dga.io.formats;
 
 import java.io.IOException;
 
-import com.soteradefense.dga.compute.VertexData;
+import com.soteradefense.dga.highbetweenness.VertexData;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.io.formats.TextVertexOutputFormat;
 import org.apache.hadoop.io.IntWritable;
