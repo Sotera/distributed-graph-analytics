@@ -29,16 +29,101 @@ public class HBSEComputeTest {
     @Test
     public void testComputeOutput() throws Exception {
         GiraphConfiguration conf = getConf();
-        TestGraph<IntWritable, VertexData, IntWritable> input = getGraph(conf);
+        TestGraph<IntWritable, VertexData, IntWritable> input = getFirstTestGraph(conf);
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
         InternalVertexRunner.run(conf, input);
         TestGraph<IntWritable, VertexData, IntWritable> output = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(8, output.getVertices().size());
         assertEquals(output.getVertex(new IntWritable(2)).getValue().getApproxBetweenness() > 0.0, true);
         assertEquals(output.getVertex(new IntWritable(1)).getValue().getApproxBetweenness() > 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(3)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(4)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(5)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(6)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(7)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(8)).getValue().getApproxBetweenness() == 0.0, true);
     }
 
-    private TestGraph<IntWritable, VertexData, IntWritable> getGraph(GiraphConfiguration conf) {
+    @Test
+    public void testGraphWithShortestPathOne() throws Exception {
+        GiraphConfiguration conf = getConf();
+        TestGraph<IntWritable, VertexData, IntWritable> input = getShortestPathOneTestGraph(conf);
+        InMemoryVertexOutputFormat.initializeOutputGraph(conf);
+        InternalVertexRunner.run(conf, input);
+        TestGraph<IntWritable, VertexData, IntWritable> output = InMemoryVertexOutputFormat.getOutputGraph();
+        assertEquals(8, output.getVertices().size());
+        assertEquals(output.getVertex(new IntWritable(1)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(2)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(3)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(4)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(5)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(6)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(7)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(8)).getValue().getApproxBetweenness() == 0.0, true);
+
+    }
+
+    @Test
+    public void testTwoCriticalPointGraph() throws Exception {
+        GiraphConfiguration conf = getConf();
+        TestGraph<IntWritable, VertexData, IntWritable> input = getTwoCriticalPointGraph(conf);
+        InMemoryVertexOutputFormat.initializeOutputGraph(conf);
+        InternalVertexRunner.run(conf, input);
+        TestGraph<IntWritable, VertexData, IntWritable> output = InMemoryVertexOutputFormat.getOutputGraph();
+        assertEquals(16, output.getVertices().size());
+        assertEquals(output.getVertex(new IntWritable(1)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(9)).getValue().getApproxBetweenness() > 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(2)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(3)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(4)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(5)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(6)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(7)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(8)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(10)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(11)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(12)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(13)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(14)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(15)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(16)).getValue().getApproxBetweenness() == 0.0, true);
+
+    }
+
+    private TestGraph<IntWritable, VertexData, IntWritable> getTwoCriticalPointGraph(GiraphConfiguration conf) {
+        TestGraph<IntWritable, VertexData, IntWritable> testGraph = new TestGraph<IntWritable, VertexData, IntWritable>(conf);
+        testGraph.addEdge(new IntWritable(1), new IntWritable(2), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(3), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(4), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(5), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(6), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(7), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(8), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(9), new IntWritable(10), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(9), new IntWritable(11), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(9), new IntWritable(12), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(9), new IntWritable(13), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(9), new IntWritable(14), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(9), new IntWritable(15), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(9), new IntWritable(16), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(9), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(9), new IntWritable(1), new IntWritable(1));
+        return testGraph;
+    }
+
+    private TestGraph<IntWritable, VertexData, IntWritable> getShortestPathOneTestGraph(GiraphConfiguration conf) {
+        TestGraph<IntWritable, VertexData, IntWritable> testGraph = new TestGraph<IntWritable, VertexData, IntWritable>(conf);
+        testGraph.addEdge(new IntWritable(1), new IntWritable(2), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(3), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(4), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(5), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(6), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(7), new IntWritable(1));
+        testGraph.addEdge(new IntWritable(1), new IntWritable(8), new IntWritable(1));
+        return testGraph;
+    }
+
+    private TestGraph<IntWritable, VertexData, IntWritable> getFirstTestGraph(GiraphConfiguration conf) {
         TestGraph<IntWritable, VertexData, IntWritable> testGraph = new TestGraph<IntWritable, VertexData, IntWritable>(conf);
         testGraph.addEdge(new IntWritable(1), new IntWritable(2), new IntWritable(1));
         testGraph.addEdge(new IntWritable(2), new IntWritable(1), new IntWritable(1));
