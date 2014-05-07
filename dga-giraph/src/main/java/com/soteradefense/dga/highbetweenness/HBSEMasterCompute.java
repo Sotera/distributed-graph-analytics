@@ -48,7 +48,7 @@ import org.apache.hadoop.io.IntWritable;
  * * fs.defaultFS OR fs.default.name:  If not set in the environment you can set them as a custom arguments. typically this will not need to be set
  * * betweenness.output.dir: Directory in HDFS used to write the high betweenness set.
  * * betweenness.set.stability: Integer value, algorithm completes with the high betweenness set changes by less than this value, checked after each cycle.
- * * betweenness.set.stability.counter: Integer value, number of times the stability threshold must be reached.
+ * * betweenness.set.stability.stabilityRunningCounter: Integer value, number of times the stability threshold must be reached.
  * * betweenness.set.maxSize: Size the result set desired.
  * * pivot.batch.size: Number of pivots to use in each batch
  * * pivot.batch.size.initial:  Number of pivots to use in the first bacth (defaults to pivot.batch.size)
@@ -96,7 +96,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      */
     public static final String BETWEENNESS_SET_STABILITY = "betweenness.set.stability";
     /**
-     * Configuration Identifier for the set stability counter cut off point (margin of error).
+     * Configuration Identifier for the set stability stabilityRunningCounter cut off point (margin of error).
      */
     public static final String BETWEENNESS_SET_STABILITY_COUNTER = HBSEMasterCompute.BETWEENNESS_SET_STABILITY + ".counter";
     /**
@@ -178,18 +178,28 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      */
     Set<Integer> highBetweennessSet = new HashSet<Integer>();
 
-    // limit on the high betweenness set size
+    /**
+     * Stores the max highbetweenness set size.
+     */
     int maxHighBCSetSize;
 
-    // current cycle: a cyle is defined here as a shortest path phase + a pair dependency phase
+    /**
+     * Current cycle: a cycle is defined here as a shortest path phase + a pair dependency phase
+     */
     int cycle = 1;
 
-
-    // algorithm is complete when high betweenness set changes by less than this amount after a full cycle
-    // cutoff must be met stabilityCounter times prior to exit.
+    /**
+     * Stores the stability cut off value after a full cycle.
+     */
     int stabilityCutoff;
+    /**
+     * Stores the number of times the stability counter must be met before exiting.
+     */
     int stabilityCounter;
-    int counter = 0;
+    /**
+     * Stores the running count of the number of times the stability counter was met.
+     */
+    int stabilityRunningCounter = 0;
 
     /**
      * Output directory in HDFS.
@@ -222,9 +232,12 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     private Random random;
 
     /**
-     * Date variable to track the start and end of the entire computation.
+     * Date variable to track the start entire computation.
      */
     private Date start;
+    /**
+     * Date variable to track the end entire computation.
+     */
     private Date end;
 
     /**
@@ -356,16 +369,16 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     /**
      * Coordinates the computation phases of SBVertex by monitoring for the completion of each state
      * and moving to the next state.
-     *
-     *      * selects pivots
-     *      * monitors for completion of shortest paths
-     *      * starts pair dependency phase
-     *      * monitors for completion of pair dependency
-     *      * checks high betweenness set stability
-     *      * if set is stable
-     *          * save set and exit
-     *      * else
-     *          * select new pivots and start new shortest path phase
+     * <p/>
+     * * selects pivots
+     * * monitors for completion of shortest paths
+     * * starts pair dependency phase
+     * * monitors for completion of pair dependency
+     * * checks high betweenness set stability
+     * * if set is stable
+     * * save set and exit
+     * * else
+     * * select new pivots and start new shortest path phase
      */
     @Override
     public void compute() {
@@ -428,12 +441,12 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
             cycle++;
 
             if (delta <= stabilityCutoff) {
-                counter++;
-                if (counter >= stabilityCounter) {
-                    LOG.info(logprefix + " Set Delta < cutoff value; counter=" + counter + " approximation complete.");
+                stabilityRunningCounter++;
+                if (stabilityRunningCounter >= stabilityCounter) {
+                    LOG.info(logprefix + " Set Delta < cutoff value; counter=" + stabilityRunningCounter + " approximation complete.");
                     state = State.FINISHED;
                 } else {
-                    LOG.info(logprefix + " Set Delta < cutoff value; counter=" + counter);
+                    LOG.info(logprefix + " Set Delta < cutoff value; counter=" + stabilityRunningCounter);
                     choosePivots(this.batchSize);
                     state = State.SHORTEST_PATH_START;
                 }
@@ -442,7 +455,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
                 LOG.info(logprefix + " All possible pivots selected, exiting");
                 state = State.FINISHED;
             } else {
-                counter = 0; // reset counter
+                stabilityRunningCounter = 0; // reset stabilityRunningCounter
                 LOG.info(logprefix + " Delta did not meet cutoff, starting next cycle.");
                 choosePivots(this.batchSize);
                 state = State.SHORTEST_PATH_START;
