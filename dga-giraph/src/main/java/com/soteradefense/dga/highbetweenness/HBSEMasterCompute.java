@@ -48,7 +48,7 @@ import org.apache.hadoop.io.IntWritable;
  * * fs.defaultFS OR fs.default.name:  If not set in the environment you can set them as a custom arguments. typically this will not need to be set
  * * betweenness.output.dir: Directory in HDFS used to write the high betweenness set.
  * * betweenness.set.stability: Integer value, algorithm completes with the high betweenness set changes by less than this value, checked after each cycle.
- * * betweenness.set.stability.stabilityRunningCounter: Integer value, number of times the stability threshold must be reached.
+ * * betweenness.set.stability.counter: Integer value, number of times the stability threshold must be reached.
  * * betweenness.set.maxSize: Size the result set desired.
  * * pivot.batch.size: Number of pivots to use in each batch
  * * pivot.batch.size.initial:  Number of pivots to use in the first bacth (defaults to pivot.batch.size)
@@ -96,7 +96,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      */
     public static final String BETWEENNESS_SET_STABILITY = "betweenness.set.stability";
     /**
-     * Configuration Identifier for the set stability stabilityRunningCounter cut off point (margin of error).
+     * Configuration Identifier for the set stability counter cut off point (margin of error).
      */
     public static final String BETWEENNESS_SET_STABILITY_COUNTER = HBSEMasterCompute.BETWEENNESS_SET_STABILITY + ".counter";
     /**
