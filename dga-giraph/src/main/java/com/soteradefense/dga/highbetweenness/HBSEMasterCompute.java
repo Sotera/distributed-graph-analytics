@@ -75,6 +75,20 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     public static final String PIVOT_AGG = "com.sotera.graph.singbetweenness.PIVOT_AGG";
     public static final String UPDATE_COUNT_AGG = "com.sotera.graph.singbetweenness.UPDATE_COUNT_AGG";
     public static final String HIGH_BC_SET_AGG = "com.sotera.graph.singbetweenness.HIGH_BC_SET_AGG";
+    public static final String BETWEENNESS_OUTPUT_DIR = "betweenness.output.dir";
+    public static final String BETWEENNESS_SHORTESTPATH_PHASES = "betweenness.shortestpath.phases";
+    public static final String BETWEENNESS_SET_STABILITY = "betweenness.set.stability";
+    public static final String BETWEENNESS_SET_STABILITY_COUNTER = HBSEMasterCompute.BETWEENNESS_SET_STABILITY + ".counter";
+    public static final String BETWEENNESS_SET_MAX_SIZE = "betweenness.set.maxSize";
+    public static final String PIVOT_BATCH_SIZE = "pivot.batch.size";
+    public static final String PIVOT_BATCH_SIZE_INITIAL = HBSEMasterCompute.PIVOT_BATCH_SIZE + ".initial";
+    public static final String PIVOT_BATCH_RANDOM_SEED = "pivot.batch.random.seed";
+    public static final String VERTEX_COUNT = "vertex.count";
+    public static final String PIVOT_BATCH_STRING = "pivot.batch.string";
+    public static final String FS_DEFAULT_FS = "fs.defaultFS";
+    public static final String FS_DEFAULT_NAME = "fs.default.name";
+    public static final String FINAL_SET_CSV = "final_set.csv";
+    public static final String STATS_CSV = "stats.csv";
 
     // number of pivots to use per batch
     private int batchSize;
@@ -122,7 +136,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         PAIR_DEPENDENCY_FIND_SUCCESSORS,
         PAIR_DEPENDENCY_RUN,
         PAIR_DEPENDENCY_COMPLETE,
-        FINISHED;
+        FINISHED
     }
 
     private State state = State.START;
@@ -147,61 +161,61 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
 
         String defaultFS = this.getDefaultFS(this.getConf());
         if (defaultFS == null) {
-            throw new IllegalArgumentException("fs.defaultFS OR fs.default.name must be set.  If not set in the environment you can set them as a custom argument to the giraph job via -ca fs.default.name=<your default fs>");
+            throw new IllegalArgumentException(FS_DEFAULT_FS + " OR " + FS_DEFAULT_NAME + " must be set.  If not set in the environment you can set them as a custom argument to the giraph job via -ca fs.default.name=<your default fs>");
         }
 
-        outputDir = getConf().get("betweenness.output.dir");
+        outputDir = getConf().get(BETWEENNESS_OUTPUT_DIR);
         if (outputDir == null || outputDir.length() < 1) {
-            throw new IllegalArgumentException("betweenness.output.dir must be set to a valid directory in HDFS");
+            throw new IllegalArgumentException(BETWEENNESS_OUTPUT_DIR + " must be set to a valid directory in HDFS");
         }
 
         this.shortestPathPhases = 1;
         this.shortestPathPhasesCompleted = 0;
-        String shortestPathPhasesStr = getConf().get("betweenness.shortestpath.phases");
+        String shortestPathPhasesStr = getConf().get(BETWEENNESS_SHORTESTPATH_PHASES);
         try {
             if (shortestPathPhasesStr != null) shortestPathPhases = Integer.parseInt(shortestPathPhasesStr);
         } catch (NumberFormatException e) {
-            LOG.error("betweenness.shortestpath.phases not set to valid int. default=1");
+            LOG.error(HBSEMasterCompute.BETWEENNESS_SHORTESTPATH_PHASES + " not set to valid int. default=1");
         }
 
 
         stabilityCutoff = 0;
-        String stabilityCutoffStr = getConf().get("betweenness.set.stability");
+        String stabilityCutoffStr = getConf().get(BETWEENNESS_SET_STABILITY);
         if (null != stabilityCutoffStr) {
             try {
                 stabilityCutoff = Integer.parseInt(stabilityCutoffStr);
             } catch (NumberFormatException e) {
-                LOG.error("betweenness.set.stability must be set to a valid int. default=" + stabilityCutoff);
+                LOG.error(HBSEMasterCompute.BETWEENNESS_SET_STABILITY + " must be set to a valid int. default=" + stabilityCutoff);
                 throw e;
             }
         }
-        LOG.info("betweenness.set.stability=" + stabilityCutoff);
+        LOG.info(BETWEENNESS_SET_STABILITY + "=" + stabilityCutoff);
 
         stabilityCounter = 3;
-        String stabilityCounterStr = getConf().get("betweenness.set.stability.counter");
+        String stabilityCounterStr = getConf().get(BETWEENNESS_SET_STABILITY_COUNTER);
         if (null != stabilityCutoffStr) {
             try {
                 stabilityCounter = Integer.parseInt(stabilityCounterStr);
             } catch (NumberFormatException e) {
-                LOG.error("betweenness.set.stability.counter must be set to a valid int. default=" + stabilityCounter);
+                LOG.error(HBSEMasterCompute.BETWEENNESS_SET_STABILITY + ".counter must be set to a valid int. default=" + stabilityCounter);
                 throw e;
             }
         }
-        LOG.info("betweenness.set.stability.counter=" + stabilityCounter);
+        LOG.info(HBSEMasterCompute.BETWEENNESS_SET_STABILITY + ".counter=" + stabilityCounter);
 
         maxHighBCSetSize = 1;
         try {
-            maxHighBCSetSize = Integer.parseInt(getConf().get("betweenness.set.maxSize"));
+            maxHighBCSetSize = Integer.parseInt(getConf().get(BETWEENNESS_SET_MAX_SIZE));
         } catch (NumberFormatException e) {
-            LOG.error("betweenness.set.maxSize must be set to a valid int.");
+            LOG.error(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE + " must be set to a valid int.");
             throw e;
         }
-        LOG.info("betweenness.set.maxSize=" + maxHighBCSetSize);
+        LOG.info(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE + "=" + maxHighBCSetSize);
 
 
         // manually set first pivot batch if argument is present
         try {
-            String pivotBatchStr = this.getConf().get("pivot.batch.string");
+            String pivotBatchStr = this.getConf().get(PIVOT_BATCH_STRING);
             if (null != pivotBatchStr && pivotBatchStr.length() > 0) {
                 String[] pivotBatchArray = pivotBatchStr.split(",");
                 for (String pivotStr : pivotBatchArray) {
@@ -212,31 +226,31 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
             }
 
         } catch (NumberFormatException e) {
-            LOG.error("Optional argument pivot.batch.string invalid. Must be a comma seperated list of ints.");
+            LOG.error("Optional argument " + HBSEMasterCompute.PIVOT_BATCH_STRING + " invalid. Must be a comma seperated list of ints.");
             throw e;
         }
         if (!currentPivots.isEmpty()) setGlobalPivots(currentPivots);
 
 
-        String batchSizeStr = this.getConf().get("pivot.batch.size");
+        String batchSizeStr = this.getConf().get(PIVOT_BATCH_SIZE);
         try {
             batchSize = Integer.parseInt(batchSizeStr);
         } catch (NumberFormatException e) {
-            LOG.error("Required option not set or invalid. \"pivot.batch.size\" must be set to a valid int, was set to: " + batchSizeStr);
+            LOG.error("Required option not set or invalid. \"" + HBSEMasterCompute.PIVOT_BATCH_SIZE + "\" must be set to a valid int, was set to: " + batchSizeStr);
             throw e;
         }
-        LOG.info("pivot.batch.size=" + batchSize);
+        LOG.info(HBSEMasterCompute.PIVOT_BATCH_SIZE + "=" + batchSize);
 
         initialBatchSize = batchSize;
         try {
-            String initialBatchSizeStr = getConf().get("pivot.batch.size.initial");
+            String initialBatchSizeStr = getConf().get(PIVOT_BATCH_SIZE_INITIAL);
             if (initialBatchSizeStr != null) initialBatchSize = Integer.parseInt(initialBatchSizeStr);
         } catch (NumberFormatException e) {
-            LOG.error("Optional setting pivot.batch.size.initial set to invalid value, using default");
+            LOG.error("Optional setting " + HBSEMasterCompute.PIVOT_BATCH_SIZE_INITIAL + " set to invalid value, using default");
         }
 
 
-        String randomSeedStr = getConf().get("pivot.batch.random.seed");
+        String randomSeedStr = getConf().get(PIVOT_BATCH_RANDOM_SEED);
         if (null == randomSeedStr) {
             random = new Random();
         } else {
@@ -246,14 +260,14 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         }
 
 
-        String maxIdStr = this.getConf().get("vertex.count");
+        String maxIdStr = this.getConf().get(VERTEX_COUNT);
         try {
             maxId = Integer.parseInt(maxIdStr);
         } catch (NumberFormatException e) {
-            LOG.error("Required option not set or invalid. \"vertex.count\" must be set to a valid int, was set to: " + maxIdStr);
+            LOG.error("Required option not set or invalid. \"" + HBSEMasterCompute.VERTEX_COUNT + "\" must be set to a valid int, was set to: " + maxIdStr);
             throw e;
         }
-        LOG.info("vertex.count=" + maxId);
+        LOG.info(HBSEMasterCompute.VERTEX_COUNT + "=" + maxId);
 
     }
 
@@ -401,7 +415,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         int time = (int) ((end.getTime() - start.getTime()) / 1000);
 
         String defaultFS = getDefaultFS(getConf());
-        String filename = defaultFS + "/" + outputDir + "/stats.csv";
+        String filename = defaultFS + "/" + outputDir + "/" + STATS_CSV;
         Path pt = new Path(filename);
         try {
             FileSystem fs = FileSystem.get(new Configuration());
@@ -446,7 +460,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      */
     private void writeHighBetweennessSet(Set<Integer> set) {
         String defaultFS = getDefaultFS(getConf());
-        String filename = defaultFS + "/" + outputDir + "/final_set.csv";
+        String filename = defaultFS + "/" + outputDir + "/" + FINAL_SET_CSV;
         Path pt = new Path(filename);
         try {
             FileSystem fs = FileSystem.get(new Configuration());
@@ -497,7 +511,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      * @return
      */
     private String getDefaultFS(Configuration conf) {
-        return (conf.get("fs.defaultFS") != null ? conf.get("fs.defaultFS") : conf.get("fs.default.name"));
+        return (conf.get(FS_DEFAULT_FS) != null ? conf.get(FS_DEFAULT_FS) : conf.get(FS_DEFAULT_NAME));
     }
 
 

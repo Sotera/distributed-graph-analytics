@@ -277,7 +277,7 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable,Verte
 	public HighBetweennessList getNewHighBetweennessList(int id, double value){
 		  int size = 1;
 		  try{
-				size = Integer.parseInt(getConf().get("betweenness.set.maxSize"));
+				size = Integer.parseInt(getConf().get(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE));
 			} catch (NumberFormatException e){
 				LOG.error("betweenness.set.maxSize must be set to a valid int.");
 				throw e;

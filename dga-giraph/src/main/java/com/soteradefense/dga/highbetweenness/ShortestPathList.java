@@ -126,7 +126,7 @@ public class ShortestPathList implements Writable{
 
 	
 	public void readFields(DataInput in) throws IOException {
-		distance = in.readLong();
+		setDistance(in.readLong());
 		int size = in.readInt();
 		this.predPathCountMap.clear();
 		for (int i = 0; i < size; i++){

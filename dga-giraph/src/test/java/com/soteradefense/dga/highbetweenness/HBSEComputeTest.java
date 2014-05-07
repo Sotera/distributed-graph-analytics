@@ -33,13 +33,13 @@ public class HBSEComputeTest {
         conf.setMasterComputeClass(HBSEMasterCompute.class);
         conf.setComputationClass(HBSEVertexComputation.class);
         conf.setVertexOutputFormatClass(InMemoryVertexOutputFormat.class);
-        conf.set("betweenness.output.dir", "tmp/output");
-        conf.set("betweenness.set.stability", "1");
-        conf.set("betweenness.set.maxSize", "10");
-        conf.set("betweenness.set.stability.counter", "3");
-        conf.set("pivot.batch.string", "1,2,3,4,5");
-        conf.set("pivot.batch.size", "5");
-        conf.set("vertex.count", "7");
+        conf.set(HBSEMasterCompute.BETWEENNESS_OUTPUT_DIR, "tmp/output");
+        conf.set(HBSEMasterCompute.BETWEENNESS_SET_STABILITY, "1");
+        conf.set(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE, "10");
+        conf.set(HBSEMasterCompute.BETWEENNESS_SET_STABILITY_COUNTER, "3");
+        conf.set(HBSEMasterCompute.PIVOT_BATCH_STRING, "1,2,3,4,5");
+        conf.set(HBSEMasterCompute.PIVOT_BATCH_SIZE, "5");
+        conf.set(HBSEMasterCompute.VERTEX_COUNT, "8");
         return conf;
     }
 
@@ -84,11 +84,12 @@ public class HBSEComputeTest {
     public void testTwoCriticalPointGraph() throws Exception {
         GiraphConfiguration conf = getConf();
         TestGraph<IntWritable, VertexData, IntWritable> input = getTwoCriticalPointGraph(conf);
+        conf.set(HBSEMasterCompute.VERTEX_COUNT, "16");
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
         InternalVertexRunner.run(conf, input);
         TestGraph<IntWritable, VertexData, IntWritable> output = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(16, output.getVertices().size());
-        assertEquals(output.getVertex(new IntWritable(1)).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new IntWritable(1)).getValue().getApproxBetweenness() > 0.0, true);
         assertEquals(output.getVertex(new IntWritable(9)).getValue().getApproxBetweenness() > 0.0, true);
         assertEquals(output.getVertex(new IntWritable(2)).getValue().getApproxBetweenness() == 0.0, true);
         assertEquals(output.getVertex(new IntWritable(3)).getValue().getApproxBetweenness() == 0.0, true);
