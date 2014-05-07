@@ -1,13 +1,13 @@
 package com.soteradefense.dga.highbetweenness;
 
+import org.apache.hadoop.io.Writable;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.apache.hadoop.io.Writable;
 
 
 /**
@@ -30,8 +30,7 @@ public class VertexData implements Writable{
 	// current approximated betweenness value 
 	// ( equals actual betweenness when / if all vertices are used as sources) 
 	private double approxBetweenness = 0.0;
-	
-	
+
 
 	/**
 	 * Add the new path to the list of shortest paths, if it is indeed a shortest path
@@ -87,12 +86,11 @@ public class VertexData implements Writable{
 			entry.getValue().write(out);
 		}
 		
-		out.writeLong(this.partialDepMap.size());
+		out.writeInt(this.partialDepMap.size());
 		for (Entry<Integer,PartialDependency> entry : partialDepMap.entrySet()){
 			out.writeInt(entry.getKey());
 			entry.getValue().write(out);
 		}
-		
 	}
 
 	public void readFields(DataInput in) throws IOException {
