@@ -43,71 +43,139 @@ import org.apache.hadoop.io.IntWritable;
  * Coordinates Global state for the SBVertex to calculate shortest paths, accumulates pair dependency information,
  * and monitor high betweenness set stability.
  * <p/>
- * Required configuration settings
+ * Required configuration settings:
  * <p/>
- * fs.defaultFS OR fs.default.name:  If not set in the environment you can set them as a custom arguments. typically this will not need to be set
- * betweenness.output.dir: Directory in HDFS used to write the high betweenness set.
- * betweenness.set.stability: Integer value, algorithm completes with the high betweenness set changes by less than this value, checked after each cycle.
- * betweenness.set.stability.counter: Integer value, number of times the stability threshold must be reached.
- * betweenness.set.maxSize: Size the result set desired.
- * pivot.batch.size: Number of pivots to use in each batch
- * pivot.batch.size.initial:  Number of pivots to use in the first bacth (defaults to pivot.batch.size)
- * vertex.count: The number of vertices to be loaded
- * betweenness.shortestpath.phases: Number of shortest path phases to run for every 1 dependency accumulation phase.
+ * * fs.defaultFS OR fs.default.name:  If not set in the environment you can set them as a custom arguments. typically this will not need to be set
+ * * betweenness.output.dir: Directory in HDFS used to write the high betweenness set.
+ * * betweenness.set.stability: Integer value, algorithm completes with the high betweenness set changes by less than this value, checked after each cycle.
+ * * betweenness.set.stability.counter: Integer value, number of times the stability threshold must be reached.
+ * * betweenness.set.maxSize: Size the result set desired.
+ * * pivot.batch.size: Number of pivots to use in each batch
+ * * pivot.batch.size.initial:  Number of pivots to use in the first bacth (defaults to pivot.batch.size)
+ * * vertex.count: The number of vertices to be loaded
+ * * betweenness.shortest.path.phases: Number of shortest path phases to run for every 1 dependency accumulation phase.
  * <p/>
  * WARNING:  id values for all vertices must be in 0,1,2,...N where N=vertex.count-1
  * <p/>
- * <p/>
  * For background information on the approximation method see:
- * "W. Chong, Efficent Extraction of High-Betweenness Vertices"
+ * * "W. Chong, Efficent Extraction of High-Betweenness Vertices"
  * <p/>
  * For background information on the method of accumulation of pair dependencies and shortest path data see:
- * "U. Brandes, A Faster Algorithm for Betweenness Centrality"
- *
- * @author Eric Kimbrel - Sotera Defense, eric.kimbrel@soteradefense.com
+ * * "U. Brandes, A Faster Algorithm for Betweenness Centrality"
  */
 public class HBSEMasterCompute extends DefaultMasterCompute {
 
     private static final Log LOG = LogFactory.getLog(HBSEMasterCompute.class);
 
-    // aggregator identifiers
+    /**
+     * Aggregator Identifier that gets the state of the computation.
+     */
     public static final String STATE_AGG = "com.sotera.graph.singbetweenness.STATE_AGG";
+    /**
+     * Aggregator Identifier for the global pivot points.
+     */
     public static final String PIVOT_AGG = "com.sotera.graph.singbetweenness.PIVOT_AGG";
+    /**
+     * Aggregator Identifier for the number of nodes changed in the highbetweenness list comparison.
+     */
     public static final String UPDATE_COUNT_AGG = "com.sotera.graph.singbetweenness.UPDATE_COUNT_AGG";
+    /**
+     * Aggregator Identifier for the saved highbetweenness set.
+     */
     public static final String HIGH_BC_SET_AGG = "com.sotera.graph.singbetweenness.HIGH_BC_SET_AGG";
+    /**
+     * Configuration Identifier for the directory to output the highbetweenness set.
+     */
     public static final String BETWEENNESS_OUTPUT_DIR = "betweenness.output.dir";
-    public static final String BETWEENNESS_SHORTESTPATH_PHASES = "betweenness.shortestpath.phases";
+    /**
+     * Configuration Identifier for the number of shortest path phases to run through.
+     */
+    public static final String BETWEENNESS_SHORTEST_PATH_PHASES = "betweenness.shortest.path.phases";
+    /**
+     * Configuration Identifier for the set stability cut off point (margin of error).
+     */
     public static final String BETWEENNESS_SET_STABILITY = "betweenness.set.stability";
+    /**
+     * Configuration Identifier for the set stability counter cut off point (margin of error).
+     */
     public static final String BETWEENNESS_SET_STABILITY_COUNTER = HBSEMasterCompute.BETWEENNESS_SET_STABILITY + ".counter";
+    /**
+     * Configuration Identifier for the maximum number of nodes in the betweenness set.
+     */
     public static final String BETWEENNESS_SET_MAX_SIZE = "betweenness.set.maxSize";
+    /**
+     * Configuration Identifier for the pivot point batch size.
+     */
     public static final String PIVOT_BATCH_SIZE = "pivot.batch.size";
+    /**
+     * Configuration Identifier for the initial pivot point batch size.
+     */
     public static final String PIVOT_BATCH_SIZE_INITIAL = HBSEMasterCompute.PIVOT_BATCH_SIZE + ".initial";
+    /**
+     * Configuration Identifier for the random seed value when choosing new pivot points.
+     */
     public static final String PIVOT_BATCH_RANDOM_SEED = "pivot.batch.random.seed";
+    /**
+     * Configuration Identifier for the number of vertices to perform the operation on.
+     */
     public static final String VERTEX_COUNT = "vertex.count";
+    /**
+     * Configuration Identifier for the starting pivot points (Comma Separated).
+     */
     public static final String PIVOT_BATCH_STRING = "pivot.batch.string";
+    /**
+     * Configuration Identifier for the default file system.
+     */
     public static final String FS_DEFAULT_FS = "fs.defaultFS";
+    /**
+     * Configuration Identifier for the default name.
+     */
     public static final String FS_DEFAULT_NAME = "fs.default.name";
+    /**
+     * This is the filename for the final highbetweenness set
+     */
     public static final String FINAL_SET_CSV = "final_set.csv";
+    /**
+     * The filename where the stats are written
+     */
     public static final String STATS_CSV = "stats.csv";
 
-    // number of pivots to use per batch
+    /**
+     * Stores the number of pivots to use per batch of nodes.
+     */
     private int batchSize;
+    /**
+     * Stores the number of pivots to use for the initial batch of nodes.
+     */
     private int initialBatchSize;
 
-    // number of shortest path phases per dependency accumulation phase.
+    /**
+     * Stores the number of shortest path phases to run through before completion.
+     */
     private int shortestPathPhases;
+    /**
+     * Stores the total number of shortest path phases completed at a certain period of computation.
+     */
     private int shortestPathPhasesCompleted;
 
-    // total number of vertices / highest vertex id value
+    /**
+     * Stores the total number of vertices to use in the period of computation.
+     */
     private int maxId;
 
-    // pivots being used as sources in the current phase
+    /**
+     * Stores the Id value of the current pivots being used for computation.
+     */
     Queue<Integer> currentPivots = new LinkedList<Integer>();
 
-    // pivots that have been used in past phases
+    /**
+     * Stores all previous pivots used in other periods of computation.
+     */
     Set<Integer> previousPivots = new HashSet<Integer>();
 
-    // current set of highest betweenness nodes
+    /**
+     * Stores the current set of highbetweenness nodes.
+     */
     Set<Integer> highBetweennessSet = new HashSet<Integer>();
 
     // limit on the high betweenness set size
@@ -123,11 +191,15 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     int stabilityCounter;
     int counter = 0;
 
-    // where to store the output (a location in hdfs)
+    /**
+     * Output directory in HDFS.
+     */
     String outputDir;
 
 
-    // Global states to coordinate computation
+    /**
+     * Global States that direct certain computation.
+     */
     public enum State {
         START,
         SHORTEST_PATH_START,
@@ -139,10 +211,19 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         FINISHED
     }
 
+    /**
+     * Variable that tracks the current state of computation.
+     */
     private State state = State.START;
 
+    /**
+     * The random variable for choosing new pivot points.
+     */
     private Random random;
 
+    /**
+     * Date variable to track the start and end of the entire computation.
+     */
     private Date start;
     private Date end;
 
@@ -171,11 +252,11 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
 
         this.shortestPathPhases = 1;
         this.shortestPathPhasesCompleted = 0;
-        String shortestPathPhasesStr = getConf().get(BETWEENNESS_SHORTESTPATH_PHASES);
+        String shortestPathPhasesStr = getConf().get(BETWEENNESS_SHORTEST_PATH_PHASES);
         try {
             if (shortestPathPhasesStr != null) shortestPathPhases = Integer.parseInt(shortestPathPhasesStr);
         } catch (NumberFormatException e) {
-            LOG.error(HBSEMasterCompute.BETWEENNESS_SHORTESTPATH_PHASES + " not set to valid int. default=1");
+            LOG.error(HBSEMasterCompute.BETWEENNESS_SHORTEST_PATH_PHASES + " not set to valid int. default=1");
         }
 
 
@@ -197,11 +278,11 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
             try {
                 stabilityCounter = Integer.parseInt(stabilityCounterStr);
             } catch (NumberFormatException e) {
-                LOG.error(HBSEMasterCompute.BETWEENNESS_SET_STABILITY + ".counter must be set to a valid int. default=" + stabilityCounter);
+                LOG.error(HBSEMasterCompute.BETWEENNESS_SET_STABILITY_COUNTER + " must be set to a valid int. default=" + stabilityCounter);
                 throw e;
             }
         }
-        LOG.info(HBSEMasterCompute.BETWEENNESS_SET_STABILITY + ".counter=" + stabilityCounter);
+        LOG.info(HBSEMasterCompute.BETWEENNESS_SET_STABILITY_COUNTER + "=" + stabilityCounter);
 
         maxHighBCSetSize = 1;
         try {
@@ -275,15 +356,16 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     /**
      * Coordinates the computation phases of SBVertex by monitoring for the completion of each state
      * and moving to the next state.
-     * -- selects pivots
-     * -- monitors for completion of shortest paths
-     * -- starts pair dependency phase
-     * -- monitors for completion of pair dependency
-     * -- checks high betweenness set stability
-     * -- if set is stable
-     * --     save set and exit
-     * -- else
-     * --     select new pivots and start new shortest path phase
+     *
+     *      * selects pivots
+     *      * monitors for completion of shortest paths
+     *      * starts pair dependency phase
+     *      * monitors for completion of pair dependency
+     *      * checks high betweenness set stability
+     *      * if set is stable
+     *          * save set and exit
+     *      * else
+     *          * select new pivots and start new shortest path phase
      */
     @Override
     public void compute() {

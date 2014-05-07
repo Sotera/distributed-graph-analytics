@@ -28,7 +28,7 @@ import java.io.IOException;
 /**
  * Leaf Compression is an analytic used to compress a graph; nodes on the periphery of the graph that do not show an
  * extensive network of connections from them will inform the nodes connected to them to remove them from the graph
- *
+ * <p/>
  * This cycle continues until all leaves have been pruned.
  */
 public class LeafCompressionComputation extends BasicComputation<Text, VIntWritable, VIntWritable, Text> {
@@ -58,6 +58,7 @@ public class LeafCompressionComputation extends BasicComputation<Text, VIntWrita
     /**
      * Inform each node we are connected to if we only have one edge so that we can be purged from the graph, or vote
      * to halt
+     *
      * @param vertex The current vertex being operated upon by the compute method
      */
     private void sendEdges(Vertex<Text, VIntWritable, VIntWritable> vertex) {

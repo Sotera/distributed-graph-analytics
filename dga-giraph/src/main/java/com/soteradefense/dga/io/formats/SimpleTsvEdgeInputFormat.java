@@ -28,33 +28,41 @@ import java.io.IOException;
 
 /**
  * SimpleTsvEdgeInputFormat allows us to specify an edge format of up to 3 columns; source, destination[, weight].
- *
+ * <p/>
  * Class does not provide any capacity for input data that does not conform to a 2 or 3 columns of character separated value data.
- *
+ * <p/>
  * If weight is not provided by the data, this class will allow you to override the default weight.  If no default weight
  * is specified, then the default weight defaults to a VIntWritable of 1.
- *
+ * <p/>
  * Override the field separator in the GiraphConfiguration provided to this class by Giraph.
- *
+ * <p/>
  * Configurable values and their default value setting:
- *      * simple.tsv.edge.delimiter = "\t"
- *      * simple.tsv.edge.weight.default = 1
- *
+ * * simple.tsv.edge.delimiter = "\t"
+ * * simple.tsv.edge.weight.default = 1
+ * <p/>
  * Set acceptable values for either of these in the configuration to change behavior.  simple.tsv.edge.weight.default must be
  * parseable by java.lang.Integer.parseInt().
  */
 public class SimpleTsvEdgeInputFormat extends TextEdgeInputFormat<Text, VIntWritable> {
 
-    /** Key we use in the GiraphConfiguration to denote our field delimiter */
+    /**
+     * Key we use in the GiraphConfiguration to denote our field delimiter
+     */
     public static final String LINE_TOKENIZE_VALUE = "simple.tsv.edge.delimiter";
 
-    /** Default value used if no field delimiter is specified via the GiraphConfiguration */
+    /**
+     * Default value used if no field delimiter is specified via the GiraphConfiguration
+     */
     public static final String LINE_TOKENIZE_VALUE_DEFAULT = "\t";
 
-    /** Key we use in the GiraphConfiguration to denote our default edge weight */
+    /**
+     * Key we use in the GiraphConfiguration to denote our default edge weight
+     */
     public static final String EDGE_WEIGHT_VALUE = "simple.tsv.edge.weight.default";
 
-    /* Edge weight used by default if not provided by data or overridden in GiraphConfiguration */
+    /**
+     * Edge weight used by default if not provided by data or overridden in GiraphConfiguration
+     */
     public static final String EDGE_WEIGHT_VALUE_DEFAULT = "1";
 
     @Override
@@ -82,7 +90,7 @@ public class SimpleTsvEdgeInputFormat extends TextEdgeInputFormat<Text, VIntWrit
             try {
                 defaultEdgeWeight = new VIntWritable(Integer.parseInt(edgeWeight));
             } catch (NumberFormatException e) {
-                throw new IOException("The default edge weight provided (configuration parameter: " + EDGE_WEIGHT_VALUE +", value: " + edgeWeight + ", could not be cast to integer.");
+                throw new IOException("The default edge weight provided (configuration parameter: " + EDGE_WEIGHT_VALUE + ", value: " + edgeWeight + ", could not be cast to integer.");
             }
 
         }
@@ -116,7 +124,7 @@ public class SimpleTsvEdgeInputFormat extends TextEdgeInputFormat<Text, VIntWrit
             String splitValues[] = value.split(delimiter);
             if (splitValues.length != 2 && splitValues.length != 3)
                 throw new IOException("Row of data, after tokenized based on delimiter [ " + delimiter + "], had " + splitValues.length + " tokens, but this format requires 2 or 3 values.  Data row was [" + value + "]");
-            if (splitValues.length == 2){
+            if (splitValues.length == 2) {
                 return defaultEdgeWeight;
             }
             try {

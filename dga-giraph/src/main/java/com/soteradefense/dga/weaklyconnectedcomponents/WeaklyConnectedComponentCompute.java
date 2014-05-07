@@ -17,13 +17,11 @@
 */
 package com.soteradefense.dga.weaklyconnectedcomponents;
 
-import org.apache.giraph.GiraphRunner;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.util.ToolRunner;
 
 import java.io.IOException;
 
@@ -56,12 +54,13 @@ public class WeaklyConnectedComponentCompute extends BasicComputation<Text, Text
     /**
      * Only called during the first superstep.
      * For Each Edge, find the one who has the greatest id and broadcast that to all neighbors.
-     * @param vertex
+     *
+     * @param vertex The current vertex being operated on.
      */
     private void broadcastGreatestNeighbor(Vertex<Text, Text, NullWritable> vertex) {
         String maxId = vertex.getId().toString();
         for (Edge<Text, NullWritable> edge : vertex.getEdges()) {
-            if (maxId.compareTo(edge.getTargetVertexId().toString()) < 0){
+            if (maxId.compareTo(edge.getTargetVertexId().toString()) < 0) {
                 maxId = edge.getTargetVertexId().toString();
             }
         }
@@ -70,14 +69,15 @@ public class WeaklyConnectedComponentCompute extends BasicComputation<Text, Text
 
     /**
      * Sends a message to all neighbors if the greatest value has changed.
-     * @param vertex The current vertex.
+     *
+     * @param vertex  The current vertex.
      * @param changed Has the greatest value changed?
-     * @param maxId The current id that has the greatest value.
+     * @param maxId   The current id that has the greatest value.
      */
     private void broadcastUpdates(Vertex<Text, Text, NullWritable> vertex, boolean changed, String maxId) {
         if (changed) {
             vertex.setValue(new Text(maxId));
-            sendMessageToAllEdges(vertex, new Text( vertex.getValue().toString() ));
+            sendMessageToAllEdges(vertex, new Text(vertex.getValue().toString()));
         }
         vertex.voteToHalt();
     }
