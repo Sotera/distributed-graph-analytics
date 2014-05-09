@@ -21,18 +21,24 @@ import org.apache.giraph.aggregators.BasicAggregator;
 
 /**
  * Aggregator to accumulate a list of the top N vertices, ranked by approximated betweenness value.
- *
- * @author Eric Kimbrel - Sotera Defense, eric.kimbrel@soteradefense.com
  */
 public class HighBCSetAggregator extends BasicAggregator<HighBetweennessList> {
 
 
+    /**
+     * Takes the old aggregated value and compares it to a new value wanting to be aggregated.
+     * @param value New Aggregated Value.
+     */
     public void aggregate(HighBetweennessList value) {
         if (value == null || value.getMaxSize() == -1) return;
         HighBetweennessList old = getAggregatedValue();
         old.aggregate(value);
     }
 
+    /**
+     * Creates an Initial HighBetweennessList
+     * @return A New HighBetweennessList.
+     */
     public HighBetweennessList createInitialValue() {
         return new HighBetweennessList();
     }

@@ -45,8 +45,6 @@ import java.util.Set;
  * <p/>
  * For background information on the method of accumulation of pair dependencies and shortest path data see:
  * "U. Brandes, A Faster Algorithm for Betweenness Centrality"
- *
- * @author Eric Kimbrel - Sotera Defense, eric.kimbrel@soteradefense.com
  */
 public class HBSEVertexComputation extends AbstractComputation<IntWritable, VertexData, IntWritable, PathData, PathData> {
 
@@ -136,7 +134,7 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
 
             }
             if (builder.length() > 1) builder.deleteCharAt(builder.length() - 1);
-            LOG.trace("ID: " + id + " Step: " + step + " State: " + state + " sent messages (pred,srouce):  " + builder.toString());
+            LOG.trace("ID: " + id + " Step: " + step + " State: " + state + " sent messages (pred,source):  " + builder.toString());
         }
 
 
@@ -218,7 +216,7 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
 
 
         // completed dependency accumulation. calculate current betweenness value and clear all other vertex data
-        // to prepare for next stage (which will be SHORTEST_PATH_START or the computation will halt, based on high betweeness
+        // to prepare for next stage (which will be SHORTEST_PATH_START or the computation will halt, based on high betweenness
         // set stability, as determined in the master compute class.
         if (State.PAIR_DEPENDENCY_COMPLETE == state) {
             double approxBetweenness = vertexValue.getApproxBetweenness();
@@ -250,7 +248,7 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
      * Read the global pivot batch:  the set of vertices that are to be used
      * as sources in this phase.
      *
-     * @return
+     * @return The current batch of pivot points.
      */
 
     private Set<Integer> getPivotBatch() {
@@ -269,9 +267,9 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
      * Get a new HighBetweennessList object, configured with the betweenness.set.maxSize option
      * from the job conf. If not set size will default to 1.
      *
-     * @param id
-     * @param value
-     * @return an empty HighBetweenessList object.
+     * @param id Vertex Id
+     * @param value Betweenness Value
+     * @return an empty HighBetweennessList object.
      */
     public HighBetweennessList getNewHighBetweennessList(int id, double value) {
         int size = 1;

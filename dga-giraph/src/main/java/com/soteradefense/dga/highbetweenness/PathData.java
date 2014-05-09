@@ -17,158 +17,225 @@
  */
 package com.soteradefense.dga.highbetweenness;
 
+import org.apache.hadoop.io.Writable;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-
-import org.apache.hadoop.io.Writable;
-
 
 
 /**
  * Message that can be passed between vertices.  Used for both shortest path computation and pair dependency
  * accumulation.  Some fields are only used in one of the two phases, or take on different meaning in the different phases.
- * 
+ * <p/>
  * For more information on this method of calculation betweenness centrality see
  * "U. Brandes, A Faster Algorithm for Betweenness Centrality"
- * 
- * @author Eric Kimbrel - Sotera Defense, eric.kimbrel@soteradefense.com
- *
  */
-public class PathData implements Writable{
+public class PathData implements Writable {
 
-	// distance of this path
-	private long distance;
-	
-	// source node originating this path
-	private int source;
-	
-	// the predecessor OR successor node (for shortest path OR pair dependency accumulation)
-	private int from;
-	
-	// the sources dependency on the successor
-	private double dependency;
-	
-	// number of shortest paths from source to the predecessor
-	private long numPaths;
-	
-	
-	/* Constructors */
-	
-	public PathData(){
-		distance = Long.MAX_VALUE;
-		source = -1;
-		from = -1;
-		dependency = -1;
-		numPaths = -1;
-	}
-	
-	
-	/**
-	 * Get a new PathData message for shortest path computation.
-	 * @param source
-	 * @param from
-	 * @param distance
-	 * @param numPaths
-	 * @return
-	 */
-	public static PathData getShortestPathMessage(int source, int from, long distance, long numPaths){
-		PathData data = new PathData();
-		data.setSource(source);
-		data.setFrom(from);
-		data.setDistance(distance);
-		data.setNumPaths(numPaths);
-		return data;
-	}
-	
-	
-	/**
-	 * Get a new PathData message for sending successor / predecessor information to neighbors
-	 * @param source
-	 * @return
-	 */
-	public static PathData getPingMessage(int source){
-		PathData data = new PathData();
-		data.setSource(source);
-		return data;
-	}
-	
-	/**
-	 * Get a new PathData message for accumulating pair dependency values
-	 * @param source
-	 * @param dependency
-	 * @param numPaths
-	 * @return
-	 */
-	public static PathData getDependencyMessage(int source,double dependency,long numPaths){
-		PathData data = new PathData();
-		data.setSource(source);
-		data.setDependency(dependency);
-		data.setNumPaths(numPaths);
-		return data;
-	}
-	
-	
-	
-	// I/O
-	
-	public void write(DataOutput out) throws IOException {
-		out.writeInt(source);
-		out.writeInt(from);
-		out.writeLong(distance);
-		out.writeLong(numPaths);
-		out.writeDouble(dependency);
-	}
-	
-	
-	public void readFields(DataInput in) throws IOException {
-		source = in.readInt();
-		from = in.readInt();
-		distance = in.readLong();
-		numPaths = in.readLong();
-		dependency = in.readDouble();
-	}
-	
+    /**
+     * The Distance of the path.
+     */
+    private long distance;
+
+    /**
+     * The source node of the path.
+     */
+    private int source;
+
+    /**
+     * the predecessor OR successor node (for shortest path OR pair dependency accumulation).
+     */
+    private int from;
+
+    /**
+     * The sources dependency on the successor.
+     */
+    private double dependency;
+
+    /**
+     * The number of shortest paths from source to the predecessor.
+     */
+    private long numPaths;
+
+
+    /**
+     * The Default Constructor for PathData
+     * * Sets Distance to the Max long value.
+     * * Sets source to -1.
+     * * Sets from to -1.
+     * * Sets dependency to -1.
+     * * Sets numPaths to -1.
+     */
+    public PathData() {
+        distance = Long.MAX_VALUE;
+        source = -1;
+        from = -1;
+        dependency = -1;
+        numPaths = -1;
+    }
+
+
+    /**
+     * Get a new PathData message for shortest path computation.
+     *
+     * @param source   The source Id
+     * @param from     The predecessor Id.
+     * @param distance The distance from the source to the predecessor.
+     * @param numPaths The number of paths from source to the predecessor.
+     * @return a New PathData Object
+     */
+    public static PathData getShortestPathMessage(int source, int from, long distance, long numPaths) {
+        PathData data = new PathData();
+        data.setSource(source);
+        data.setFrom(from);
+        data.setDistance(distance);
+        data.setNumPaths(numPaths);
+        return data;
+    }
+
+
+    /**
+     * Get a new PathData message for sending successor / predecessor information to neighbors
+     *
+     * @param source The source that the ping came from.
+     * @return A new PathData message for Ping purposes.
+     */
+    public static PathData getPingMessage(int source) {
+        PathData data = new PathData();
+        data.setSource(source);
+        return data;
+    }
+
+    /**
+     * Get a new PathData message for accumulating pair dependency values
+     *
+     * @param source     The source that the ping came from.
+     * @param dependency The pair dependency value.
+     * @param numPaths   The number of shortest paths.
+     * @return A new PathData for a Dependency Message.
+     */
+    public static PathData getDependencyMessage(int source, double dependency, long numPaths) {
+        PathData data = new PathData();
+        data.setSource(source);
+        data.setDependency(dependency);
+        data.setNumPaths(numPaths);
+        return data;
+    }
+
+
+    // I/O
+
+    public void write(DataOutput out) throws IOException {
+        out.writeInt(source);
+        out.writeInt(from);
+        out.writeLong(distance);
+        out.writeLong(numPaths);
+        out.writeDouble(dependency);
+    }
+
+
+    public void readFields(DataInput in) throws IOException {
+        source = in.readInt();
+        from = in.readInt();
+        distance = in.readLong();
+        numPaths = in.readLong();
+        dependency = in.readDouble();
+    }
+
 	
 	
 	/* Getters and Setters */
-	
-	public long getDistance() {
-		return distance;
-	}
-	public void setDistance(long distance) {
-		this.distance = distance;
-	}
-	public int getSource() {
-		return source;
-	}
-	public void setSource(int source) {
-		this.source = source;
-	}
-	public int getFrom() {
-		return from;
-	}
-	public void setFrom(int from) {
-		this.from = from;
-	}
-	public double getDependency() {
-		return dependency;
-	}
-	public void setDependency(double dependency) {
-		this.dependency = dependency;
-	}
-	public long getNumPaths() {
-		return numPaths;
-	}
-	public void setNumPaths(long numPaths) {
-		this.numPaths = numPaths;
-	}
-	
-	
-	
+
+    /**
+     * Gets the distance from source to a predecessor.
+     *
+     * @return The distance value.
+     */
+    public long getDistance() {
+        return distance;
+    }
+
+    /**
+     * Sets the distance from a source to a predecessor.
+     *
+     * @param distance Distance value to set it to.
+     */
+    public void setDistance(long distance) {
+        this.distance = distance;
+    }
+
+    /**
+     * Gets the source value.
+     *
+     * @return The source value.
+     */
+    public int getSource() {
+        return source;
+    }
+
+    /**
+     * Sets the source value.
+     *
+     * @param source The value to set the source to.
+     */
+    public void setSource(int source) {
+        this.source = source;
+    }
+
+    /**
+     * Gets the predecessor/successor value.
+     *
+     * @return The value of from.
+     */
+    public int getFrom() {
+        return from;
+    }
+
+    /**
+     * Sets the value of from.
+     *
+     * @param from The value to set from to.
+     */
+    public void setFrom(int from) {
+        this.from = from;
+    }
+
+    /**
+     * Gets the dependency value.
+     *
+     * @return The value in dependency.
+     */
+    public double getDependency() {
+        return dependency;
+    }
+
+    /**
+     * Sets the dependency value.
+     *
+     * @param dependency The value to set dependency to.
+     */
+    public void setDependency(double dependency) {
+        this.dependency = dependency;
+    }
+
+    /**
+     * Gets the number of shortest paths.
+     *
+     * @return The value in numPaths.
+     */
+    public long getNumPaths() {
+        return numPaths;
+    }
+
+    /**
+     * Set the number of paths.
+     *
+     * @param numPaths The value to set numPaths to.
+     */
+    public void setNumPaths(long numPaths) {
+        this.numPaths = numPaths;
+    }
 
 
-	
-	
-	
 }

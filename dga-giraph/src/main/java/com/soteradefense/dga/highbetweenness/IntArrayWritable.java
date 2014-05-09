@@ -20,11 +20,24 @@ package com.soteradefense.dga.highbetweenness;
 import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.IntWritable;
 
+/**
+ * A Simple IntArrayWritable.
+ */
+public class IntArrayWritable extends ArrayWritable {
+    /**
+     * The Default Constructor for creating a new IntArrayWritable.
+     */
+    public IntArrayWritable() {
+        super(IntWritable.class);
+    }
 
-public class IntArrayWritable extends ArrayWritable { 
-	
-	public IntArrayWritable() { super(IntWritable.class); } 
-	
-	public IntArrayWritable(IntWritable[] values) { super(IntWritable.class,values); }
+    /**
+     * Constructor to create a new IntArrayWritable with an array of IntWritable.
+     *
+     * @param values An array of IntWritable
+     */
+    public IntArrayWritable(IntWritable[] values) {
+        super(IntWritable.class, values);
+    }
 
 }

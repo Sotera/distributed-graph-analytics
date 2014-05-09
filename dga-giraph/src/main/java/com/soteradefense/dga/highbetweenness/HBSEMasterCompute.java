@@ -56,6 +56,7 @@ import java.util.*;
  * <p/>
  * For background information on the method of accumulation of pair dependencies and shortest path data see:
  * * "U. Brandes, A Faster Algorithm for Betweenness Centrality"
+ *
  */
 public class HBSEMasterCompute extends DefaultMasterCompute {
 
@@ -205,13 +206,16 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      * Global States that direct certain computation.
      *
      *      * START: Chooses the initial batch size.
-     *      * SHORTEST_PATH_START:
-     *      * SHORTEST_PATH_RUN:
-     *      * PAIR_DEPENDENCY_PING_PREDECESSOR:
-     *      * PAIR_DEPENDENCY_FIND_SUCCESSORS:
-     *      * PAIR_DEPENDENCY_RUN:
-     *      * PAIR_DEPENDENCY_COMPLETE:
-     *      * FINISHED:
+     *      * SHORTEST_PATH_START: Starts to calculate the shortest paths from the pivots to every other node.
+     *      * SHORTEST_PATH_RUN: Instructs the nodes to actually find the shortest paths.
+     *      * PAIR_DEPENDENCY_PING_PREDECESSOR:  Sends a message to all Predecessors,
+     *                                           letting them know they are dependent on them being in the graph
+     *      * PAIR_DEPENDENCY_FIND_SUCCESSORS:  Process all the messages you receive from nodes that are ahead of the current
+     *                                          vertex. For any source that has no successors, it will begin to pair itself with
+     *                                          nodes that it depends on.
+     *      * PAIR_DEPENDENCY_RUN: Will continue to accumulate all dependencies until all dependencies are accounted for.
+     *      * PAIR_DEPENDENCY_COMPLETE:  Go through the nodes that are dependencies and calculate the approx. betweenness value.
+     *      * FINISHED:  Computation is Halted.
      */
     public enum State {
         START,
@@ -506,7 +510,9 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         setGlobalPivots(currentPivots);
     }
 
-
+    /**
+     * Writes the various statistics when computation finishes.
+     */
     private void writeStats() {
 
         int pivotsSelected = this.currentPivots.size() + this.previousPivots.size();
@@ -540,7 +546,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     /**
      * Set pivots globally in the pivot aggregator
      *
-     * @param pivots
+     * @param pivots A collection of selected pivots.
      */
     private void setGlobalPivots(Collection<Integer> pivots) {
         IntWritable[] batch = new IntWritable[pivots.size()];
@@ -555,7 +561,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     /**
      * Write the high betweenness set to a file in hdfs
      *
-     * @param set
+     * @param set A set of vertices that contain the highest highbetweenness value.
      */
     private void writeHighBetweennessSet(Set<Integer> set) {
         String defaultFS = getDefaultFS(getConf());
@@ -579,7 +585,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     /**
      * Set the value of the state aggregator
      *
-     * @param state
+     * @param state The current state of computation.
      */
     private void setGlobalState(State state) {
         this.setAggregatedValue(STATE_AGG, new IntWritable(state.ordinal()));
@@ -588,8 +594,9 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
 
     /**
      * Find the number of changes in the high betweenness set.
+     * Compares the previous run to the newest computation.
      *
-     * @param incomingSet
+     * @param incomingSet A new set of high betweenness calculations
      * @return the number of changes in the high betweenness set.
      */
     private int compareHighBetweennessSet(Set<Integer> incomingSet) {
@@ -606,8 +613,8 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     /**
      * Get the default file system. used to create a valid hdfs path
      *
-     * @param conf
-     * @return
+     * @param conf Configuration for the current job.
+     * @return the default hdfs file system.
      */
     private String getDefaultFS(Configuration conf) {
         return (conf.get(FS_DEFAULT_FS) != null ? conf.get(FS_DEFAULT_FS) : conf.get(FS_DEFAULT_NAME));

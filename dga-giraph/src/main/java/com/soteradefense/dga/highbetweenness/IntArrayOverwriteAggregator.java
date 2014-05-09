@@ -22,8 +22,6 @@ import org.apache.hadoop.io.IntWritable;
 
 /**
  * Stores a single IntArrayWritable for global broadcast / communication.
- *
- * @author Eric Kimbrel - Sotera Defense, eric.kimbrel@soteradefense.com
  */
 public class IntArrayOverwriteAggregator extends BasicAggregator<IntArrayWritable> {
 

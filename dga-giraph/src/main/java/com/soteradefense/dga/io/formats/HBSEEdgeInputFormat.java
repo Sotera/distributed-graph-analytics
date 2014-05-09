@@ -44,8 +44,6 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
  * src,target (if no weight is specified a weight of 1 is assumed.
  * 
  * 
- * 
- * @author Eric Kimbrel - Sotera Defense, eric.kimbrel@soteradefense.com
  *
  */
 public class HBSEEdgeInputFormat extends TextEdgeInputFormat<IntWritable,IntWritable>{
@@ -59,8 +57,10 @@ public class HBSEEdgeInputFormat extends TextEdgeInputFormat<IntWritable,IntWrit
 		EdgeReader<IntWritable,IntWritable> reader = (useDuplicator) ? new ReverseEdgeDuplicator<IntWritable, IntWritable>(new SBEdgeReader()) : new SBEdgeReader();
 		return reader;
 	}
-	
-	
+
+    /**
+     * A SimpleEdge for encapsulating data.
+     */
 	class SimpleEdge{
 		int src;
 		int target;
@@ -72,8 +72,10 @@ public class HBSEEdgeInputFormat extends TextEdgeInputFormat<IntWritable,IntWrit
 			weight = (tokens.length > 2) ? Integer.parseInt(tokens[2]) : 1;
 		}
 	}
-	
-	  
+
+    /**
+     * An EdgeReader that uses SimpleEdge to process each line.
+     */
 	public class SBEdgeReader extends TextEdgeReaderFromEachLineProcessed<SimpleEdge>{
 
 		@Override

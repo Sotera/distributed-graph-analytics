@@ -17,6 +17,8 @@
  */
 package com.soteradefense.dga.highbetweenness;
 
+import org.apache.hadoop.io.Writable;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -25,14 +27,10 @@ import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-import org.apache.hadoop.io.Writable;
-
 
 /**
  * Maintains a list of the top N items(an item is defined as an int id, and double value), ranked by a double value.
  * Designed for use with the giraph Aggregator pattern.
- *
- * @author Eric Kimbrel - Sotera Defense, eric.kimbrel@soteradefense.com
  */
 public class HighBetweennessList implements Writable {
 
@@ -40,9 +38,21 @@ public class HighBetweennessList implements Writable {
      * Container class to store an id and value
      */
     class BcTuple {
+        /**
+         * Vertex Id
+         */
         int id;
+        /**
+         * Approx. Betweenness.
+         */
         double value;
 
+        /**
+         * Constructor for a New BcTuple
+         *
+         * @param id    Vertex Id
+         * @param value Betweenness Value
+         */
         public BcTuple(int id, double value) {
             this.id = id;
             this.value = value;
@@ -61,27 +71,44 @@ public class HighBetweennessList implements Writable {
     };
 
 
-    // Max number of BcTuples to keep
+    /**
+     * The maximum number of tuples to keep.
+     */
     private int maxSize;
 
+    /**
+     * A PriorityQueue of BcTuple's.
+     */
     private PriorityQueue<BcTuple> highBetweennessQueue;
 
 
     // CONSTRUCTORS
 
+    /**
+     * Creates a new HighBetweennessList with Max size 1.
+     */
     public HighBetweennessList() {
         maxSize = 1;
         highBetweennessQueue = new PriorityQueue<BcTuple>(1, comparator);
     }
 
-
+    /**
+     * Creates a new HighBetweennessList with a Custom MaxSize
+     *
+     * @param maxSize The maximum size of the priority queue.
+     */
     public HighBetweennessList(int maxSize) {
         this();
         this.maxSize = maxSize;
         highBetweennessQueue = new PriorityQueue<BcTuple>(maxSize, comparator);
     }
 
-
+    /**
+     * Creates a new HighBetweennessList with maxSize 1 and Adds a Value.
+     *
+     * @param id    Vertex Id
+     * @param value Betweenness Value
+     */
     public HighBetweennessList(int id, double value) {
         this();
         maxSize = 1;
@@ -90,6 +117,13 @@ public class HighBetweennessList implements Writable {
 
     }
 
+    /**
+     * Creates a new HighBetweennessList with a custom size and initial value.
+     *
+     * @param maxSize The maximum size of the priority queue.
+     * @param id      Vertex Id
+     * @param value   Betweenness Value
+     */
     public HighBetweennessList(int maxSize, int id, double value) {
         this();
         this.maxSize = maxSize;
@@ -102,7 +136,7 @@ public class HighBetweennessList implements Writable {
     /**
      * Add items from other to this.  Keeping only the top N (maxSize) items.
      *
-     * @param other
+     * @param other Another Highbetweenness set.
      */
     public void aggregate(HighBetweennessList other) {
         if (other.maxSize > maxSize) {
