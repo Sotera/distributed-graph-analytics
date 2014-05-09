@@ -17,26 +17,20 @@
  */
 package com.soteradefense.dga.highbetweenness;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Random;
-import java.util.Set;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.giraph.aggregators.IntOverwriteAggregator;
 import org.apache.giraph.aggregators.IntSumAggregator;
+import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.*;
 
 
 /**
@@ -209,6 +203,15 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
 
     /**
      * Global States that direct certain computation.
+     *
+     *      * START: Chooses the initial batch size.
+     *      * SHORTEST_PATH_START:
+     *      * SHORTEST_PATH_RUN:
+     *      * PAIR_DEPENDENCY_PING_PREDECESSOR:
+     *      * PAIR_DEPENDENCY_FIND_SUCCESSORS:
+     *      * PAIR_DEPENDENCY_RUN:
+     *      * PAIR_DEPENDENCY_COMPLETE:
+     *      * FINISHED:
      */
     public enum State {
         START,
@@ -242,6 +245,9 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
 
     /**
      * Read options from configuration file and set up aggregators (global communication)
+     *
+     * @throws InstantiationException if it is unable to register an aggregator with a specific class.
+     * @throws IllegalAccessException if it is unable to access the class passed in as an aggregator.
      */
     @Override
     public void initialize() throws InstantiationException, IllegalAccessException {
@@ -393,7 +399,6 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
             state = State.SHORTEST_PATH_START;
             setGlobalState(state);
             LOG.info("Superstep: " + step + " Switched to State: " + state);
-            return;
         } else if (State.SHORTEST_PATH_START == state) {
             int updateCount = ((IntWritable) this.getAggregatedValue(UPDATE_COUNT_AGG)).get();
             LOG.info("Superstep: " + step + " Paths updated: " + updateCount);
@@ -471,7 +476,6 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
             LOG.error("INVALID STATE: " + state);
             throw new IllegalStateException("Invalid State" + state);
         }
-
     }
 
 
