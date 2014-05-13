@@ -35,9 +35,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-public class HDSEEdgeInputFormatTest extends HBSEEdgeInputFormat {
+public class SimpleEdgeInputFormatTest extends SimpleEdgeInputFormat {
     private RecordReader<LongWritable,Text> rr;
-    private ImmutableClassesGiraphConfiguration<Text, Text, VIntWritable> conf;
+    private ImmutableClassesGiraphConfiguration<Text, Text, Text> conf;
     private TaskAttemptContext tac;
 
     @Before
@@ -45,13 +45,13 @@ public class HDSEEdgeInputFormatTest extends HBSEEdgeInputFormat {
         rr = mock(RecordReader.class);
         GiraphConfiguration giraphConf = new GiraphConfiguration();
         giraphConf.setComputationClass(BasicComputation.class);
-        conf = new ImmutableClassesGiraphConfiguration<Text, Text, VIntWritable>(giraphConf);
+        conf = new ImmutableClassesGiraphConfiguration<Text, Text, Text>(giraphConf);
         tac = mock(TaskAttemptContext.class);
         when(tac.getConfiguration()).thenReturn(conf);
     }
 
-    public EdgeReader<IntWritable, IntWritable> createEdgeReader(final RecordReader<LongWritable,Text> rr) throws IOException {
-        return new SBEdgeReader(){
+    public EdgeReader<Text, Text> createEdgeReader(final RecordReader<LongWritable,Text> rr) throws IOException {
+        return new SimpleEdgeReader(){
             @Override
             protected RecordReader<LongWritable, Text> createLineRecordReader(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
                 return rr;
@@ -66,9 +66,9 @@ public class HDSEEdgeInputFormatTest extends HBSEEdgeInputFormat {
         EdgeReader ter = createEdgeReader(rr);
         ter.setConf(conf);
         ter.initialize(null, tac);
-        assertEquals(ter.getCurrentSourceId(), new IntWritable(1));
-        assertEquals(ter.getCurrentEdge().getTargetVertexId(), new IntWritable(2));
-        assertEquals(ter.getCurrentEdge().getValue(), new IntWritable(1));
+        assertEquals(ter.getCurrentSourceId(), new Text("1"));
+        assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text("2"));
+        assertEquals(ter.getCurrentEdge().getValue(), new Text("1"));
 
     }
 
@@ -79,9 +79,9 @@ public class HDSEEdgeInputFormatTest extends HBSEEdgeInputFormat {
         EdgeReader ter = createEdgeReader(rr);
         ter.setConf(conf);
         ter.initialize(null, tac);
-        assertEquals(ter.getCurrentSourceId(), new IntWritable(1));
-        assertEquals(ter.getCurrentEdge().getTargetVertexId(), new IntWritable(2));
-        assertEquals(ter.getCurrentEdge().getValue(), new IntWritable(10));
+        assertEquals(ter.getCurrentSourceId(), new Text("1"));
+        assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text("2"));
+        assertEquals(ter.getCurrentEdge().getValue(), new Text("10"));
 
     }
 }

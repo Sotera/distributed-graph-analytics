@@ -26,6 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -38,25 +39,25 @@ import java.util.*;
  * and monitor high betweenness set stability.
  * <p/>
  * Required configuration settings:
- * <p/>
- * * fs.defaultFS OR fs.default.name:  If not set in the environment you can set them as a custom arguments. typically this will not need to be set
- * * betweenness.output.dir: Directory in HDFS used to write the high betweenness set.
- * * betweenness.set.stability: Integer value, algorithm completes with the high betweenness set changes by less than this value, checked after each cycle.
- * * betweenness.set.stability.counter: Integer value, number of times the stability threshold must be reached.
- * * betweenness.set.maxSize: Size the result set desired.
- * * pivot.batch.size: Number of pivots to use in each batch
- * * pivot.batch.size.initial:  Number of pivots to use in the first bacth (defaults to pivot.batch.size)
- * * vertex.count: The number of vertices to be loaded
- * * betweenness.shortest.path.phases: Number of shortest path phases to run for every 1 dependency accumulation phase.
+ * <ul>
+ * <li>fs.defaultFS OR fs.default.name:  If not set in the environment you can set them as a custom arguments. typically this will not need to be set. </li>
+ * <li>betweenness.output.dir: Directory in HDFS used to write the high betweenness set.</li>
+ * <li>betweenness.set.stability: Integer value, algorithm completes with the high betweenness set changes by less than this value, checked after each cycle.</li>
+ * <li>betweenness.set.stability.counter: Integer value, number of times the stability threshold must be reached.</li>
+ * <li>betweenness.set.maxSize: Size the result set desired.</li>
+ * <li>pivot.batch.size: Number of pivots to use in each batch</li>
+ * <li>pivot.batch.size.initial:  Number of pivots to use in the first batch (defaults to pivot.batch.size)</li>
+ * <li>vertex.count: The number of vertices to be loaded</li>
+ * <li>betweenness.shortest.path.phases: Number of shortest path phases to run for every 1 dependency accumulation phase.</li>
+ * </ul>
  * <p/>
  * WARNING:  id values for all vertices must be in 0,1,2,...N where N=vertex.count-1
  * <p/>
  * For background information on the approximation method see:
- * * "W. Chong, Efficent Extraction of High-Betweenness Vertices"
+ * <a href="http://www.google.com/url?url=http://scholar.google.com/scholar_url%3Fhl%3Den%26q%3Dhttp://www.researchgate.net/publication/221273491_Efficient_Extraction_of_High-Betweenness_Vertices/file/3deec52a5dd8a6faa1.pdf%26sa%3DX%26scisig%3DAAGBfm1Xl41dnryyDhAGnt9AYOL6iHLoOg%26oi%3Dscholarr&rct=j&q=&esrc=s&sa=X&ei=j15yU7mwGMKdyATX7ID4BA&ved=0CC0QgAMoADAA&usg=AFQjCNH-dTuG7bYZk4__IQGwGvFrnQ9mGQ&cad=rja">"W. Chong, Efficent Extraction of High-Betweenness Vertices"</a>
  * <p/>
  * For background information on the method of accumulation of pair dependencies and shortest path data see:
- * * "U. Brandes, A Faster Algorithm for Betweenness Centrality"
- *
+ * <a href="http://www.google.com/url?url=http://scholar.google.com/scholar_url%3Fhl%3Den%26q%3Dhttp://kops.ub.uni-konstanz.de/bitstream/handle/urn:nbn:de:bsz:352-opus-71888/algorithm.pdf%253Fsequence%253D1%26sa%3DX%26scisig%3DAAGBfm2tszb3JWsE0Mp8E5os2p-udyVKtw%26oi%3Dscholarr&rct=j&q=&esrc=s&sa=X&ei=4l5yU7CuOsOPyAS-7YLoBw&ved=0CCgQgAMoADAA&usg=AFQjCNGKQ_j2h7QQSQncFUGgkpKO4Uo3Yw&cad=rja">"U. Brandes, A Faster Algorithm for Betweenness Centrality"</a>
  */
 public class HBSEMasterCompute extends DefaultMasterCompute {
 
@@ -93,7 +94,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     /**
      * Configuration Identifier for the set stability counter cut off point (margin of error).
      */
-    public static final String BETWEENNESS_SET_STABILITY_COUNTER = HBSEMasterCompute.BETWEENNESS_SET_STABILITY + ".counter";
+    public static final String BETWEENNESS_SET_STABILITY_COUNTER = BETWEENNESS_SET_STABILITY + ".counter";
     /**
      * Configuration Identifier for the maximum number of nodes in the betweenness set.
      */
@@ -105,7 +106,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     /**
      * Configuration Identifier for the initial pivot point batch size.
      */
-    public static final String PIVOT_BATCH_SIZE_INITIAL = HBSEMasterCompute.PIVOT_BATCH_SIZE + ".initial";
+    public static final String PIVOT_BATCH_SIZE_INITIAL = PIVOT_BATCH_SIZE + ".initial";
     /**
      * Configuration Identifier for the random seed value when choosing new pivot points.
      */
@@ -134,6 +135,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      * The filename where the stats are written
      */
     public static final String STATS_CSV = "stats.csv";
+    public static final String PIVOT_BATCH_DELIMITER = ",";
 
     /**
      * Stores the number of pivots to use per batch of nodes.
@@ -161,72 +163,46 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     /**
      * Stores the Id value of the current pivots being used for computation.
      */
-    Queue<Integer> currentPivots = new LinkedList<Integer>();
+    private Queue<Integer> currentPivots = new LinkedList<Integer>();
 
     /**
      * Stores all previous pivots used in other periods of computation.
      */
-    Set<Integer> previousPivots = new HashSet<Integer>();
+    private Set<Integer> previousPivots = new HashSet<Integer>();
 
     /**
      * Stores the current set of highbetweenness nodes.
      */
-    Set<Integer> highBetweennessSet = new HashSet<Integer>();
+    private Set<String> highBetweennessSet = new HashSet<String>();
 
     /**
      * Stores the max highbetweenness set size.
      */
-    int maxHighBCSetSize;
+    private int maxHighBCSetSize;
 
     /**
      * Current cycle: a cycle is defined here as a shortest path phase + a pair dependency phase
      */
-    int cycle = 1;
+    private int cycle = 1;
 
     /**
      * Stores the stability cut off value after a full cycle.
      */
-    int stabilityCutoff;
+    private int stabilityCutoff;
     /**
      * Stores the number of times the stability counter must be met before exiting.
      */
-    int stabilityCounter;
+    private int stabilityCounter;
     /**
      * Stores the running count of the number of times the stability counter was met.
      */
-    int stabilityRunningCounter = 0;
+    private int stabilityRunningCounter = 0;
 
     /**
      * Output directory in HDFS.
      */
-    String outputDir;
+    private String outputDir;
 
-
-    /**
-     * Global States that direct certain computation.
-     *
-     *      * START: Chooses the initial batch size.
-     *      * SHORTEST_PATH_START: Starts to calculate the shortest paths from the pivots to every other node.
-     *      * SHORTEST_PATH_RUN: Instructs the nodes to actually find the shortest paths.
-     *      * PAIR_DEPENDENCY_PING_PREDECESSOR:  Sends a message to all Predecessors,
-     *                                           letting them know they are dependent on them being in the graph
-     *      * PAIR_DEPENDENCY_FIND_SUCCESSORS:  Process all the messages you receive from nodes that are ahead of the current
-     *                                          vertex. For any source that has no successors, it will begin to pair itself with
-     *                                          nodes that it depends on.
-     *      * PAIR_DEPENDENCY_RUN: Will continue to accumulate all dependencies until all dependencies are accounted for.
-     *      * PAIR_DEPENDENCY_COMPLETE:  Go through the nodes that are dependencies and calculate the approx. betweenness value.
-     *      * FINISHED:  Computation is Halted.
-     */
-    public enum State {
-        START,
-        SHORTEST_PATH_START,
-        SHORTEST_PATH_RUN,
-        PAIR_DEPENDENCY_PING_PREDECESSOR,
-        PAIR_DEPENDENCY_FIND_SUCCESSORS,
-        PAIR_DEPENDENCY_RUN,
-        PAIR_DEPENDENCY_COMPLETE,
-        FINISHED
-    }
 
     /**
      * Variable that tracks the current state of computation.
@@ -258,10 +234,9 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         start = new Date();
         state = State.START;
         this.registerPersistentAggregator(STATE_AGG, IntOverwriteAggregator.class);
-        this.registerPersistentAggregator(PIVOT_AGG, IntArrayOverwriteAggregator.class);
+        this.registerPersistentAggregator(PIVOT_AGG, TextArrayOverwriteAggregator.class);
         this.registerAggregator(UPDATE_COUNT_AGG, IntSumAggregator.class);
         this.registerAggregator(HIGH_BC_SET_AGG, HighBCSetAggregator.class);
-
 
         String defaultFS = this.getDefaultFS(this.getConf());
         if (defaultFS == null) {
@@ -273,218 +248,198 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
             throw new IllegalArgumentException(BETWEENNESS_OUTPUT_DIR + " must be set to a valid directory in HDFS");
         }
 
-        this.shortestPathPhases = 1;
+        shortestPathPhases = getOptionalHBSEConfiguration(BETWEENNESS_SHORTEST_PATH_PHASES, 1);
         this.shortestPathPhasesCompleted = 0;
-        String shortestPathPhasesStr = getConf().get(BETWEENNESS_SHORTEST_PATH_PHASES);
-        try {
-            if (shortestPathPhasesStr != null) shortestPathPhases = Integer.parseInt(shortestPathPhasesStr);
-        } catch (NumberFormatException e) {
-            LOG.error(HBSEMasterCompute.BETWEENNESS_SHORTEST_PATH_PHASES + " not set to valid int. default=1");
-        }
 
-
-        stabilityCutoff = 0;
-        String stabilityCutoffStr = getConf().get(BETWEENNESS_SET_STABILITY);
-        if (null != stabilityCutoffStr) {
-            try {
-                stabilityCutoff = Integer.parseInt(stabilityCutoffStr);
-            } catch (NumberFormatException e) {
-                LOG.error(HBSEMasterCompute.BETWEENNESS_SET_STABILITY + " must be set to a valid int. default=" + stabilityCutoff);
-                throw e;
-            }
-        }
+        stabilityCutoff = getOptionalHBSEConfiguration(BETWEENNESS_SET_STABILITY, 0);
         LOG.info(BETWEENNESS_SET_STABILITY + "=" + stabilityCutoff);
 
-        stabilityCounter = 3;
-        String stabilityCounterStr = getConf().get(BETWEENNESS_SET_STABILITY_COUNTER);
-        if (null != stabilityCutoffStr) {
-            try {
-                stabilityCounter = Integer.parseInt(stabilityCounterStr);
-            } catch (NumberFormatException e) {
-                LOG.error(HBSEMasterCompute.BETWEENNESS_SET_STABILITY_COUNTER + " must be set to a valid int. default=" + stabilityCounter);
-                throw e;
-            }
-        }
+        stabilityCutoff = getOptionalHBSEConfiguration(BETWEENNESS_SET_STABILITY_COUNTER, 3);
         LOG.info(HBSEMasterCompute.BETWEENNESS_SET_STABILITY_COUNTER + "=" + stabilityCounter);
 
-        maxHighBCSetSize = 1;
-        try {
-            maxHighBCSetSize = Integer.parseInt(getConf().get(BETWEENNESS_SET_MAX_SIZE));
-        } catch (NumberFormatException e) {
-            LOG.error(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE + " must be set to a valid int.");
-            throw e;
-        }
+        maxHighBCSetSize = getRequiredHBSEConfiguration(BETWEENNESS_SET_MAX_SIZE);
         LOG.info(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE + "=" + maxHighBCSetSize);
 
 
         // manually set first pivot batch if argument is present
         try {
             String pivotBatchStr = this.getConf().get(PIVOT_BATCH_STRING);
-            if (null != pivotBatchStr && pivotBatchStr.length() > 0) {
-                String[] pivotBatchArray = pivotBatchStr.split(",");
+            if (pivotBatchStr != null && pivotBatchStr.length() > 0) {
+                String[] pivotBatchArray = pivotBatchStr.split(PIVOT_BATCH_DELIMITER);
                 for (String pivotStr : pivotBatchArray) {
-                    int pivot = Integer.parseInt(pivotStr);
-                    currentPivots.add(pivot);
-                    LOG.info("Manually added pivot: " + pivot);
+                    currentPivots.add(pivotStr);
+                    LOG.info("Manually added pivot: " + pivotStr);
                 }
             }
 
         } catch (NumberFormatException e) {
-            LOG.error("Optional argument " + HBSEMasterCompute.PIVOT_BATCH_STRING + " invalid. Must be a comma seperated list of ints.");
+            LOG.error("Optional argument " + PIVOT_BATCH_STRING + " invalid. Must be a comma seperated list of ints.");
             throw e;
         }
-        if (!currentPivots.isEmpty()) setGlobalPivots(currentPivots);
-
-
-        String batchSizeStr = this.getConf().get(PIVOT_BATCH_SIZE);
-        try {
-            batchSize = Integer.parseInt(batchSizeStr);
-        } catch (NumberFormatException e) {
-            LOG.error("Required option not set or invalid. \"" + HBSEMasterCompute.PIVOT_BATCH_SIZE + "\" must be set to a valid int, was set to: " + batchSizeStr);
-            throw e;
-        }
-        LOG.info(HBSEMasterCompute.PIVOT_BATCH_SIZE + "=" + batchSize);
-
-        initialBatchSize = batchSize;
-        try {
-            String initialBatchSizeStr = getConf().get(PIVOT_BATCH_SIZE_INITIAL);
-            if (initialBatchSizeStr != null) initialBatchSize = Integer.parseInt(initialBatchSizeStr);
-        } catch (NumberFormatException e) {
-            LOG.error("Optional setting " + HBSEMasterCompute.PIVOT_BATCH_SIZE_INITIAL + " set to invalid value, using default");
+        if (!currentPivots.isEmpty()) {
+            setGlobalPivots(currentPivots);
         }
 
+        batchSize = getRequiredHBSEConfiguration(PIVOT_BATCH_SIZE);
+        LOG.info(PIVOT_BATCH_SIZE + "=" + batchSize);
 
+        initialBatchSize = getOptionalHBSEConfiguration(PIVOT_BATCH_SIZE_INITIAL, batchSize);
+
+        random = getRandomWithSeed(PIVOT_BATCH_RANDOM_SEED);
+
+
+        maxId = getRequiredHBSEConfiguration(VERTEX_COUNT);
+        LOG.info(VERTEX_COUNT + "=" + maxId);
+
+    }
+    private Random getRandomWithSeed(String name){
         String randomSeedStr = getConf().get(PIVOT_BATCH_RANDOM_SEED);
-        if (null == randomSeedStr) {
+        if (randomSeedStr == null) {
             random = new Random();
-        } else {
+        }
+        else {
             long seed = Long.parseLong(randomSeedStr);
             random = new Random(seed);
             LOG.info("Set random seed: " + seed);
         }
-
-
-        String maxIdStr = this.getConf().get(VERTEX_COUNT);
+        return random;
+    }
+    private int getRequiredHBSEConfiguration(String name) {
+        String propValue = getConf().get(name);
         try {
-            maxId = Integer.parseInt(maxIdStr);
+            return Integer.parseInt(propValue);
         } catch (NumberFormatException e) {
-            LOG.error("Required option not set or invalid. \"" + HBSEMasterCompute.VERTEX_COUNT + "\" must be set to a valid int, was set to: " + maxIdStr);
+            LOG.error("Option not set or invalid. \"" + name + "\" must be set to a valid int, was set to: " + propValue, e);
             throw e;
         }
-        LOG.info(HBSEMasterCompute.VERTEX_COUNT + "=" + maxId);
-
     }
-
+    private int getOptionalHBSEConfiguration(String name, int defaultValue){
+        String propValue = getConf().get(name);
+        try {
+            return Integer.parseInt(propValue);
+        } catch (NumberFormatException e) {
+            LOG.error("Option not set or invalid. \"" + name + "\" must be set to a valid int, was set to: " + defaultValue, e);
+            return defaultValue;
+        }
+    }
 
     /**
      * Coordinates the computation phases of SBVertex by monitoring for the completion of each state
      * and moving to the next state.
-     * <p/>
-     * * selects pivots
-     * * monitors for completion of shortest paths
-     * * starts pair dependency phase
-     * * monitors for completion of pair dependency
-     * * checks high betweenness set stability
-     * * if set is stable
-     * * save set and exit
-     * * else
-     * * select new pivots and start new shortest path phase
+     * <ol>
+     * <li>selects pivots</li>
+     * <li>monitors for completion of shortest paths</li>
+     * <li>starts pair dependency phase</li>
+     * <li>monitors for completion of pair dependency</li>
+     * <li>checks high betweenness set stability</li>
+     * <li>if set is stable save set and exit else select new pivots and start new shortest path phase</li>
+     * </ol>
      */
     @Override
     public void compute() {
         long step = this.getSuperstep();
         LOG.info("Superstep: " + step + " starting in State: " + state);
-
-        if (State.START == state) {
-            if (currentPivots.isEmpty()) {
-                int currentBatchSize = (step == 0) ? this.initialBatchSize : this.batchSize;
-                choosePivots(currentBatchSize);
-            }
-            state = State.SHORTEST_PATH_START;
-            setGlobalState(state);
-            LOG.info("Superstep: " + step + " Switched to State: " + state);
-        } else if (State.SHORTEST_PATH_START == state) {
-            int updateCount = ((IntWritable) this.getAggregatedValue(UPDATE_COUNT_AGG)).get();
-            LOG.info("Superstep: " + step + " Paths updated: " + updateCount);
-            state = State.SHORTEST_PATH_RUN;
-            setGlobalState(state);
-            LOG.info("Superstep: " + step + " Switched to State: " + state);
-        } else if (State.SHORTEST_PATH_RUN == state) {
-            int updateCount = ((IntWritable) this.getAggregatedValue(UPDATE_COUNT_AGG)).get();
-            LOG.info("Superstep: " + step + " Paths updated: " + updateCount);
-            if (updateCount == 0) {
-                shortestPathPhasesCompleted++;
-                if (shortestPathPhasesCompleted == shortestPathPhases) {
-                    state = State.PAIR_DEPENDENCY_PING_PREDECESSOR;
-                } else {
-                    choosePivots(this.batchSize);
-                    state = State.SHORTEST_PATH_START;
+        switch (state) {
+            case START:
+                if (currentPivots.isEmpty()) {
+                    int currentBatchSize = (step == 0) ? this.initialBatchSize : this.batchSize;
+                    choosePivots(currentBatchSize);
                 }
+                state = State.SHORTEST_PATH_START;
                 setGlobalState(state);
-                LOG.info("Superstep: " + step + " UPDATE COUNT 0, shortest path phase " + shortestPathPhasesCompleted + " of " + shortestPathPhases + " Switched to State: " + state);
-            }
-        } else if (State.PAIR_DEPENDENCY_PING_PREDECESSOR == state) {
-            shortestPathPhasesCompleted = 0;
-            state = State.PAIR_DEPENDENCY_FIND_SUCCESSORS;
-            setGlobalState(state);
-            LOG.info("Superstep: " + step + " Switched to State: " + state);
-        } else if (State.PAIR_DEPENDENCY_FIND_SUCCESSORS == state) {
-            state = State.PAIR_DEPENDENCY_RUN;
-            setGlobalState(state);
-            LOG.info("Superstep: " + step + " Switched to State: " + state);
-        } else if (State.PAIR_DEPENDENCY_RUN == state) {
-            int updateCount = ((IntWritable) this.getAggregatedValue(UPDATE_COUNT_AGG)).get();
-            if (updateCount == 0) {
-                state = State.PAIR_DEPENDENCY_COMPLETE;
+                LOG.info("Superstep: " + step + " Switched to State: " + state);
+                break;
+            case SHORTEST_PATH_START:
+                int updateCount = ((IntWritable) this.getAggregatedValue(UPDATE_COUNT_AGG)).get();
+                LOG.info("Superstep: " + step + " Paths updated: " + updateCount);
+                state = State.SHORTEST_PATH_RUN;
                 setGlobalState(state);
-            }
-            LOG.info("Superstep: " + step + " UPDATE COUNT " + updateCount + ", State: " + state);
-        } else if (State.PAIR_DEPENDENCY_COMPLETE == state) {
-            HighBetweennessList hbl = getAggregatedValue(HIGH_BC_SET_AGG);
-            Set<Integer> incomingSet = hbl.getHighBetweennessSet();
-            int delta = this.compareHighBetweennessSet(incomingSet);
-            highBetweennessSet = incomingSet;
+                LOG.info("Superstep: " + step + " Switched to State: " + state);
+                break;
+            case SHORTEST_PATH_RUN:
+                updateCount = ((IntWritable) this.getAggregatedValue(UPDATE_COUNT_AGG)).get();
+                LOG.info("Superstep: " + step + " Paths updated: " + updateCount);
+                if (updateCount == 0) {
+                    shortestPathPhasesCompleted++;
+                    if (shortestPathPhasesCompleted == shortestPathPhases) {
+                        state = State.PAIR_DEPENDENCY_PING_PREDECESSOR;
+                    } else {
+                        choosePivots(this.batchSize);
+                        state = State.SHORTEST_PATH_START;
+                    }
+                    setGlobalState(state);
+                    LOG.info("Superstep: " + step + " UPDATE COUNT 0, shortest path phase " + shortestPathPhasesCompleted + " of " + shortestPathPhases + " Switched to State: " + state);
+                }
+                break;
+            case PAIR_DEPENDENCY_PING_PREDECESSOR:
+                shortestPathPhasesCompleted = 0;
+                state = State.PAIR_DEPENDENCY_FIND_SUCCESSORS;
+                setGlobalState(state);
+                LOG.info("Superstep: " + step + " Switched to State: " + state);
+                break;
+            case PAIR_DEPENDENCY_FIND_SUCCESSORS:
+                state = State.PAIR_DEPENDENCY_RUN;
+                setGlobalState(state);
+                LOG.info("Superstep: " + step + " Switched to State: " + state);
+                break;
+            case PAIR_DEPENDENCY_RUN:
+                updateCount = ((IntWritable) this.getAggregatedValue(UPDATE_COUNT_AGG)).get();
+                if (updateCount == 0) {
+                    state = State.PAIR_DEPENDENCY_COMPLETE;
+                    setGlobalState(state);
+                }
+                LOG.info("Superstep: " + step + " UPDATE COUNT " + updateCount + ", State: " + state);
+                break;
+            case PAIR_DEPENDENCY_COMPLETE:
+                HighBetweennessList hbl = getAggregatedValue(HIGH_BC_SET_AGG);
+                Set<String> incomingSet = hbl.getHighBetweennessSet();
+                int delta = this.compareHighBetweennessSet(incomingSet);
+                highBetweennessSet = incomingSet;
 
-            LOG.info("High Betweenness Set Delta: " + delta);
-            String logprefix = "Finished Cycle: " + cycle;
-            cycle++;
+                LOG.info("High Betweenness Set Delta: " + delta);
+                String logprefix = "Finished Cycle: " + cycle;
+                cycle++;
 
-            if (delta <= stabilityCutoff) {
-                stabilityRunningCounter++;
-                if (stabilityRunningCounter >= stabilityCounter) {
-                    LOG.info(logprefix + " Set Delta < cutoff value; counter=" + stabilityRunningCounter + " approximation complete.");
+                if (delta <= stabilityCutoff) {
+                    stabilityRunningCounter++;
+                    if (stabilityRunningCounter >= stabilityCounter) {
+                        LOG.info(logprefix + " Set Delta < cutoff value; counter=" + stabilityRunningCounter + " approximation complete.");
+                        state = State.FINISHED;
+                    } else {
+                        LOG.info(logprefix + " Set Delta < cutoff value; counter=" + stabilityRunningCounter);
+                        choosePivots(this.batchSize);
+                        state = State.SHORTEST_PATH_START;
+                    }
+
+                } else if (currentPivots.size() + previousPivots.size() == this.maxId) {
+                    LOG.info(logprefix + " All possible pivots selected, exiting");
                     state = State.FINISHED;
                 } else {
-                    LOG.info(logprefix + " Set Delta < cutoff value; counter=" + stabilityRunningCounter);
+                    stabilityRunningCounter = 0; // reset stabilityRunningCounter
+                    LOG.info(logprefix + " Delta did not meet cutoff, starting next cycle.");
                     choosePivots(this.batchSize);
                     state = State.SHORTEST_PATH_START;
                 }
-
-            } else if (currentPivots.size() + previousPivots.size() == this.maxId) {
-                LOG.info(logprefix + " All possible pivots selected, exiting");
-                state = State.FINISHED;
-            } else {
-                stabilityRunningCounter = 0; // reset stabilityRunningCounter
-                LOG.info(logprefix + " Delta did not meet cutoff, starting next cycle.");
-                choosePivots(this.batchSize);
-                state = State.SHORTEST_PATH_START;
-            }
-            setGlobalState(state);
-            LOG.info("Superstep: " + step + ", going to State: " + state);
-        } else if (State.FINISHED == state) {
-            this.haltComputation();
-            end = new Date();
-            this.writeHighBetweennessSet(highBetweennessSet);
-            this.writeStats();
-        } else {
-            LOG.error("INVALID STATE: " + state);
-            throw new IllegalStateException("Invalid State" + state);
+                setGlobalState(state);
+                LOG.info("Superstep: " + step + ", going to State: " + state);
+                break;
+            case FINISHED:
+                this.haltComputation();
+                end = new Date();
+                this.writeHighBetweennessSet(highBetweennessSet);
+                this.writeStats();
+                break;
+            default:
+                LOG.error("INVALID STATE: " + state);
+                throw new IllegalStateException("Invalid State" + state);
         }
     }
 
 
     /**
      * Populate currentPivots with a new batch of pivots. Set the value globally with an aggregator
+     *
+     * @param currentBatchSize The number of pivots you want in the batch.
      */
     private void choosePivots(int currentBatchSize) {
         LOG.info("Selecting new pivots.");
@@ -525,22 +480,28 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         try {
             FileSystem fs = FileSystem.get(new Configuration());
             BufferedWriter br = new BufferedWriter(new OutputStreamWriter(fs.create(pt, true)));
-            br.write("k: " + this.highBetweennessSet.size() + "\n");
-            br.write("delta p: " + this.batchSize + "\n");
-            br.write("cutoff: " + this.stabilityCutoff + "\n");
-            br.write("counter: " + this.stabilityCounter + "\n");
-            br.write("pivots selected: " + pivotsSelected + "\n");
-            br.write("percent of graph selected: " + percentSelected + "\n");
-            br.write("supsersteps: " + this.getSuperstep() + "\n");
-            br.write("cycles: " + this.cycle + "\n");
-            br.write("run time: " + time + "\n");
+            try {
+                br.write("k: " + this.highBetweennessSet.size() + "\n");
+                br.write("delta p: " + this.batchSize + "\n");
+                br.write("cutoff: " + this.stabilityCutoff + "\n");
+                br.write("counter: " + this.stabilityCounter + "\n");
+                br.write("pivots selected: " + pivotsSelected + "\n");
+                br.write("percent of graph selected: " + percentSelected + "\n");
+                br.write("supsersteps: " + this.getSuperstep() + "\n");
+                br.write("cycles: " + this.cycle + "\n");
+                br.write("run time: " + time + "\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new IllegalStateException("Could not write to file: " + filename);
+            } finally {
+                br.close();
+            }
 
-
-            br.close();
         } catch (IOException e) {
             e.printStackTrace();
-            throw new IllegalStateException("Could not write to file: " + filename);
+            throw new IllegalStateException("Could not open file: " + filename);
         }
+
     }
 
     /**
@@ -548,13 +509,13 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      *
      * @param pivots A collection of selected pivots.
      */
-    private void setGlobalPivots(Collection<Integer> pivots) {
-        IntWritable[] batch = new IntWritable[pivots.size()];
+    private void setGlobalPivots(Collection<String> pivots) {
+        Text[] batch = new Text[pivots.size()];
         int i = 0;
-        for (int pivot : pivots) {
-            batch[i++] = new IntWritable(pivot);
+        for (String pivot : pivots) {
+            batch[i++] = new Text(pivot);
         }
-        this.setAggregatedValue(PIVOT_AGG, new IntArrayWritable(batch));
+        this.setAggregatedValue(PIVOT_AGG, new TextArrayWritable(batch));
     }
 
 
@@ -563,20 +524,26 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      *
      * @param set A set of vertices that contain the highest highbetweenness value.
      */
-    private void writeHighBetweennessSet(Set<Integer> set) {
+    private void writeHighBetweennessSet(Set<String> set) {
         String defaultFS = getDefaultFS(getConf());
         String filename = defaultFS + "/" + outputDir + "/" + FINAL_SET_CSV;
         Path pt = new Path(filename);
         try {
             FileSystem fs = FileSystem.get(new Configuration());
             BufferedWriter br = new BufferedWriter(new OutputStreamWriter(fs.create(pt, true)));
-            for (int id : set) {
-                br.write(id + "\n");
+            try {
+                for (String id : set) {
+                    br.write(id + "\n");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new IllegalStateException("Could not write to file: " + filename);
+            } finally {
+                br.close();
             }
-            br.close();
         } catch (IOException e) {
             e.printStackTrace();
-            throw new IllegalStateException("Could not write to file: " + filename);
+            throw new IllegalStateException("Could not open file: " + filename);
         }
 
     }
@@ -599,9 +566,9 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      * @param incomingSet A new set of high betweenness calculations
      * @return the number of changes in the high betweenness set.
      */
-    private int compareHighBetweennessSet(Set<Integer> incomingSet) {
+    private int compareHighBetweennessSet(Set<String> incomingSet) {
         int diff = 0;
-        for (int id : incomingSet) {
+        for (String id : incomingSet) {
             if (!this.highBetweennessSet.contains(id)) {
                 diff++;
             }

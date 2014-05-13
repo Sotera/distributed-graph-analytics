@@ -17,13 +17,13 @@
  */
 package com.soteradefense.dga.highbetweenness;
 
-import com.soteradefense.dga.highbetweenness.HBSEMasterCompute.State;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.AbstractComputation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
 import java.io.IOException;
@@ -46,9 +46,9 @@ import java.util.Set;
  * For background information on the method of accumulation of pair dependencies and shortest path data see:
  * "U. Brandes, A Faster Algorithm for Betweenness Centrality"
  */
-public class HBSEVertexComputation extends AbstractComputation<IntWritable, VertexData, IntWritable, PathData, PathData> {
+public class HBSEComputation extends AbstractComputation<Text, VertexData, Text, PathData, PathData> {
 
-    private static final Log LOG = LogFactory.getLog(HBSEVertexComputation.class);
+    private static final Log LOG = LogFactory.getLog(HBSEComputation.class);
 
     /**
      * Works in two major stages which are repeated and coordinated
@@ -59,11 +59,9 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
      * Stage 2:  Accumulate pair dependencies
      */
     @Override
-    public void compute(Vertex<IntWritable, VertexData, IntWritable> vertex,
-                        Iterable<PathData> messages) throws IOException {
-
+    public void compute(Vertex<Text, VertexData, Text> vertex, Iterable<PathData> messages) throws IOException {
         long step = this.getSuperstep();
-        int id = vertex.getId().get();
+        String id = vertex.getId().toString();
         int updateCount = 0;
         State state = getCurrentGlobalState();
 
@@ -76,11 +74,11 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
         // Start a shortest path phase
         // if this vertex is a source (pivot) send shortest path messages to neighbors
 
-        if (State.SHORTEST_PATH_START == state /*|| State.SHORTEST_PATH_RUN == state*/) {
+        if (State.SHORTEST_PATH_START == state) {
             if (getPivotBatch().contains(id)) {
                 LOG.info("Superstep: " + step + " Start new shortest path computation. Source = " + id);
-                for (Edge<IntWritable, IntWritable> edge : vertex.getEdges()) {
-                    sendMessage(edge.getTargetVertexId(), PathData.getShortestPathMessage(id, id, edge.getValue().get(), 1));
+                for (Edge<Text, Text> edge : vertex.getEdges()) {
+                    sendMessage(edge.getTargetVertexId(), PathData.getShortestPathMessage(id, id, Long.parseLong(edge.getValue().toString()), 1));
                 }
                 vertexValue.addPathData(PathData.getShortestPathMessage(id, id, 0, 1L));
                 this.aggregate(HBSEMasterCompute.UPDATE_COUNT_AGG, new IntWritable(1));
@@ -92,7 +90,7 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
         // continue a shortest path phase, continues until no shortest paths are updated.
         if (State.SHORTEST_PATH_RUN == state) {
 
-            Map<Integer, ShortestPathList> updatedPathMap = new HashMap<Integer, ShortestPathList>();
+            Map<String, ShortestPathList> updatedPathMap = new HashMap<String, ShortestPathList>();
 
             // process incoming messages
             for (PathData message : messages) {
@@ -103,13 +101,13 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
             }
 
             // send outgoing messages for each updated shortest path
-            for (Entry<Integer, ShortestPathList> entry : updatedPathMap.entrySet()) {
+            for (Entry<String, ShortestPathList> entry : updatedPathMap.entrySet()) {
                 ShortestPathList spl = entry.getValue();
-                int src = entry.getKey();
+                String src = entry.getKey();
                 long numPaths = spl.getNumShortestPaths();
                 updateCount++;
-                for (Edge<IntWritable, IntWritable> edge : vertex.getEdges()) {
-                    long newDistance = spl.getDistance() + edge.getValue().get();
+                for (Edge<Text, Text> edge : vertex.getEdges()) {
+                    long newDistance = spl.getDistance() + Long.parseLong(edge.getValue().toString());
                     this.sendMessage(edge.getTargetVertexId(), PathData.getShortestPathMessage(src, id, newDistance, numPaths));
                 }
             }
@@ -122,12 +120,12 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
         if (State.PAIR_DEPENDENCY_PING_PREDECESSOR == state) {
             StringBuilder builder = new StringBuilder();
             // for each shortest path send a message with that source.
-            for (Entry<Integer, ShortestPathList> entry : vertexValue.getPathDataMap().entrySet()) {
-                int source = entry.getKey();
+            for (Entry<String, ShortestPathList> entry : vertexValue.getPathDataMap().entrySet()) {
+                String source = entry.getKey();
                 long distance = entry.getValue().getDistance();
                 if (distance > 0) { // exclude this vertex
-                    for (int pred : entry.getValue().getPredPathCountMap().keySet()) {
-                        this.sendMessage(new IntWritable(pred), PathData.getPingMessage(source));
+                    for (String pred : entry.getValue().getPredPathCountMap().keySet()) {
+                        this.sendMessage(new Text(pred), PathData.getPingMessage(source));
                         builder.append("(").append(pred).append(",").append(source).append("),");
                     }
                 }
@@ -142,19 +140,19 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
         // this vertex has any successors
         // vertices with no successors will begin the pair dependency accumulation process.
         if (State.PAIR_DEPENDENCY_FIND_SUCCESSORS == state) {
-            Set<Integer> successorExists = new HashSet<Integer>();
+            Set<String> successorExists = new HashSet<String>();
 
             for (PathData message : messages) {
-                int src = message.getSource();
+                String src = message.getSource();
                 successorExists.add(src);
                 vertexValue.addPartialDep(src, 0.0, 1);  // for every successor message ad one to the partial dep count
             }
 
             StringBuilder builder = new StringBuilder();
-            Set<Integer> allPaths = vertexValue.getPathDataMap().keySet();
+            Set<String> allPaths = vertexValue.getPathDataMap().keySet();
             allPaths.remove(vertex.getId());
-            Set<Integer> noSuccessor = new HashSet<Integer>();
-            for (int src : allPaths) {
+            Set<String> noSuccessor = new HashSet<String>();
+            for (String src : allPaths) {
                 if (!successorExists.contains(src)) {
                     noSuccessor.add(src);
                     builder.append(src).append(",");
@@ -163,12 +161,12 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
 
             // for any sources that this vertex has no successors, start the dependency accumulation chain
             if (noSuccessor.size() > 0) {
-                for (int src : noSuccessor) {
+                for (String src : noSuccessor) {
                     ShortestPathList spl = vertexValue.getPathDataMap().get(src);
                     long numPaths = spl.getNumShortestPaths();
                     double dep = 0;
-                    for (int pred : spl.getPredPathCountMap().keySet()) {
-                        this.sendMessage(new IntWritable(pred), PathData.getDependencyMessage(src, dep, numPaths));
+                    for (String pred : spl.getPredPathCountMap().keySet()) {
+                        this.sendMessage(new Text(pred), PathData.getDependencyMessage(src, dep, numPaths));
                     }
                 }
                 noSuccessor.clear();
@@ -184,9 +182,9 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
         if (State.PAIR_DEPENDENCY_RUN == state) {
 
             for (PathData message : messages) {
-                int src = message.getSource();
+                String src = message.getSource();
 
-                if (src == id) {
+                if (src.equals(id)) {
                     continue; // don't process paths for which you are the source
                 }
 
@@ -204,8 +202,8 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
                     ShortestPathList spl = vertexValue.getPathDataMap().get(src);
                     StringBuilder builder = new StringBuilder();
                     this.aggregate(HBSEMasterCompute.UPDATE_COUNT_AGG, new IntWritable(1));
-                    for (int pred : spl.getPredPathCountMap().keySet()) {
-                        this.sendMessage(new IntWritable(pred), PathData.getDependencyMessage(src, partialSum.getDependency(), numPaths));
+                    for (String pred : spl.getPredPathCountMap().keySet()) {
+                        this.sendMessage(new Text(pred), PathData.getDependencyMessage(src, partialSum.getDependency(), numPaths));
                         builder.append(pred).append(",");
                     }
                     if (builder.length() > 1) builder.deleteCharAt(builder.length() - 1);
@@ -220,11 +218,11 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
         // set stability, as determined in the master compute class.
         if (State.PAIR_DEPENDENCY_COMPLETE == state) {
             double approxBetweenness = vertexValue.getApproxBetweenness();
-            for (PartialDependency partialDep : vertexValue.getPartialDepMap().values()) {
+            for (PartialDependency partialDep : vertexValue.getPartialDependencyMap().values()) {
                 approxBetweenness += partialDep.getDependency();
             }
             vertexValue.setApproxBetweenness(approxBetweenness);
-            vertexValue.getPartialDepMap().clear();
+            vertexValue.getPartialDependencyMap().clear();
             vertexValue.getPathDataMap().clear();
             this.aggregate(HBSEMasterCompute.HIGH_BC_SET_AGG, getNewHighBetweennessList(id, approxBetweenness));
         }
@@ -251,12 +249,12 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
      * @return The current batch of pivot points.
      */
 
-    private Set<Integer> getPivotBatch() {
-        IntArrayWritable iwa = this.getAggregatedValue(HBSEMasterCompute.PIVOT_AGG);
+    private Set<String> getPivotBatch() {
+        TextArrayWritable iwa = this.getAggregatedValue(HBSEMasterCompute.PIVOT_AGG);
         Writable[] wa = iwa.get();
-        Set<Integer> batch = new HashSet<Integer>();
+        Set<String> batch = new HashSet<String>();
         for (Writable iw : wa) {
-            int pivot = ((IntWritable) iw).get();
+            String pivot = iw.toString();
             batch.add(pivot);
         }
         return batch;
@@ -267,11 +265,11 @@ public class HBSEVertexComputation extends AbstractComputation<IntWritable, Vert
      * Get a new HighBetweennessList object, configured with the betweenness.set.maxSize option
      * from the job conf. If not set size will default to 1.
      *
-     * @param id Vertex Id
+     * @param id    Vertex Id
      * @param value Betweenness Value
      * @return an empty HighBetweennessList object.
      */
-    public HighBetweennessList getNewHighBetweennessList(int id, double value) {
+    public HighBetweennessList getNewHighBetweennessList(String id, double value) {
         int size = 1;
         try {
             size = Integer.parseInt(getConf().get(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE));

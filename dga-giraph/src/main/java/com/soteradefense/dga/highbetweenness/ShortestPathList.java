@@ -42,7 +42,7 @@ public class ShortestPathList implements Writable {
     /**
      * The map of predecessor to number of shortest paths from source to that predecessor
      */
-    private Map<Integer, Long> predPathCountMap;
+    private Map<String, Long> predPathCountMap;
 
 
     /**
@@ -50,7 +50,7 @@ public class ShortestPathList implements Writable {
      */
     public ShortestPathList() {
         distance = Long.MAX_VALUE;
-        setPredPathCountMap(new HashMap<Integer, Long>());
+        setPredPathCountMap(new HashMap<String, Long>());
     }
 
 
@@ -114,8 +114,8 @@ public class ShortestPathList implements Writable {
     public void write(DataOutput out) throws IOException {
         out.writeLong(distance);
         out.writeInt(this.predPathCountMap.size());
-        for (Entry<Integer, Long> entry : predPathCountMap.entrySet()) {
-            out.writeInt(entry.getKey());
+        for (Entry<String, Long> entry : predPathCountMap.entrySet()) {
+            out.writeBytes(entry.getKey());
             out.writeLong(entry.getValue());
         }
 
@@ -127,7 +127,8 @@ public class ShortestPathList implements Writable {
         int size = in.readInt();
         this.predPathCountMap.clear();
         for (int i = 0; i < size; i++) {
-            predPathCountMap.put(in.readInt(), in.readLong());
+            //TODO: EXPLORE THE READ WRITE WITH STRINGS
+            predPathCountMap.put(in.readLine(), in.readLong());
         }
     }
 
@@ -155,7 +156,7 @@ public class ShortestPathList implements Writable {
      *
      * @return The HashMap
      */
-    public Map<Integer, Long> getPredPathCountMap() {
+    public Map<String, Long> getPredPathCountMap() {
         return predPathCountMap;
     }
 
@@ -164,7 +165,7 @@ public class ShortestPathList implements Writable {
      *
      * @param predPathCountMap The Map to set it to.
      */
-    public void setPredPathCountMap(Map<Integer, Long> predPathCountMap) {
+    public void setPredPathCountMap(Map<String, Long> predPathCountMap) {
         this.predPathCountMap = predPathCountMap;
     }
 

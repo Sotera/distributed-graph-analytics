@@ -32,7 +32,7 @@ import java.util.Set;
  * Maintains a list of the top N items(an item is defined as an int id, and double value), ranked by a double value.
  * Designed for use with the giraph Aggregator pattern.
  */
-public class HighBetweennessList implements Writable {
+public class HighBetweennessList extends StringWritable implements Writable {
 
     /**
      * Container class to store an id and value
@@ -41,7 +41,7 @@ public class HighBetweennessList implements Writable {
         /**
          * Vertex Id
          */
-        int id;
+        String id;
         /**
          * Approx. Betweenness.
          */
@@ -53,7 +53,7 @@ public class HighBetweennessList implements Writable {
          * @param id    Vertex Id
          * @param value Betweenness Value
          */
-        public BcTuple(int id, double value) {
+        public BcTuple(String id, double value) {
             this.id = id;
             this.value = value;
         }
@@ -88,8 +88,7 @@ public class HighBetweennessList implements Writable {
      * Creates a new HighBetweennessList with Max size 1.
      */
     public HighBetweennessList() {
-        maxSize = 1;
-        highBetweennessQueue = new PriorityQueue<BcTuple>(1, comparator);
+        this(1);
     }
 
     /**
@@ -98,7 +97,6 @@ public class HighBetweennessList implements Writable {
      * @param maxSize The maximum size of the priority queue.
      */
     public HighBetweennessList(int maxSize) {
-        this();
         this.maxSize = maxSize;
         highBetweennessQueue = new PriorityQueue<BcTuple>(maxSize, comparator);
     }
@@ -109,12 +107,9 @@ public class HighBetweennessList implements Writable {
      * @param id    Vertex Id
      * @param value Betweenness Value
      */
-    public HighBetweennessList(int id, double value) {
+    public HighBetweennessList(String id, double value) {
         this();
-        maxSize = 1;
-        highBetweennessQueue = new PriorityQueue<BcTuple>(1, comparator);
         highBetweennessQueue.add(new BcTuple(id, value));
-
     }
 
     /**
@@ -124,10 +119,8 @@ public class HighBetweennessList implements Writable {
      * @param id      Vertex Id
      * @param value   Betweenness Value
      */
-    public HighBetweennessList(int maxSize, int id, double value) {
-        this();
-        this.maxSize = maxSize;
-        highBetweennessQueue = new PriorityQueue<BcTuple>(maxSize, comparator);
+    public HighBetweennessList(int maxSize, String id, double value) {
+        this(maxSize);
         highBetweennessQueue.add(new BcTuple(id, value));
 
     }
@@ -160,8 +153,8 @@ public class HighBetweennessList implements Writable {
     /**
      * @return the ids of the stored items, as a set.
      */
-    public Set<Integer> getHighBetweennessSet() {
-        Set<Integer> set = new HashSet<Integer>();
+    public Set<String> getHighBetweennessSet() {
+        Set<String> set = new HashSet<String>();
         for (BcTuple t : highBetweennessQueue) {
             set.add(t.id);
         }
@@ -178,12 +171,13 @@ public class HighBetweennessList implements Writable {
         out.writeInt(size);
         if (highBetweennessQueue != null) {
             for (BcTuple t : highBetweennessQueue) {
-                out.writeInt(t.id);
+                writeString(out, t.id);
                 out.writeDouble(t.value);
             }
         }
     }
 
+    //TODO: IO FIXES FOR STRINGS
 
     /**
      * Read fields
@@ -193,7 +187,7 @@ public class HighBetweennessList implements Writable {
         highBetweennessQueue = new PriorityQueue<BcTuple>(maxSize, comparator);
         int size = in.readInt();
         for (int i = 0; i < size; i++) {
-            highBetweennessQueue.add(new BcTuple(in.readInt(), in.readDouble()));
+            highBetweennessQueue.add(new BcTuple(readString(in), in.readDouble()));
         }
     }
 

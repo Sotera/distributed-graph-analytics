@@ -46,8 +46,7 @@ public class PartialDependency implements Writable {
      * Default Constructor for a PartialDependency.  Dependency and Successors are both set to 0.
      */
     public PartialDependency() {
-        dependency = 0;
-        successors = 0;
+        this(0,0);
     }
 
     /**
@@ -113,7 +112,7 @@ public class PartialDependency implements Writable {
      *
      * @param diff Value to accumulate by.
      */
-    public void addDep(double diff) {
+    public void addDependency(double diff) {
         this.dependency += diff;
     }
 

@@ -30,21 +30,23 @@ import java.io.IOException;
  *
  * TODO: I really dislike the edge.getValue() that we output here -- we should discuss appropriate behavior at a later date.
  */
-public class SimpleTsvEdgeOutputFormat extends TextEdgeOutputFormat<Text, VIntWritable, VIntWritable> {
+public class SimpleTsvEdgeOutputFormat extends TextEdgeOutputFormat<Text, Text, Text> {
 
     public static final String LINE_TOKENIZE_VALUE = "simple.tsv.edge.delimiter";
 
     public static final String LINE_TOKENIZE_VALUE_DEFAULT = "\t";
+    public static final String SIMPLE_TSV_USE_SOURCE_VALUE = "simple.tsv.use.source.value";
+    public static final String SIMPLE_TSV_USE_SOURCE_VALUE_DEFAULT = "false";
 
     @Override
-    public TextEdgeWriter<Text, VIntWritable, VIntWritable> createEdgeWriter(TaskAttemptContext context) throws IOException, InterruptedException {
+    public TextEdgeWriter<Text, Text, Text> createEdgeWriter(TaskAttemptContext context) throws IOException, InterruptedException {
         return new SimpleTsvEdgeWriter();
     }
 
-    protected class SimpleTsvEdgeWriter extends TextEdgeWriterToEachLine<Text, VIntWritable, VIntWritable> {
+    protected class SimpleTsvEdgeWriter extends TextEdgeWriterToEachLine<Text, Text, Text> {
 
         private String delimiter;
-
+        private boolean useSourceValue;
         /**
          * Upon intialization, determines the field separator and default weight to use from the GiraphConfiguration
          * @param context
@@ -55,11 +57,17 @@ public class SimpleTsvEdgeOutputFormat extends TextEdgeOutputFormat<Text, VIntWr
         public void initialize(TaskAttemptContext context) throws IOException, InterruptedException {
             super.initialize(context);
             delimiter = getConf().get(LINE_TOKENIZE_VALUE, LINE_TOKENIZE_VALUE_DEFAULT);
+            useSourceValue = Boolean.parseBoolean(getConf().get(SIMPLE_TSV_USE_SOURCE_VALUE, SIMPLE_TSV_USE_SOURCE_VALUE_DEFAULT));
         }
 
         @Override
-        protected Text convertEdgeToLine(Text sourceId, VIntWritable sourceValue, Edge<Text, VIntWritable> edge) throws IOException {
-            return new Text(sourceId + delimiter + edge.getTargetVertexId() + delimiter + edge.getValue().toString());
+        protected Text convertEdgeToLine(Text sourceId, Text sourceValue, Edge<Text, Text> edge) throws IOException {
+            if(!useSourceValue) {
+                return new Text(sourceId + delimiter + edge.getTargetVertexId() + delimiter + edge.getValue().toString());
+            }
+            else{
+                return new Text(sourceId.toString().trim() + delimiter + edge.getTargetVertexId().toString().trim() + delimiter + sourceValue.toString().trim());
+            }
         }
 
     }

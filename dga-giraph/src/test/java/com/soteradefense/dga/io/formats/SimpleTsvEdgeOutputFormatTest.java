@@ -40,34 +40,34 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
     private ImmutableClassesGiraphConfiguration conf;
     private TaskAttemptContext tac;
 
-    private Vertex<Text, VIntWritable, VIntWritable> vertex;
-    Edge<Text, VIntWritable> edge1;
-    Edge<Text, VIntWritable> edge2;
+    private Vertex<Text, Text, Text> vertex;
+    Edge<Text, Text> edge1;
+    Edge<Text, Text> edge2;
 
     private RecordWriter<Text, Text> rw;
 
     @Before
     public void setUp() throws Exception {
         GiraphConfiguration giraphConfiguration = new GiraphConfiguration();
-        conf = new ImmutableClassesGiraphConfiguration<Text, Text, VIntWritable>(giraphConfiguration);
+        conf = new ImmutableClassesGiraphConfiguration<Text, Text, Text>(giraphConfiguration);
         tac = mock(TaskAttemptContext.class);
         when(tac.getConfiguration()).thenReturn(conf);
 
         vertex = mock(Vertex.class);
         when(vertex.getId()).thenReturn(new Text("34"));
-        when(vertex.getValue()).thenReturn(new VIntWritable(10));
+        when(vertex.getValue()).thenReturn(new Text("10"));
 
-        Iterable<Edge<Text, VIntWritable>> iterable = mock(Iterable.class);
-        Iterator<Edge<Text, VIntWritable>> iterator = mock(Iterator.class);
+        Iterable<Edge<Text, Text>> iterable = mock(Iterable.class);
+        Iterator<Edge<Text, Text>> iterator = mock(Iterator.class);
         when(iterable.iterator()).thenReturn(iterator);
 
         edge1 = mock(Edge.class);
         when(edge1.getTargetVertexId()).thenReturn(new Text("12"));
-        when(edge1.getValue()).thenReturn(new VIntWritable(1));
+        when(edge1.getValue()).thenReturn(new Text("1"));
 
         edge2 = mock(Edge.class);
         when(edge2.getTargetVertexId()).thenReturn(new Text("6"));
-        when(edge2.getValue()).thenReturn(new VIntWritable(4));
+        when(edge2.getValue()).thenReturn(new Text("4"));
 
         rw = mock(RecordWriter.class);
 
@@ -76,7 +76,7 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
 
     }
 
-    public TextEdgeWriter<Text, VIntWritable, VIntWritable> createEdgeWriter(final RecordWriter<Text, Text> rw) {
+    public TextEdgeWriter<Text, Text, Text> createEdgeWriter(final RecordWriter<Text, Text> rw) {
         return new SimpleTsvEdgeWriter() {
             @Override
             protected RecordWriter<Text, Text> createLineRecordWriter(TaskAttemptContext context) throws IOException, InterruptedException {
@@ -87,7 +87,7 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
 
     @Test
     public void testWriteGraphAsEdges() throws Exception {
-        TextEdgeWriter<Text, VIntWritable, VIntWritable> writer = createEdgeWriter(rw);
+        TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
         writer.setConf(conf);
         writer.initialize(tac);
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge1);
@@ -99,7 +99,7 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
 
     @Test
     public void testWriteGraphWithOverriddenSeparator() throws Exception {
-        TextEdgeWriter<Text, VIntWritable, VIntWritable> writer = createEdgeWriter(rw);
+        TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
 
         GiraphConfiguration giraphConfiguration = new GiraphConfiguration();
         giraphConfiguration.set(SimpleTsvEdgeOutputFormat.LINE_TOKENIZE_VALUE, ":");
@@ -115,14 +115,14 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
 
     @Test
     public void testGraphWriteWithEmptyEdgeWeight() throws Exception {
-        TextEdgeWriter<Text, VIntWritable, VIntWritable> writer = createEdgeWriter(rw);
+        TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
 
         writer.setConf(conf);
         writer.initialize(tac);
 
-        Edge<Text, VIntWritable> edge = mock(Edge.class);
+        Edge<Text, Text> edge = mock(Edge.class);
         when(edge.getTargetVertexId()).thenReturn(new Text("12"));
-        when(edge.getValue()).thenReturn(new VIntWritable());
+        when(edge.getValue()).thenReturn(new Text());
 
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge);
         verify(rw).write(new Text("34\t12\t0"), null);

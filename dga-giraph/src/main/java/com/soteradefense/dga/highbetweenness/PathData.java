@@ -31,7 +31,7 @@ import java.io.IOException;
  * For more information on this method of calculation betweenness centrality see
  * "U. Brandes, A Faster Algorithm for Betweenness Centrality"
  */
-public class PathData implements Writable {
+public class PathData extends StringWritable implements Writable {
 
     /**
      * The Distance of the path.
@@ -41,12 +41,12 @@ public class PathData implements Writable {
     /**
      * The source node of the path.
      */
-    private int source;
+    private String source;
 
     /**
      * the predecessor OR successor node (for shortest path OR pair dependency accumulation).
      */
-    private int from;
+    private String from;
 
     /**
      * The sources dependency on the successor.
@@ -69,8 +69,8 @@ public class PathData implements Writable {
      */
     public PathData() {
         distance = Long.MAX_VALUE;
-        source = -1;
-        from = -1;
+        source = "-1";
+        from = "-1";
         dependency = -1;
         numPaths = -1;
     }
@@ -85,7 +85,7 @@ public class PathData implements Writable {
      * @param numPaths The number of paths from source to the predecessor.
      * @return a New PathData Object
      */
-    public static PathData getShortestPathMessage(int source, int from, long distance, long numPaths) {
+    public static PathData getShortestPathMessage(String source, String from, long distance, long numPaths) {
         PathData data = new PathData();
         data.setSource(source);
         data.setFrom(from);
@@ -101,7 +101,7 @@ public class PathData implements Writable {
      * @param source The source that the ping came from.
      * @return A new PathData message for Ping purposes.
      */
-    public static PathData getPingMessage(int source) {
+    public static PathData getPingMessage(String source) {
         PathData data = new PathData();
         data.setSource(source);
         return data;
@@ -115,7 +115,7 @@ public class PathData implements Writable {
      * @param numPaths   The number of shortest paths.
      * @return A new PathData for a Dependency Message.
      */
-    public static PathData getDependencyMessage(int source, double dependency, long numPaths) {
+    public static PathData getDependencyMessage(String source, double dependency, long numPaths) {
         PathData data = new PathData();
         data.setSource(source);
         data.setDependency(dependency);
@@ -127,8 +127,8 @@ public class PathData implements Writable {
     // I/O
 
     public void write(DataOutput out) throws IOException {
-        out.writeInt(source);
-        out.writeInt(from);
+        writeString(out, source);
+        writeString(out,from);
         out.writeLong(distance);
         out.writeLong(numPaths);
         out.writeDouble(dependency);
@@ -136,8 +136,9 @@ public class PathData implements Writable {
 
 
     public void readFields(DataInput in) throws IOException {
-        source = in.readInt();
-        from = in.readInt();
+
+        source = readString(in);
+        from = readString(in);
         distance = in.readLong();
         numPaths = in.readLong();
         dependency = in.readDouble();
@@ -170,7 +171,7 @@ public class PathData implements Writable {
      *
      * @return The source value.
      */
-    public int getSource() {
+    public String getSource() {
         return source;
     }
 
@@ -179,7 +180,7 @@ public class PathData implements Writable {
      *
      * @param source The value to set the source to.
      */
-    public void setSource(int source) {
+    public void setSource(String source) {
         this.source = source;
     }
 
@@ -188,7 +189,7 @@ public class PathData implements Writable {
      *
      * @return The value of from.
      */
-    public int getFrom() {
+    public String getFrom() {
         return from;
     }
 
@@ -197,7 +198,7 @@ public class PathData implements Writable {
      *
      * @param from The value to set from to.
      */
-    public void setFrom(int from) {
+    public void setFrom(String from) {
         this.from = from;
     }
 

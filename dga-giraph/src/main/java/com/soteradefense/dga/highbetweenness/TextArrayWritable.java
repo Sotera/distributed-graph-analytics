@@ -18,17 +18,17 @@
 package com.soteradefense.dga.highbetweenness;
 
 import org.apache.hadoop.io.ArrayWritable;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
 
 /**
  * A Simple IntArrayWritable.
  */
-public class IntArrayWritable extends ArrayWritable {
+public class TextArrayWritable extends ArrayWritable {
     /**
      * The Default Constructor for creating a new IntArrayWritable.
      */
-    public IntArrayWritable() {
-        super(IntWritable.class);
+    public TextArrayWritable() {
+        super(Text.class);
     }
 
     /**
@@ -36,8 +36,8 @@ public class IntArrayWritable extends ArrayWritable {
      *
      * @param values An array of IntWritable
      */
-    public IntArrayWritable(IntWritable[] values) {
-        super(IntWritable.class, values);
+    public TextArrayWritable(Text[] values) {
+        super(Text.class, values);
     }
 
 }

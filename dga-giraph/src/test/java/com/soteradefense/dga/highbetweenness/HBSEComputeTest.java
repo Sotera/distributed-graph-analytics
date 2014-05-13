@@ -31,7 +31,7 @@ public class HBSEComputeTest {
     public GiraphConfiguration getConf() {
         GiraphConfiguration conf = new GiraphConfiguration();
         conf.setMasterComputeClass(HBSEMasterCompute.class);
-        conf.setComputationClass(HBSEVertexComputation.class);
+        conf.setComputationClass(HBSEComputation.class);
         conf.setVertexOutputFormatClass(InMemoryVertexOutputFormat.class);
         conf.set(HBSEMasterCompute.BETWEENNESS_OUTPUT_DIR, "tmp/output");
         conf.set(HBSEMasterCompute.BETWEENNESS_SET_STABILITY, "1");
