@@ -30,21 +30,21 @@ import java.util.Set;
 /**
  * A Simple IntArrayWritable.
  */
-public class TextArrayWritable implements Writable {
+public class PivotSetWritable implements Writable {
 
     private Set<String> pivots;
 
-    public TextArrayWritable(Collection<String> pivots) {
+    public PivotSetWritable(Collection<String> pivots) {
         super();
         this.pivots = new HashSet<String>();
         this.pivots.addAll(pivots);
     }
 
-    public TextArrayWritable() {
+    public PivotSetWritable() {
         this(new HashSet<String>());
     }
 
-    public void aggregate(TextArrayWritable other) {
+    public void aggregate(PivotSetWritable other) {
         pivots.addAll(other.getPivots());
     }
 

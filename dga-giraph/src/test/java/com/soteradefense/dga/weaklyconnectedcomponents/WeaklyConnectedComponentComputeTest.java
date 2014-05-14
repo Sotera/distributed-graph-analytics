@@ -35,10 +35,10 @@ public class WeaklyConnectedComponentComputeTest {
         GiraphConfiguration conf = new GiraphConfiguration();
         conf.setComputationClass(WeaklyConnectedComponentCompute.class);
         conf.setVertexOutputFormatClass(InMemoryVertexOutputFormat.class);
-        TestGraph<Text,Text,NullWritable> testGraph = getGraph(conf);
+        TestGraph<Text,Text,Text> testGraph = getGraph(conf);
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
         InternalVertexRunner.run(conf, testGraph);
-        TestGraph<Text, Text, NullWritable> graph = InMemoryVertexOutputFormat.getOutputGraph();
+        TestGraph<Text, Text, Text> graph = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(6, graph.getVertices().size());
         assertEquals("2", graph.getVertex(new Text("1")).getValue().toString());
         assertEquals("2", graph.getVertex(new Text("2")).getValue().toString());
@@ -47,14 +47,14 @@ public class WeaklyConnectedComponentComputeTest {
         assertEquals("6", graph.getVertex(new Text("5")).getValue().toString());
         assertEquals("6", graph.getVertex(new Text("6")).getValue().toString());
     }
-    private TestGraph<Text,Text,NullWritable> getGraph(GiraphConfiguration conf){
-        TestGraph<Text, Text, NullWritable> testGraph = new TestGraph<Text, Text, NullWritable>(conf);
-        testGraph.addEdge(new Text("1"), new Text("2"), NullWritable.get());
-        testGraph.addEdge(new Text("2"), new Text("1"), NullWritable.get());
-        testGraph.addEdge(new Text("3"), new Text("4"), NullWritable.get());
-        testGraph.addEdge(new Text("4"), new Text("3"), NullWritable.get());
-        testGraph.addEdge(new Text("5"), new Text("6"), NullWritable.get());
-        testGraph.addEdge(new Text("6"), new Text("5"), NullWritable.get());
+    private TestGraph<Text,Text,Text> getGraph(GiraphConfiguration conf){
+        TestGraph<Text, Text, Text> testGraph = new TestGraph<Text, Text, Text>(conf);
+        testGraph.addEdge(new Text("1"), new Text("2"), new Text(""));
+        testGraph.addEdge(new Text("2"), new Text("1"), new Text(""));
+        testGraph.addEdge(new Text("3"), new Text("4"), new Text(""));
+        testGraph.addEdge(new Text("4"), new Text("3"), new Text(""));
+        testGraph.addEdge(new Text("5"), new Text("6"), new Text(""));
+        testGraph.addEdge(new Text("6"), new Text("5"), new Text(""));
         return testGraph;
     }
 }

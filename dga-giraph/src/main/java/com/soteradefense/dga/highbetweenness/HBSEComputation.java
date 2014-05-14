@@ -72,6 +72,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         // if this vertex is a source (pivot) send shortest path messages to neighbors
 
         if (State.SHORTEST_PATH_START == state) {
+            // If the step isn't 0 migrate the current pivots to previous pivots
             if (!(step == 0)) {
                 setGlobalPivots(getPivotBatch(), HBSEMasterCompute.PREVIOUS_PIVOT_AGG);
             }
@@ -150,7 +151,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
 
             StringBuilder builder = new StringBuilder();
             Set<String> allPaths = vertexValue.getPathDataMap().keySet();
-            allPaths.remove(vertex.getId());
+            allPaths.remove(vertex.getId().toString());
             Set<String> noSuccessor = new HashSet<String>();
             for (String src : allPaths) {
                 if (!successorExists.contains(src)) {
@@ -230,7 +231,6 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
 
     }
 
-
     /**
      * Return the current global state
      *
@@ -249,11 +249,17 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
      * @return The current batch of pivot points.
      */
     private Set<String> getPivotBatch() {
-        TextArrayWritable iwa = this.getAggregatedValue(HBSEMasterCompute.PIVOT_AGG);
+        PivotSetWritable iwa = this.getAggregatedValue(HBSEMasterCompute.PIVOT_AGG);
         return getBatch(iwa);
     }
 
-    private Set<String> getBatch(TextArrayWritable iwa) {
+    /**
+     * Gets a Set of Pivots
+     *
+     * @param iwa A PivotSetWritable object
+     * @return A set of pivots
+     */
+    private Set<String> getBatch(PivotSetWritable iwa) {
         return iwa.getPivots();
     }
 
@@ -277,43 +283,81 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         return new HighBetweennessList(size, id, value);
     }
 
+    /**
+     * Returns the percentage of nodes to count as a pivot.
+     *
+     * @return Pivot based on the superstep.
+     */
+    private double getPercentageCutOff() {
+        if (getSuperstep() == 0) {
+            return ((DoubleWritable) getAggregatedValue(HBSEMasterCompute.INITIAL_PIVOT_PERCENT)).get();
+        } else {
+            return ((DoubleWritable) getAggregatedValue(HBSEMasterCompute.PIVOT_PERCENT)).get();
+        }
+    }
+
+    /**
+     * Determines if a vertex can be a pivot point.
+     *
+     * @param id Vertex Id
+     * @return True if it is a pivot point.
+     */
     private boolean isPivotPoint(String id) {
         Random random = getRandomWithSeed(HBSEMasterCompute.PIVOT_BATCH_RANDOM_SEED);
-        double percentageCutoff;
-        if (getSuperstep() == 0) {
-            percentageCutoff = ((DoubleWritable) getAggregatedValue(HBSEMasterCompute.INITIAL_PIVOT_PERCENT)).get();
-        } else {
-            percentageCutoff = ((DoubleWritable) getAggregatedValue(HBSEMasterCompute.PIVOT_PERCENT)).get();
-        }
+        double percentageCutoff = getPercentageCutOff();
         double randomNumber = random.nextDouble();
         boolean isPivot = randomNumber < percentageCutoff;
         if (isPivot) {
-            isPivot = !setPivot(id);
+            isPivot = setPivot(id);
         }
         return isPivot;
     }
 
+    /**
+     * Checks to see if the vertex was used as a previous pivot.
+     * If it was a previous pivot, then true is returned.
+     *
+     * @param id Vertex Id
+     * @return True if set as a current Pivot, False if it was already used.
+     */
     private boolean setPivot(String id) {
         boolean wasPreviouslyUsed = true;
         Set<String> previousBatch = getPreviousPivotBatch();
         if (!previousBatch.contains(id)) {
-            Set<String> currentPivots = getPivotBatch();
+            Set<String> currentPivots = new HashSet<String>();
             currentPivots.add(id);
             setGlobalPivots(currentPivots, HBSEMasterCompute.PIVOT_AGG);
             wasPreviouslyUsed = false;
         }
-        return wasPreviouslyUsed;
+        return !wasPreviouslyUsed;
     }
 
+    /**
+     * Sets a global set of pivots based on name
+     *
+     * @param pivots Set of Pivots
+     * @param name   Name of the aggregator to use.
+     */
     private void setGlobalPivots(Collection<String> pivots, String name) {
-        this.aggregate(name, new TextArrayWritable(pivots));
+        this.aggregate(name, new PivotSetWritable(pivots));
     }
 
+    /**
+     * Gets the previous Pivot Batch
+     *
+     * @return Set of Pivots
+     */
     private Set<String> getPreviousPivotBatch() {
-        TextArrayWritable previousPivots = getAggregatedValue(HBSEMasterCompute.PREVIOUS_PIVOT_AGG);
+        PivotSetWritable previousPivots = getAggregatedValue(HBSEMasterCompute.PREVIOUS_PIVOT_AGG);
         return getBatch(previousPivots);
     }
 
+    /**
+     * Gets a Random Object With A possible Seed based on a Configuration.
+     *
+     * @param name Configuration Key
+     * @return Random which is either seeded or not.
+     */
     private Random getRandomWithSeed(String name) {
         Random random;
         String randomSeedStr = getConf().get(name);

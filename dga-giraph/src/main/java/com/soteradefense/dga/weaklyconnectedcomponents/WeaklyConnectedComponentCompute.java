@@ -28,10 +28,10 @@ import java.io.IOException;
 /**
  * WeaklyConnectedComponents is the concept of finding how many uniquely connected nodes there are in a specific data set.
  */
-public class WeaklyConnectedComponentCompute extends BasicComputation<Text, Text, NullWritable, Text> {
+public class WeaklyConnectedComponentCompute extends BasicComputation<Text, Text, Text, Text> {
 
     @Override
-    public void compute(Vertex<Text, Text, NullWritable> vertex, Iterable<Text> messages) throws IOException {
+    public void compute(Vertex<Text, Text, Text> vertex, Iterable<Text> messages) throws IOException {
         try {
             if (getSuperstep() == 0) {
                 broadcastGreatestNeighbor(vertex);
@@ -57,9 +57,9 @@ public class WeaklyConnectedComponentCompute extends BasicComputation<Text, Text
      *
      * @param vertex The current vertex being operated on.
      */
-    private void broadcastGreatestNeighbor(Vertex<Text, Text, NullWritable> vertex) {
+    private void broadcastGreatestNeighbor(Vertex<Text, Text, Text> vertex) {
         String maxId = vertex.getId().toString();
-        for (Edge<Text, NullWritable> edge : vertex.getEdges()) {
+        for (Edge<Text, Text> edge : vertex.getEdges()) {
             if (maxId.compareTo(edge.getTargetVertexId().toString()) < 0) {
                 maxId = edge.getTargetVertexId().toString();
             }
@@ -74,7 +74,7 @@ public class WeaklyConnectedComponentCompute extends BasicComputation<Text, Text
      * @param changed Has the greatest value changed?
      * @param maxId   The current id that has the greatest value.
      */
-    private void broadcastUpdates(Vertex<Text, Text, NullWritable> vertex, boolean changed, String maxId) {
+    private void broadcastUpdates(Vertex<Text, Text, Text> vertex, boolean changed, String maxId) {
         if (changed) {
             vertex.setValue(new Text(maxId));
             sendMessageToAllEdges(vertex, new Text(vertex.getValue().toString()));

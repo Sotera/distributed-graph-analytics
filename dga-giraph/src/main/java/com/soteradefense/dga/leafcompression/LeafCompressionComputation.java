@@ -31,17 +31,18 @@ import java.io.IOException;
  * <p/>
  * This cycle continues until all leaves have been pruned.
  */
-public class LeafCompressionComputation extends BasicComputation<Text, VIntWritable, VIntWritable, Text> {
+public class LeafCompressionComputation extends BasicComputation<Text, Text, Text, Text> {
 
     @Override
-    public void compute(Vertex<Text, VIntWritable, VIntWritable> vertex, Iterable<Text> messages) throws IOException {
+    public void compute(Vertex<Text, Text, Text> vertex, Iterable<Text> messages) throws IOException {
         try {
             // Check to see if we received any messages from connected nodes notifying us
             // that they have only a single edge, and can subsequently be pruned from the graph
+
             for (Text incomingMessage : messages) {
                 Text messageVertex = new Text(incomingMessage.toString().split(":")[0]);
-                int value = Integer.parseInt(incomingMessage.toString().split(":")[1]);
-                vertex.setValue(new VIntWritable(vertex.getValue().get() + 1 + value));
+                int value = getVertexValue(incomingMessage.toString().split(":")[1]);
+                vertex.setValue(new Text(String.format("%d", getVertexValue(vertex.getValue().toString()) + 1 + value)));
 
                 // Remove the vertex and its corresponding edge
                 removeVertexRequest(messageVertex);
@@ -61,17 +62,31 @@ public class LeafCompressionComputation extends BasicComputation<Text, VIntWrita
      *
      * @param vertex The current vertex being operated upon by the compute method
      */
-    private void sendEdges(Vertex<Text, VIntWritable, VIntWritable> vertex) {
-        if (vertex.getNumEdges() == 1 && vertex.getValue().get() != -1) {
-            for (Edge<Text, VIntWritable> edge : vertex.getEdges()) {
-                sendMessage(edge.getTargetVertexId(), new Text(vertex.getId().toString() + ":" + vertex.getValue().toString()));
+    private void sendEdges(Vertex<Text, Text, Text> vertex) {
+        int vertexValue = getVertexValue(vertex.getValue().toString());
+        if (vertex.getNumEdges() == 1 && vertexValue != -1) {
+            for (Edge<Text, Text> edge : vertex.getEdges()) {
+                sendMessage(edge.getTargetVertexId(), new Text(vertex.getId().toString() + ":" + vertexValue));
             }
-            vertex.setValue(new VIntWritable(-1));
+            vertex.setValue(new Text("-1"));
             // This node will never vote to halt, but will simply be deleted.
-        } else if (vertex.getValue().get() != -1) {
+        } else if (vertexValue != -1) {
             // If we aren't being imminently deleted
             vertex.voteToHalt();
         }
     }
 
+    /**
+     * Converts a vertex value from a string to an int.
+     *
+     * @param value vertex value as a string.
+     * @return integer vertex value.
+     */
+    private int getVertexValue(String value) {
+        int vertexValue = 0;
+        if (value != null && !value.equals("")) {
+            vertexValue = Integer.parseInt(value);
+        }
+        return vertexValue;
+    }
 }

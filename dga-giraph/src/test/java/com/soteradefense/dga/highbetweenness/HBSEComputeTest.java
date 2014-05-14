@@ -83,6 +83,7 @@ public class HBSEComputeTest {
     @Test
     public void testTwoCriticalPointGraph() throws Exception {
         GiraphConfiguration conf = getConf();
+        conf.set(HBSEMasterCompute.PIVOT_BATCH_STRING, "1,2,3,4,5,9");
         TestGraph<Text, VertexData, Text> input = getTwoCriticalPointGraph(conf);
         conf.set(HBSEMasterCompute.VERTEX_COUNT, "16");
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);

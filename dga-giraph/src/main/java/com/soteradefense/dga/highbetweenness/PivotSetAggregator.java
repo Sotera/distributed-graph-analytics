@@ -18,30 +18,28 @@
 package com.soteradefense.dga.highbetweenness;
 
 import org.apache.giraph.aggregators.BasicAggregator;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
 
 /**
  * Stores a single TextArrayWritable for global broadcast / communication.
  */
-public class TextArrayOverwriteAggregator extends BasicAggregator<TextArrayWritable> {
+public class PivotSetAggregator extends BasicAggregator<PivotSetWritable> {
 
     /**
      * Set the aggregated value of this aggregator to
      * the specified value.
      */
-    public void aggregate(TextArrayWritable value) {
+    public void aggregate(PivotSetWritable value) {
         if(value == null)
             return;
-        TextArrayWritable old = getAggregatedValue();
+        PivotSetWritable old = getAggregatedValue();
         old.aggregate(value);
     }
 
     /**
      * Returns an empty TextArrayWritable
      */
-    public TextArrayWritable createInitialValue() {
-        return new TextArrayWritable();
+    public PivotSetWritable createInitialValue() {
+        return new PivotSetWritable();
     }
 
 }
