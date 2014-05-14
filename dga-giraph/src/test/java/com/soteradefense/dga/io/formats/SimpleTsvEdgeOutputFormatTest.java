@@ -125,7 +125,8 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
         when(edge.getValue()).thenReturn(new Text());
 
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge);
-        verify(rw).write(new Text("34\t12\t0"), null);
+        //TODO: Ask about the Edge Weight default with Text
+        verify(rw).write(new Text("34\t12\t"), null);
 
     }
 }
