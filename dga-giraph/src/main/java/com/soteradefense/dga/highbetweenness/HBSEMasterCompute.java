@@ -68,77 +68,111 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      * Aggregator Identifier that gets the state of the computation.
      */
     public static final String STATE_AGG = "com.sotera.graph.singbetweenness.STATE_AGG";
+
     /**
      * Aggregator Identifier for the global pivot points.
      */
     public static final String PIVOT_AGG = "com.sotera.graph.singbetweenness.PIVOT_AGG";
+
+    /**
+     * Aggregator Identifier that stores the previous pivots.
+     */
     public static final String PREVIOUS_PIVOT_AGG = PIVOT_AGG + "_PREVIOUS";
+
     /**
      * Aggregator Identifier for the number of nodes changed in the highbetweenness list comparison.
      */
     public static final String UPDATE_COUNT_AGG = "com.sotera.graph.singbetweenness.UPDATE_COUNT_AGG";
+
     /**
      * Aggregator Identifier for the saved highbetweenness set.
      */
     public static final String HIGH_BC_SET_AGG = "com.sotera.graph.singbetweenness.HIGH_BC_SET_AGG";
+
     /**
      * Configuration Identifier for the directory to output the highbetweenness set.
      */
     public static final String BETWEENNESS_OUTPUT_DIR = "betweenness.output.dir";
+
     /**
      * Configuration Identifier for the number of shortest path phases to run through.
      */
     public static final String BETWEENNESS_SHORTEST_PATH_PHASES = "betweenness.shortest.path.phases";
+
     /**
      * Configuration Identifier for the set stability cut off point (margin of error).
      */
     public static final String BETWEENNESS_SET_STABILITY = "betweenness.set.stability";
+
     /**
      * Configuration Identifier for the set stability counter cut off point (margin of error).
      */
     public static final String BETWEENNESS_SET_STABILITY_COUNTER = BETWEENNESS_SET_STABILITY + ".counter";
+
+
     /**
      * Configuration Identifier for the maximum number of nodes in the betweenness set.
      */
     public static final String BETWEENNESS_SET_MAX_SIZE = "betweenness.set.maxSize";
+
     /**
      * Configuration Identifier for the pivot point batch size.
      */
     public static final String PIVOT_BATCH_SIZE = "pivot.batch.size";
+
     /**
      * Configuration Identifier for the initial pivot point batch size.
      */
     public static final String PIVOT_BATCH_SIZE_INITIAL = PIVOT_BATCH_SIZE + ".initial";
+
     /**
      * Configuration Identifier for the random seed value when choosing new pivot points.
      */
     public static final String PIVOT_BATCH_RANDOM_SEED = "pivot.batch.random.seed";
+
     /**
      * Configuration Identifier for the number of vertices to perform the operation on.
      */
     public static final String VERTEX_COUNT = "vertex.count";
+
     /**
      * Configuration Identifier for the starting pivot points (Comma Separated).
      */
     public static final String PIVOT_BATCH_STRING = "pivot.batch.string";
+
     /**
      * Configuration Identifier for the default file system.
      */
     public static final String FS_DEFAULT_FS = "fs.defaultFS";
+
     /**
      * Configuration Identifier for the default name.
      */
     public static final String FS_DEFAULT_NAME = "fs.default.name";
+
     /**
      * This is the filename for the final highbetweenness set
      */
     public static final String FINAL_SET_CSV = "final_set.csv";
+
     /**
      * The filename where the stats are written
      */
     public static final String STATS_CSV = "stats.csv";
+
+    /**
+     * Constant string that stores the pivot batch separation value.
+     */
     public static final String PIVOT_BATCH_DELIMITER = ",";
+
+    /**
+     * Aggregator Identifier that stores the percentage of pivots to choose per batch.
+     */
     public static final String PIVOT_PERCENT = "pivot.percent.cutoff";
+
+    /**
+     * Aggregator Identifier that stores the percentage of initial pivots to choose per batch.
+     */
     public static final String INITIAL_PIVOT_PERCENT = PIVOT_PERCENT + ".initial";
 
 
