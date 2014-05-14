@@ -18,7 +18,6 @@
 package com.soteradefense.dga.weaklyconnectedcomponents;
 
 
-import com.soteradefense.dga.io.formats.SimpleTsvUndirectedEdgeInputFormat;
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.io.formats.InMemoryVertexOutputFormat;
 import org.apache.giraph.utils.InternalVertexRunner;
@@ -36,7 +35,6 @@ public class WeaklyConnectedComponentComputeTest {
         GiraphConfiguration conf = new GiraphConfiguration();
         conf.setComputationClass(WeaklyConnectedComponentCompute.class);
         conf.setVertexOutputFormatClass(InMemoryVertexOutputFormat.class);
-        conf.set(SimpleTsvUndirectedEdgeInputFormat.EXPECTED_NUMBER_OF_COLUMNS_KEY, "2");
         TestGraph<Text,Text,NullWritable> testGraph = getGraph(conf);
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
         InternalVertexRunner.run(conf, testGraph);

@@ -22,7 +22,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 
 /**
- * Stores a single IntArrayWritable for global broadcast / communication.
+ * Stores a single TextArrayWritable for global broadcast / communication.
  */
 public class TextArrayOverwriteAggregator extends BasicAggregator<TextArrayWritable> {
 
@@ -31,14 +31,17 @@ public class TextArrayOverwriteAggregator extends BasicAggregator<TextArrayWrita
      * the specified value.
      */
     public void aggregate(TextArrayWritable value) {
-        this.setAggregatedValue(value);
+        if(value == null)
+            return;
+        TextArrayWritable old = getAggregatedValue();
+        old.aggregate(value);
     }
 
     /**
-     * Returns an empty IntArrayWritable
+     * Returns an empty TextArrayWritable
      */
     public TextArrayWritable createInitialValue() {
-        return new TextArrayWritable(new Text[0]);
+        return new TextArrayWritable();
     }
 
 }

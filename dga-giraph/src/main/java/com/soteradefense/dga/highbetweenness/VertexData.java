@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.highbetweenness;
 
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
@@ -35,7 +36,7 @@ import java.util.Map.Entry;
  * <li>approximated betweenness value</li>
  * </ul>
  */
-public class VertexData extends StringWritable implements Writable {
+public class VertexData implements Writable {
 
     /**
      * The map of source vertex to shortest path data
@@ -65,7 +66,7 @@ public class VertexData extends StringWritable implements Writable {
         ShortestPathList list = getPathDataMap().get(source);
 
         // if the list was empty ad the first item and return
-        if (null == list) {
+        if (list == null) {
             list = new ShortestPathList(data);
             getPathDataMap().put(source, list);
             return list;
@@ -102,13 +103,13 @@ public class VertexData extends StringWritable implements Writable {
         out.writeDouble(approxBetweenness);
         out.writeInt(pathDataMap.size());
         for (Entry<String, ShortestPathList> entry : pathDataMap.entrySet()) {
-            writeString(out, entry.getKey());
+            Text.writeString(out, entry.getKey());
             entry.getValue().write(out);
         }
 
         out.writeInt(this.partialDepMap.size());
         for (Entry<String, PartialDependency> entry : partialDepMap.entrySet()) {
-            writeString(out, entry.getKey());
+            Text.writeString(out, entry.getKey());
             entry.getValue().write(out);
         }
     }
@@ -122,7 +123,7 @@ public class VertexData extends StringWritable implements Writable {
         // read the path data map
         int size = in.readInt();
         for (int i = 0; i < size; i++) {
-            String key = readString(in);
+            String key = Text.readString(in);
             ShortestPathList list = new ShortestPathList();
             list.readFields(in);
             pathDataMap.put(key, list);
@@ -130,7 +131,7 @@ public class VertexData extends StringWritable implements Writable {
 
         size = in.readInt();
         for (int i = 0; i < size; i++) {
-            String src = readString(in);
+            String src = Text.readString(in);
             PartialDependency dep = new PartialDependency();
             dep.readFields(in);
             partialDepMap.put(src, dep);

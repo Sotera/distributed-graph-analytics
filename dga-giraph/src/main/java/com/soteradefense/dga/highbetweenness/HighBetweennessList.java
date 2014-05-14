@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.highbetweenness;
 
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
@@ -32,7 +33,7 @@ import java.util.Set;
  * Maintains a list of the top N items(an item is defined as an int id, and double value), ranked by a double value.
  * Designed for use with the giraph Aggregator pattern.
  */
-public class HighBetweennessList extends StringWritable implements Writable {
+public class HighBetweennessList implements Writable {
 
     /**
      * Container class to store an id and value
@@ -171,13 +172,11 @@ public class HighBetweennessList extends StringWritable implements Writable {
         out.writeInt(size);
         if (highBetweennessQueue != null) {
             for (BcTuple t : highBetweennessQueue) {
-                writeString(out, t.id);
+                Text.writeString(out, t.id);
                 out.writeDouble(t.value);
             }
         }
     }
-
-    //TODO: IO FIXES FOR STRINGS
 
     /**
      * Read fields
@@ -187,7 +186,7 @@ public class HighBetweennessList extends StringWritable implements Writable {
         highBetweennessQueue = new PriorityQueue<BcTuple>(maxSize, comparator);
         int size = in.readInt();
         for (int i = 0; i < size; i++) {
-            highBetweennessQueue.add(new BcTuple(readString(in), in.readDouble()));
+            highBetweennessQueue.add(new BcTuple(Text.readString(in), in.readDouble()));
         }
     }
 

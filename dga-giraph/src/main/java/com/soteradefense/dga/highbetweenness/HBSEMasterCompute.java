@@ -19,13 +19,14 @@ package com.soteradefense.dga.highbetweenness;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.giraph.aggregators.IntOverwriteAggregator;
-import org.apache.giraph.aggregators.IntSumAggregator;
+import org.apache.giraph.aggregators.*;
 import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
 import java.io.BufferedWriter;
@@ -71,6 +72,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      * Aggregator Identifier for the global pivot points.
      */
     public static final String PIVOT_AGG = "com.sotera.graph.singbetweenness.PIVOT_AGG";
+    public static final String PREVIOUS_PIVOT_AGG = PIVOT_AGG + "_PREVIOUS";
     /**
      * Aggregator Identifier for the number of nodes changed in the highbetweenness list comparison.
      */
@@ -136,6 +138,9 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      */
     public static final String STATS_CSV = "stats.csv";
     public static final String PIVOT_BATCH_DELIMITER = ",";
+    public static final String PIVOT_PERCENT = "pivot.percent.cutoff";
+    public static final String INITIAL_PIVOT_PERCENT = PIVOT_PERCENT + ".initial";
+
 
     /**
      * Stores the number of pivots to use per batch of nodes.
@@ -159,16 +164,6 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      * Stores the total number of vertices to use in the period of computation.
      */
     private int maxId;
-
-    /**
-     * Stores the Id value of the current pivots being used for computation.
-     */
-    private Queue<Integer> currentPivots = new LinkedList<Integer>();
-
-    /**
-     * Stores all previous pivots used in other periods of computation.
-     */
-    private Set<Integer> previousPivots = new HashSet<Integer>();
 
     /**
      * Stores the current set of highbetweenness nodes.
@@ -210,11 +205,6 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     private State state = State.START;
 
     /**
-     * The random variable for choosing new pivot points.
-     */
-    private Random random;
-
-    /**
      * Date variable to track the start entire computation.
      */
     private Date start;
@@ -235,6 +225,9 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         state = State.START;
         this.registerPersistentAggregator(STATE_AGG, IntOverwriteAggregator.class);
         this.registerPersistentAggregator(PIVOT_AGG, TextArrayOverwriteAggregator.class);
+        this.registerPersistentAggregator(PREVIOUS_PIVOT_AGG, TextArrayOverwriteAggregator.class);
+        this.registerPersistentAggregator(PIVOT_PERCENT, DoubleOverwriteAggregator.class);
+        this.registerPersistentAggregator(INITIAL_PIVOT_PERCENT, DoubleOverwriteAggregator.class);
         this.registerAggregator(UPDATE_COUNT_AGG, IntSumAggregator.class);
         this.registerAggregator(HIGH_BC_SET_AGG, HighBCSetAggregator.class);
 
@@ -254,7 +247,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         stabilityCutoff = getOptionalHBSEConfiguration(BETWEENNESS_SET_STABILITY, 0);
         LOG.info(BETWEENNESS_SET_STABILITY + "=" + stabilityCutoff);
 
-        stabilityCutoff = getOptionalHBSEConfiguration(BETWEENNESS_SET_STABILITY_COUNTER, 3);
+        stabilityCounter = getOptionalHBSEConfiguration(BETWEENNESS_SET_STABILITY_COUNTER, 3);
         LOG.info(HBSEMasterCompute.BETWEENNESS_SET_STABILITY_COUNTER + "=" + stabilityCounter);
 
         maxHighBCSetSize = getRequiredHBSEConfiguration(BETWEENNESS_SET_MAX_SIZE);
@@ -262,6 +255,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
 
 
         // manually set first pivot batch if argument is present
+        LinkedList<String> currentPivots = new LinkedList<String>();
         try {
             String pivotBatchStr = this.getConf().get(PIVOT_BATCH_STRING);
             if (pivotBatchStr != null && pivotBatchStr.length() > 0) {
@@ -273,37 +267,25 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
             }
 
         } catch (NumberFormatException e) {
-            LOG.error("Optional argument " + PIVOT_BATCH_STRING + " invalid. Must be a comma seperated list of ints.");
+            LOG.error("Optional argument " + PIVOT_BATCH_STRING + " invalid. Must be a comma separated list of Ids.");
             throw e;
         }
-        if (!currentPivots.isEmpty()) {
-            setGlobalPivots(currentPivots);
-        }
+        setGlobalPivots(currentPivots);
 
         batchSize = getRequiredHBSEConfiguration(PIVOT_BATCH_SIZE);
         LOG.info(PIVOT_BATCH_SIZE + "=" + batchSize);
 
+
         initialBatchSize = getOptionalHBSEConfiguration(PIVOT_BATCH_SIZE_INITIAL, batchSize);
 
-        random = getRandomWithSeed(PIVOT_BATCH_RANDOM_SEED);
-
-
+        this.setAggregatedValue(PREVIOUS_PIVOT_AGG, new TextArrayWritable());
         maxId = getRequiredHBSEConfiguration(VERTEX_COUNT);
+        this.setAggregatedValue(PIVOT_PERCENT, new DoubleWritable((double)batchSize / maxId));
+        this.setAggregatedValue(INITIAL_PIVOT_PERCENT, new DoubleWritable((double)initialBatchSize / maxId));
         LOG.info(VERTEX_COUNT + "=" + maxId);
 
     }
-    private Random getRandomWithSeed(String name){
-        String randomSeedStr = getConf().get(PIVOT_BATCH_RANDOM_SEED);
-        if (randomSeedStr == null) {
-            random = new Random();
-        }
-        else {
-            long seed = Long.parseLong(randomSeedStr);
-            random = new Random(seed);
-            LOG.info("Set random seed: " + seed);
-        }
-        return random;
-    }
+
     private int getRequiredHBSEConfiguration(String name) {
         String propValue = getConf().get(name);
         try {
@@ -313,9 +295,12 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
             throw e;
         }
     }
-    private int getOptionalHBSEConfiguration(String name, int defaultValue){
+
+    private int getOptionalHBSEConfiguration(String name, int defaultValue) {
         String propValue = getConf().get(name);
         try {
+            if (propValue == null)
+                return defaultValue;
             return Integer.parseInt(propValue);
         } catch (NumberFormatException e) {
             LOG.error("Option not set or invalid. \"" + name + "\" must be set to a valid int, was set to: " + defaultValue, e);
@@ -341,10 +326,6 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         LOG.info("Superstep: " + step + " starting in State: " + state);
         switch (state) {
             case START:
-                if (currentPivots.isEmpty()) {
-                    int currentBatchSize = (step == 0) ? this.initialBatchSize : this.batchSize;
-                    choosePivots(currentBatchSize);
-                }
                 state = State.SHORTEST_PATH_START;
                 setGlobalState(state);
                 LOG.info("Superstep: " + step + " Switched to State: " + state);
@@ -364,7 +345,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
                     if (shortestPathPhasesCompleted == shortestPathPhases) {
                         state = State.PAIR_DEPENDENCY_PING_PREDECESSOR;
                     } else {
-                        choosePivots(this.batchSize);
+                        //TODO: REMOVE choosePivots(this.batchSize);
                         state = State.SHORTEST_PATH_START;
                     }
                     setGlobalState(state);
@@ -407,17 +388,17 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
                         state = State.FINISHED;
                     } else {
                         LOG.info(logprefix + " Set Delta < cutoff value; counter=" + stabilityRunningCounter);
-                        choosePivots(this.batchSize);
+                        //TODO: REMOVE choosePivots(this.batchSize);
                         state = State.SHORTEST_PATH_START;
                     }
 
-                } else if (currentPivots.size() + previousPivots.size() == this.maxId) {
+                } else if (getCurrentPivots().getPivots().size() + getPreviousPivots().getPivots().size() == this.maxId) {
                     LOG.info(logprefix + " All possible pivots selected, exiting");
                     state = State.FINISHED;
                 } else {
                     stabilityRunningCounter = 0; // reset stabilityRunningCounter
                     LOG.info(logprefix + " Delta did not meet cutoff, starting next cycle.");
-                    choosePivots(this.batchSize);
+                    //TODO: REMOVE choosePivots(this.batchSize);
                     state = State.SHORTEST_PATH_START;
                 }
                 setGlobalState(state);
@@ -441,7 +422,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      *
      * @param currentBatchSize The number of pivots you want in the batch.
      */
-    private void choosePivots(int currentBatchSize) {
+    /*private void choosePivots(int currentBatchSize) {
         LOG.info("Selecting new pivots.");
         previousPivots.addAll(currentPivots);
         currentPivots.clear();
@@ -463,14 +444,14 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         LOG.info("Pivot selection complete. Took " + attempt + " attempts.");
         LOG.info("Pivot set: " + b.toString());
         setGlobalPivots(currentPivots);
-    }
+    }*/
 
     /**
      * Writes the various statistics when computation finishes.
      */
     private void writeStats() {
 
-        int pivotsSelected = this.currentPivots.size() + this.previousPivots.size();
+        int pivotsSelected = getCurrentPivots().getPivots().size() + getPreviousPivots().getPivots().size();
         double percentSelected = (double) pivotsSelected / this.maxId;
         int time = (int) ((end.getTime() - start.getTime()) / 1000);
 
@@ -510,12 +491,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      * @param pivots A collection of selected pivots.
      */
     private void setGlobalPivots(Collection<String> pivots) {
-        Text[] batch = new Text[pivots.size()];
-        int i = 0;
-        for (String pivot : pivots) {
-            batch[i++] = new Text(pivot);
-        }
-        this.setAggregatedValue(PIVOT_AGG, new TextArrayWritable(batch));
+        this.setAggregatedValue(PIVOT_AGG, new TextArrayWritable(pivots));
     }
 
 
@@ -587,5 +563,11 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         return (conf.get(FS_DEFAULT_FS) != null ? conf.get(FS_DEFAULT_FS) : conf.get(FS_DEFAULT_NAME));
     }
 
+    private TextArrayWritable getCurrentPivots(){
+        return getAggregatedValue(PIVOT_AGG);
+    }
+    private TextArrayWritable getPreviousPivots(){
+        return getAggregatedValue(PREVIOUS_PIVOT_AGG);
+    }
 
 }

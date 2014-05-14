@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.highbetweenness;
 
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
@@ -31,7 +32,7 @@ import java.io.IOException;
  * For more information on this method of calculation betweenness centrality see
  * "U. Brandes, A Faster Algorithm for Betweenness Centrality"
  */
-public class PathData extends StringWritable implements Writable {
+public class PathData implements Writable {
 
     /**
      * The Distance of the path.
@@ -127,8 +128,8 @@ public class PathData extends StringWritable implements Writable {
     // I/O
 
     public void write(DataOutput out) throws IOException {
-        writeString(out, source);
-        writeString(out,from);
+        Text.writeString(out, source);
+        Text.writeString(out,from);
         out.writeLong(distance);
         out.writeLong(numPaths);
         out.writeDouble(dependency);
@@ -137,8 +138,8 @@ public class PathData extends StringWritable implements Writable {
 
     public void readFields(DataInput in) throws IOException {
 
-        source = readString(in);
-        from = readString(in);
+        source = Text.readString(in);
+        from = Text.readString(in);
         distance = in.readLong();
         numPaths = in.readLong();
         dependency = in.readDouble();

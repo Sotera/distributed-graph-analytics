@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.highbetweenness;
 
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
@@ -115,7 +116,7 @@ public class ShortestPathList implements Writable {
         out.writeLong(distance);
         out.writeInt(this.predPathCountMap.size());
         for (Entry<String, Long> entry : predPathCountMap.entrySet()) {
-            out.writeBytes(entry.getKey());
+            Text.writeString(out, entry.getKey());
             out.writeLong(entry.getValue());
         }
 
@@ -123,12 +124,11 @@ public class ShortestPathList implements Writable {
 
 
     public void readFields(DataInput in) throws IOException {
+        this.predPathCountMap.clear();
         setDistance(in.readLong());
         int size = in.readInt();
-        this.predPathCountMap.clear();
         for (int i = 0; i < size; i++) {
-            //TODO: EXPLORE THE READ WRITE WITH STRINGS
-            predPathCountMap.put(in.readLine(), in.readLong());
+            predPathCountMap.put(Text.readString(in), in.readLong());
         }
     }
 

@@ -17,27 +17,55 @@
  */
 package com.soteradefense.dga.highbetweenness;
 
-import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A Simple IntArrayWritable.
  */
-public class TextArrayWritable extends ArrayWritable {
-    /**
-     * The Default Constructor for creating a new IntArrayWritable.
-     */
+public class TextArrayWritable implements Writable {
+
+    private Set<String> pivots;
+
+    public TextArrayWritable(Collection<String> pivots) {
+        super();
+        this.pivots = new HashSet<String>();
+        this.pivots.addAll(pivots);
+    }
+
     public TextArrayWritable() {
-        super(Text.class);
+        this(new HashSet<String>());
     }
 
-    /**
-     * Constructor to create a new IntArrayWritable with an array of IntWritable.
-     *
-     * @param values An array of IntWritable
-     */
-    public TextArrayWritable(Text[] values) {
-        super(Text.class, values);
+    public void aggregate(TextArrayWritable other) {
+        pivots.addAll(other.getPivots());
     }
 
+    @Override
+    public void write(DataOutput out) throws IOException {
+        out.writeInt(pivots.size());
+        for (String pivot : pivots) {
+            Text.writeString(out, pivot);
+        }
+    }
+
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        pivots.clear();
+        int size = in.readInt();
+        for (int i = 0; i < size; ++i) {
+            pivots.add(Text.readString(in));
+        }
+    }
+
+    public Set<String> getPivots() {
+        return pivots;
+    }
 }

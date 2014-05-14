@@ -22,16 +22,13 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.AbstractComputation;
 import org.apache.giraph.graph.Vertex;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 
 /**
@@ -75,7 +72,10 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         // if this vertex is a source (pivot) send shortest path messages to neighbors
 
         if (State.SHORTEST_PATH_START == state) {
-            if (getPivotBatch().contains(id)) {
+            if (!(step == 0)) {
+                setGlobalPivots(getPivotBatch(), HBSEMasterCompute.PREVIOUS_PIVOT_AGG);
+            }
+            if (isPivotPoint(id)) {
                 LOG.info("Superstep: " + step + " Start new shortest path computation. Source = " + id);
                 for (Edge<Text, Text> edge : vertex.getEdges()) {
                     sendMessage(edge.getTargetVertexId(), PathData.getShortestPathMessage(id, id, Long.parseLong(edge.getValue().toString()), 1));
@@ -248,16 +248,13 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
      *
      * @return The current batch of pivot points.
      */
-
     private Set<String> getPivotBatch() {
         TextArrayWritable iwa = this.getAggregatedValue(HBSEMasterCompute.PIVOT_AGG);
-        Writable[] wa = iwa.get();
-        Set<String> batch = new HashSet<String>();
-        for (Writable iw : wa) {
-            String pivot = iw.toString();
-            batch.add(pivot);
-        }
-        return batch;
+        return getBatch(iwa);
+    }
+
+    private Set<String> getBatch(TextArrayWritable iwa) {
+        return iwa.getPivots();
     }
 
 
@@ -280,5 +277,53 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         return new HighBetweennessList(size, id, value);
     }
 
+    private boolean isPivotPoint(String id) {
+        Random random = getRandomWithSeed(HBSEMasterCompute.PIVOT_BATCH_RANDOM_SEED);
+        double percentageCutoff;
+        if (getSuperstep() == 0) {
+            percentageCutoff = ((DoubleWritable) getAggregatedValue(HBSEMasterCompute.INITIAL_PIVOT_PERCENT)).get();
+        } else {
+            percentageCutoff = ((DoubleWritable) getAggregatedValue(HBSEMasterCompute.PIVOT_PERCENT)).get();
+        }
+        double randomNumber = random.nextDouble();
+        boolean isPivot = randomNumber < percentageCutoff;
+        if (isPivot) {
+            isPivot = !setPivot(id);
+        }
+        return isPivot;
+    }
 
+    private boolean setPivot(String id) {
+        boolean wasPreviouslyUsed = true;
+        Set<String> previousBatch = getPreviousPivotBatch();
+        if (!previousBatch.contains(id)) {
+            Set<String> currentPivots = getPivotBatch();
+            currentPivots.add(id);
+            setGlobalPivots(currentPivots, HBSEMasterCompute.PIVOT_AGG);
+            wasPreviouslyUsed = false;
+        }
+        return wasPreviouslyUsed;
+    }
+
+    private void setGlobalPivots(Collection<String> pivots, String name) {
+        this.aggregate(name, new TextArrayWritable(pivots));
+    }
+
+    private Set<String> getPreviousPivotBatch() {
+        TextArrayWritable previousPivots = getAggregatedValue(HBSEMasterCompute.PREVIOUS_PIVOT_AGG);
+        return getBatch(previousPivots);
+    }
+
+    private Random getRandomWithSeed(String name) {
+        Random random;
+        String randomSeedStr = getConf().get(name);
+        if (randomSeedStr == null) {
+            random = new Random();
+        } else {
+            long seed = Long.parseLong(randomSeedStr);
+            random = new Random(seed);
+            LOG.info("Set random seed: " + seed);
+        }
+        return random;
+    }
 }
