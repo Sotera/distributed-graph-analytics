@@ -68,7 +68,7 @@ public class SimpleEdgeInputFormatTest extends SimpleEdgeInputFormat {
         ter.initialize(null, tac);
         assertEquals(ter.getCurrentSourceId(), new Text("1"));
         assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text("2"));
-        assertEquals(ter.getCurrentEdge().getValue(), new Text("1"));
+        assertEquals(ter.getCurrentEdge().getValue(), new Text());
 
     }
 

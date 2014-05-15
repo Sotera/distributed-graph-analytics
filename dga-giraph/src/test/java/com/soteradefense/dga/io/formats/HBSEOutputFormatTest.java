@@ -40,12 +40,12 @@ import static org.mockito.Mockito.when;
 
 public class HBSEOutputFormatTest extends HBSEOutputFormat {
     private ImmutableClassesGiraphConfiguration<
-            IntWritable,VertexData,IntWritable> conf;
+            Text,VertexData,Text> conf;
     @Before
     public void setUp() throws Exception {
         GiraphConfiguration giraphConfiguration = new GiraphConfiguration();
         giraphConfiguration.setComputationClass(BasicComputation.class);
-        conf = new ImmutableClassesGiraphConfiguration<IntWritable,VertexData,IntWritable>(giraphConfiguration);
+        conf = new ImmutableClassesGiraphConfiguration<Text,VertexData,Text>(giraphConfiguration);
     }
     @Override
     public TextVertexWriter createVertexWriter(TaskAttemptContext context) throws IOException, InterruptedException {
@@ -65,8 +65,8 @@ public class HBSEOutputFormatTest extends HBSEOutputFormat {
         TaskAttemptContext tac = mock(TaskAttemptContext.class);
         when(tac.getConfiguration()).thenReturn(conf);
 
-        Vertex<IntWritable,VertexData,IntWritable> vertex = mock(Vertex.class);
-        when(vertex.getId()).thenReturn(new IntWritable(1));
+        Vertex<Text,VertexData,Text> vertex = mock(Vertex.class);
+        when(vertex.getId()).thenReturn(new Text("1"));
         when(vertex.getValue()).thenReturn(new VertexData());
         // Create empty iterator == no edges
         final RecordWriter<Text,Text> tw = mock(RecordWriter.class);

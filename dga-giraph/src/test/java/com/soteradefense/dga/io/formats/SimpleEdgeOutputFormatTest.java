@@ -22,7 +22,6 @@ import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.VIntWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.junit.Before;
@@ -31,17 +30,18 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Iterator;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
+public class SimpleEdgeOutputFormatTest extends SimpleEdgeOutputFormat {
 
     private ImmutableClassesGiraphConfiguration conf;
+    
     private TaskAttemptContext tac;
 
     private Vertex<Text, Text, Text> vertex;
+
     Edge<Text, Text> edge1;
+
     Edge<Text, Text> edge2;
 
     private RecordWriter<Text, Text> rw;
@@ -77,7 +77,7 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
     }
 
     public TextEdgeWriter<Text, Text, Text> createEdgeWriter(final RecordWriter<Text, Text> rw) {
-        return new SimpleTsvEdgeWriter() {
+        return new SimpleEdgeWriter() {
             @Override
             protected RecordWriter<Text, Text> createLineRecordWriter(TaskAttemptContext context) throws IOException, InterruptedException {
                 return rw;
@@ -88,13 +88,13 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
     @Test
     public void testWriteGraphAsEdges() throws Exception {
         TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
+        conf.set(SIMPLE_WRITE_EDGE_VALUE, "true");
         writer.setConf(conf);
         writer.initialize(tac);
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge1);
         verify(rw).write(new Text("34\t12\t1"), null);
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge2);
         verify(rw).write(new Text("34\t6\t4"), null);
-
     }
 
     @Test
@@ -102,8 +102,8 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
         TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
 
         GiraphConfiguration giraphConfiguration = new GiraphConfiguration();
-        giraphConfiguration.set(SimpleTsvEdgeOutputFormat.LINE_TOKENIZE_VALUE, ":");
-
+        giraphConfiguration.set(SimpleEdgeOutputFormat.LINE_TOKENIZE_VALUE, ":");
+        giraphConfiguration.set(SIMPLE_WRITE_EDGE_VALUE, "true");
         writer.setConf(new ImmutableClassesGiraphConfiguration(giraphConfiguration));
         writer.initialize(tac);
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge1);
@@ -125,8 +125,7 @@ public class SimpleTsvEdgeOutputFormatTest extends SimpleTsvEdgeOutputFormat {
         when(edge.getValue()).thenReturn(new Text());
 
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge);
-        //TODO: Ask about the Edge Weight default with Text
-        verify(rw).write(new Text("34\t12\t"), null);
+        verify(rw).write(new Text("34\t12"), null);
 
     }
 }

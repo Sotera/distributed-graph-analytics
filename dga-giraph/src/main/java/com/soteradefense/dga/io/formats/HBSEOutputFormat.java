@@ -30,7 +30,7 @@ import java.io.IOException;
 /**
  * Writes the approximated betweenness value for each vertex
  */
-public class HBSEOutputFormat extends TextVertexOutputFormat<IntWritable, VertexData, IntWritable> {
+public class HBSEOutputFormat extends TextVertexOutputFormat<Text, VertexData, Text> {
 
     @Override
     public TextVertexWriter createVertexWriter(TaskAttemptContext context) throws IOException,
@@ -50,9 +50,9 @@ public class HBSEOutputFormat extends TextVertexOutputFormat<IntWritable, Vertex
          * @throws IOException
          * @throws InterruptedException
          */
-        public void writeVertex(Vertex<IntWritable, VertexData, IntWritable> vertex) throws IOException, InterruptedException {
+        public void writeVertex(Vertex<Text, VertexData, Text> vertex) throws IOException, InterruptedException {
             double approxBC = vertex.getValue().getApproxBetweenness();
-            getRecordWriter().write(new Text(Integer.toString(vertex.getId().get())), new Text(Double.toString(approxBC)));
+            getRecordWriter().write(new Text(vertex.getId().toString()), new Text(Double.toString(approxBC)));
         }
 
     }

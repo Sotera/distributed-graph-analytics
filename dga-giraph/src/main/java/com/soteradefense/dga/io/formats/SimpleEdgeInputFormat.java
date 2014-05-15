@@ -22,7 +22,6 @@ import java.io.IOException;
 import org.apache.giraph.io.EdgeReader;
 import org.apache.giraph.io.ReverseEdgeDuplicator;
 import org.apache.giraph.io.formats.TextEdgeInputFormat;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -39,9 +38,9 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
  * in both directions where needed, or set the io.edge.reverse.duplicator custom argument to true.
  * <p/>
  * Format:
- * src,target,weight
+ * src,target,edgeValue
  * OR
- * src,target (if no weight is specified a weight of 1 is assumed.
+ * src,target (if no edgeValue is specified a edgeValue of 1 is assumed.
  */
 public class SimpleEdgeInputFormat extends TextEdgeInputFormat<Text, Text> {
 
@@ -56,18 +55,20 @@ public class SimpleEdgeInputFormat extends TextEdgeInputFormat<Text, Text> {
     public static final String LINE_TOKENIZE_VALUE_DEFAULT = ",";
 
     /**
-     * Key we use in the GiraphConfiguration to denote our default edge weight
+     * Key we use in the GiraphConfiguration to denote our default edge edgeValue
      */
-    public static final String EDGE_WEIGHT_VALUE = "simple.edge.weight.default";
+    public static final String EDGE_VALUE = "simple.edge.value.default";
 
     /**
-     * Edge weight used by default if not provided by data or overridden in GiraphConfiguration
+     * Edge edgeValue used by default if not provided by data or overridden in GiraphConfiguration
      */
-    public static final String EDGE_WEIGHT_VALUE_DEFAULT = "1";
+    public static final String EDGE_VALUE_DEFAULT = "";
+
     /**
      * Configuration Identifier to use a reverse edge.
      */
     public static final String IO_EDGE_REVERSE_DUPLICATOR = "io.edge.reverse.duplicator";
+
     /**
      * Default Value for the reverse edge duplicator.
      */
@@ -85,14 +86,17 @@ public class SimpleEdgeInputFormat extends TextEdgeInputFormat<Text, Text> {
      * A SimpleEdge for encapsulating data.
      */
     private class SimpleEdge {
-        private String src;
-        private String target;
-        private String weight;
 
-        public SimpleEdge(String[] tokens, String defaultWeight) {
+        private String src;
+
+        private String target;
+
+        private String edgeValue;
+
+        public SimpleEdge(String[] tokens, String defaultEdgeValue) {
             src = tokens[0];
             target = tokens[1];
-            weight = (tokens.length > 2) ? tokens[2] : defaultWeight;
+            edgeValue = (tokens.length > 2) ? tokens[2] : defaultEdgeValue;
         }
     }
 
@@ -102,19 +106,20 @@ public class SimpleEdgeInputFormat extends TextEdgeInputFormat<Text, Text> {
     public class SimpleEdgeReader extends TextEdgeReaderFromEachLineProcessed<SimpleEdge> {
 
         private String delimiter;
-        private String defaultWeight;
+
+        private String defaultEdgeValue;
 
         @Override
         public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
             super.initialize(inputSplit, context);
             delimiter = getConf().get(LINE_TOKENIZE_VALUE, LINE_TOKENIZE_VALUE_DEFAULT);
-            defaultWeight = getConf().get(EDGE_WEIGHT_VALUE, EDGE_WEIGHT_VALUE_DEFAULT);
+            defaultEdgeValue = getConf().get(EDGE_VALUE, EDGE_VALUE_DEFAULT);
         }
 
         @Override
         protected SimpleEdge preprocessLine(Text line) throws IOException {
             String[] tokens = line.toString().split(delimiter);
-            return new SimpleEdge(tokens, defaultWeight);
+            return new SimpleEdge(tokens, defaultEdgeValue);
         }
 
         @Override
@@ -129,7 +134,7 @@ public class SimpleEdgeInputFormat extends TextEdgeInputFormat<Text, Text> {
 
         @Override
         protected Text getValue(SimpleEdge line) throws IOException {
-            return new Text(line.weight);
+            return new Text(line.edgeValue);
         }
 
     }
