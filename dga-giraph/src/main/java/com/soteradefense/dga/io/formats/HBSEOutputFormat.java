@@ -33,8 +33,7 @@ import java.io.IOException;
 public class HBSEOutputFormat extends TextVertexOutputFormat<IntWritable, VertexData, IntWritable> {
 
     @Override
-    public TextVertexWriter createVertexWriter(
-            TaskAttemptContext context) throws IOException,
+    public TextVertexWriter createVertexWriter(TaskAttemptContext context) throws IOException,
             InterruptedException {
         return new SBVertexWriter();
     }
@@ -44,10 +43,14 @@ public class HBSEOutputFormat extends TextVertexOutputFormat<IntWritable, Vertex
      */
     public class SBVertexWriter extends TextVertexWriter {
 
-        public void writeVertex(
-                Vertex<IntWritable, VertexData, IntWritable> vertex)
-                throws IOException, InterruptedException {
-
+        /**
+         * Writes a Vertex
+         *
+         * @param vertex Vertex to Write
+         * @throws IOException
+         * @throws InterruptedException
+         */
+        public void writeVertex(Vertex<IntWritable, VertexData, IntWritable> vertex) throws IOException, InterruptedException {
             double approxBC = vertex.getValue().getApproxBetweenness();
             getRecordWriter().write(new Text(Integer.toString(vertex.getId().get())), new Text(Double.toString(approxBC)));
         }

@@ -82,9 +82,6 @@ public class HighBetweennessList implements Writable {
      */
     private PriorityQueue<BcTuple> highBetweennessQueue;
 
-
-    // CONSTRUCTORS
-
     /**
      * Creates a new HighBetweennessList with Max size 1.
      */
@@ -228,7 +225,7 @@ public class HighBetweennessList implements Writable {
     /**
      * Set the maxSize of this list
      *
-     * @param maxSize
+     * @param maxSize The maximum size of the priority queue.
      */
     public void setMaxSize(int maxSize) {
         this.maxSize = maxSize;

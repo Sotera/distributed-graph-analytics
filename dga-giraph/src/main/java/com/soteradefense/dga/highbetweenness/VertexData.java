@@ -54,11 +54,10 @@ public class VertexData implements Writable {
      */
     private double approxBetweenness = 0.0;
 
-
     /**
      * Add the new path to the list of shortest paths, if it is indeed a shortest path
      *
-     * @param data - a shortest path message
+     * @param data A shortest path message
      * @return The updated ShortestPathList, or null if no update was made.
      */
     public ShortestPathList addPathData(PathData data) {
@@ -98,7 +97,7 @@ public class VertexData implements Writable {
     }
 
 
-    // I/O
+    @Override
     public void write(DataOutput out) throws IOException {
         out.writeDouble(approxBetweenness);
         out.writeInt(pathDataMap.size());
@@ -114,6 +113,7 @@ public class VertexData implements Writable {
         }
     }
 
+    @Override
     public void readFields(DataInput in) throws IOException {
         //Reset Maps
         pathDataMap.clear();
@@ -138,9 +138,6 @@ public class VertexData implements Writable {
         }
 
     }
-
-
-    // GETTERS / SETTERS
 
     /**
      * Gets the Partial Dependency Map

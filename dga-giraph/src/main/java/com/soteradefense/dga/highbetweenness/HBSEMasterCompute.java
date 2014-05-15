@@ -55,10 +55,10 @@ import java.util.*;
  * WARNING:  id values for all vertices must be in 0,1,2,...N where N=vertex.count-1
  * <p/>
  * For background information on the approximation method see:
- * <a href="http://www.google.com/url?url=http://scholar.google.com/scholar_url%3Fhl%3Den%26q%3Dhttp://www.researchgate.net/publication/221273491_Efficient_Extraction_of_High-Betweenness_Vertices/file/3deec52a5dd8a6faa1.pdf%26sa%3DX%26scisig%3DAAGBfm1Xl41dnryyDhAGnt9AYOL6iHLoOg%26oi%3Dscholarr&rct=j&q=&esrc=s&sa=X&ei=j15yU7mwGMKdyATX7ID4BA&ved=0CC0QgAMoADAA&usg=AFQjCNH-dTuG7bYZk4__IQGwGvFrnQ9mGQ&cad=rja">"W. Chong, Efficent Extraction of High-Betweenness Vertices"</a>
+ * See <a href="http://www.google.com/url?url=http://scholar.google.com/scholar_url%3Fhl%3Den%26q%3Dhttp://www.researchgate.net/publication/221273491_Efficient_Extraction_of_High-Betweenness_Vertices/file/3deec52a5dd8a6faa1.pdf%26sa%3DX%26scisig%3DAAGBfm1Xl41dnryyDhAGnt9AYOL6iHLoOg%26oi%3Dscholarr&rct=j&q=&esrc=s&sa=X&ei=j15yU7mwGMKdyATX7ID4BA&ved=0CC0QgAMoADAA&usg=AFQjCNH-dTuG7bYZk4__IQGwGvFrnQ9mGQ&cad=rja">"W. Chong, Efficent Extraction of High-Betweenness Vertices"</a>
  * <p/>
  * For background information on the method of accumulation of pair dependencies and shortest path data see:
- * <a href="http://www.google.com/url?url=http://scholar.google.com/scholar_url%3Fhl%3Den%26q%3Dhttp://kops.ub.uni-konstanz.de/bitstream/handle/urn:nbn:de:bsz:352-opus-71888/algorithm.pdf%253Fsequence%253D1%26sa%3DX%26scisig%3DAAGBfm2tszb3JWsE0Mp8E5os2p-udyVKtw%26oi%3Dscholarr&rct=j&q=&esrc=s&sa=X&ei=4l5yU7CuOsOPyAS-7YLoBw&ved=0CCgQgAMoADAA&usg=AFQjCNGKQ_j2h7QQSQncFUGgkpKO4Uo3Yw&cad=rja">"U. Brandes, A Faster Algorithm for Betweenness Centrality"</a>
+ * See <a href="http://www.google.com/url?url=http://scholar.google.com/scholar_url%3Fhl%3Den%26q%3Dhttp://kops.ub.uni-konstanz.de/bitstream/handle/urn:nbn:de:bsz:352-opus-71888/algorithm.pdf%253Fsequence%253D1%26sa%3DX%26scisig%3DAAGBfm2tszb3JWsE0Mp8E5os2p-udyVKtw%26oi%3Dscholarr&rct=j&q=&esrc=s&sa=X&ei=4l5yU7CuOsOPyAS-7YLoBw&ved=0CCgQgAMoADAA&usg=AFQjCNGKQ_j2h7QQSQncFUGgkpKO4Uo3Yw&cad=rja">"U. Brandes, A Faster Algorithm for Betweenness Centrality"</a>
  */
 public class HBSEMasterCompute extends DefaultMasterCompute {
 
@@ -254,7 +254,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         this.registerPersistentAggregator(PIVOT_PERCENT, DoubleOverwriteAggregator.class);
         this.registerPersistentAggregator(INITIAL_PIVOT_PERCENT, DoubleOverwriteAggregator.class);
         this.registerAggregator(UPDATE_COUNT_AGG, IntSumAggregator.class);
-        this.registerAggregator(HIGH_BC_SET_AGG, HighBCSetAggregator.class);
+        this.registerAggregator(HIGH_BC_SET_AGG, HighBetweennessListAggregator.class);
 
         String defaultFS = this.getDefaultFS(this.getConf());
         if (defaultFS == null) {

@@ -20,7 +20,7 @@ package com.soteradefense.dga.highbetweenness;
 import org.apache.giraph.aggregators.BasicAggregator;
 
 /**
- * Stores a single TextArrayWritable for global broadcast / communication.
+ * Stores a single PivotSetWritable for global broadcast / communication.
  */
 public class PivotSetAggregator extends BasicAggregator<PivotSetWritable> {
 
@@ -36,7 +36,7 @@ public class PivotSetAggregator extends BasicAggregator<PivotSetWritable> {
     }
 
     /**
-     * Returns an empty TextArrayWritable
+     * Returns an empty PivotSetWritable
      */
     public PivotSetWritable createInitialValue() {
         return new PivotSetWritable();

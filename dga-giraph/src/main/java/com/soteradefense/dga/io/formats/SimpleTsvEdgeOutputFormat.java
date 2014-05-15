@@ -32,10 +32,24 @@ import java.io.IOException;
  */
 public class SimpleTsvEdgeOutputFormat extends TextEdgeOutputFormat<Text, Text, Text> {
 
+    /**
+     * Configuration Identifier for the file delimiter.
+     */
     public static final String LINE_TOKENIZE_VALUE = "simple.tsv.edge.delimiter";
 
+    /**
+     * The default value for the file delimiter.
+     */
     public static final String LINE_TOKENIZE_VALUE_DEFAULT = "\t";
+
+    /**
+     * Configuration Identifier to use the source value when outputting.
+     */
     public static final String SIMPLE_TSV_USE_SOURCE_VALUE = "simple.tsv.use.source.value";
+
+    /**
+     * The default value for the Use Source Value Configuration.
+     */
     public static final String SIMPLE_TSV_USE_SOURCE_VALUE_DEFAULT = "false";
 
     @Override
@@ -43,10 +57,21 @@ public class SimpleTsvEdgeOutputFormat extends TextEdgeOutputFormat<Text, Text, 
         return new SimpleTsvEdgeWriter();
     }
 
+    /**
+     * A Simple Edge Writer that writes each edge into a file on HDFS.
+     */
     protected class SimpleTsvEdgeWriter extends TextEdgeWriterToEachLine<Text, Text, Text> {
 
+        /**
+         * Delimiter to use when separating values.
+         */
         private String delimiter;
+
+        /**
+         * Flag that says whether or not to use the source value when outputting.
+         */
         private boolean useSourceValue;
+
         /**
          * Upon intialization, determines the field separator and default weight to use from the GiraphConfiguration
          * @param context
@@ -60,6 +85,14 @@ public class SimpleTsvEdgeOutputFormat extends TextEdgeOutputFormat<Text, Text, 
             useSourceValue = Boolean.parseBoolean(getConf().get(SIMPLE_TSV_USE_SOURCE_VALUE, SIMPLE_TSV_USE_SOURCE_VALUE_DEFAULT));
         }
 
+        /**
+         * Converts an edge to a writable line.
+         * @param sourceId Vertex Id
+         * @param sourceValue Vertex Value
+         * @param edge Edge that it is writing.
+         * @return A Text value formatted to be a line.
+         * @throws IOException
+         */
         @Override
         protected Text convertEdgeToLine(Text sourceId, Text sourceValue, Edge<Text, Text> edge) throws IOException {
             if(!useSourceValue) {

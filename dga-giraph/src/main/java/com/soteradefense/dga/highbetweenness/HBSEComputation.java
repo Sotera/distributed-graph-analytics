@@ -38,10 +38,10 @@ import java.util.Map.Entry;
  * betweenness centrality.
  * <p/>
  * For background information on the approximation method see:
- * "W. Chong, Efficient Extraction of High-Betweenness Vertices"
+ * See <a href="http://scholar.google.com/scholar_url?hl=en&q=http://www.researchgate.net/publication/221273491_Efficient_Extraction_of_High-Betweenness_Vertices/file/3deec52a5dd8a6faa1.pdf&sa=X&scisig=AAGBfm1Xl41dnryyDhAGnt9AYOL6iHLoOg&oi=scholarr">"W. Chong, Efficient Extraction of High-Betweenness Vertices"</a>
  * <p/>
  * For background information on the method of accumulation of pair dependencies and shortest path data see:
- * "U. Brandes, A Faster Algorithm for Betweenness Centrality"
+ * See <a href="http://www.google.com/url?url=http://scholar.google.com/scholar_url%3Fhl%3Den%26q%3Dhttp://kops.ub.uni-konstanz.de/bitstream/handle/urn:nbn:de:bsz:352-opus-71888/algorithm.pdf%253Fsequence%253D1%26sa%3DX%26scisig%3DAAGBfm2tszb3JWsE0Mp8E5os2p-udyVKtw%26oi%3Dscholarr&rct=j&q=&esrc=s&sa=X&ei=fwl1U4a9KeKgsASZqYGQAQ&ved=0CCoQgAMoADAA&usg=AFQjCNEAaZe30FmMsqHyJ1mjLJbBHcrd8w&cad=rja">"U. Brandes, A Faster Algorithm for Betweenness Centrality"</a>
  */
 public class HBSEComputation extends AbstractComputation<Text, VertexData, Text, PathData, PathData> {
 
@@ -51,9 +51,11 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
      * Works in two major stages which are repeated and coordinated
      * by the setting of a global state (set by the master compute class)
      * <p/>
-     * Stage 1:  Discover shortest paths, and shortest path counts for each
-     * source vertex in a globally set pivot batch to each node in the graph.
-     * Stage 2:  Accumulate pair dependencies
+     * <p/>
+     * <ul>
+     * <li>Stage 1:  Discover shortest paths, and shortest path counts for each source vertex in a globally set pivot batch to each node in the graph.</li>
+     * <li>Stage 2:  Accumulate pair dependencies.</li>
+     * </ul>
      */
     @Override
     public void compute(Vertex<Text, VertexData, Text> vertex, Iterable<PathData> messages) throws IOException {
@@ -102,7 +104,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
             for (Entry<String, ShortestPathList> entry : updatedPathMap.entrySet()) {
                 ShortestPathList spl = entry.getValue();
                 String src = entry.getKey();
-                long numPaths = spl.getNumShortestPaths();
+                long numPaths = spl.getShortestPathCount();
                 updateCount++;
                 for (Edge<Text, Text> edge : vertex.getEdges()) {
                     long newDistance = spl.getDistance() + Long.parseLong(edge.getValue().toString());
@@ -122,7 +124,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                 String source = entry.getKey();
                 long distance = entry.getValue().getDistance();
                 if (distance > 0) { // exclude this vertex
-                    for (String pred : entry.getValue().getPredPathCountMap().keySet()) {
+                    for (String pred : entry.getValue().getPredecessorPathCountMap().keySet()) {
                         this.sendMessage(new Text(pred), PathData.getPingMessage(source));
                         builder.append("(").append(pred).append(",").append(source).append("),");
                     }
@@ -161,10 +163,10 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
             if (noSuccessor.size() > 0) {
                 for (String src : noSuccessor) {
                     ShortestPathList spl = vertexValue.getPathDataMap().get(src);
-                    long numPaths = spl.getNumShortestPaths();
+                    long numPaths = spl.getShortestPathCount();
                     double dep = 0;
-                    for (String pred : spl.getPredPathCountMap().keySet()) {
-                        this.sendMessage(new Text(pred), PathData.getDependencyMessage(src, dep, numPaths));
+                    for (String predecessor : spl.getPredecessorPathCountMap().keySet()) {
+                        this.sendMessage(new Text(predecessor), PathData.getDependencyMessage(src, dep, numPaths));
                     }
                 }
                 noSuccessor.clear();
@@ -188,7 +190,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
 
                 double successorDep = message.getDependency();
                 long successorNumPaths = message.getNumPaths();
-                long numPaths = vertexValue.getPathDataMap().get(src).getNumShortestPaths();
+                long numPaths = vertexValue.getPathDataMap().get(src).getShortestPathCount();
                 double partialDep = ((double) numPaths / successorNumPaths) * (1 + successorDep);
                 LOG.debug("ID: " + id + " Step: " + step + " message {src:" + src + " successorPaths:" + successorNumPaths + " successorDep:" + successorDep + "} calculated {paths:" + numPaths + ", dep:" + partialDep + "}");
 
@@ -200,9 +202,9 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                     ShortestPathList spl = vertexValue.getPathDataMap().get(src);
                     StringBuilder builder = new StringBuilder();
                     this.aggregate(HBSEMasterCompute.UPDATE_COUNT_AGG, new IntWritable(1));
-                    for (String pred : spl.getPredPathCountMap().keySet()) {
-                        this.sendMessage(new Text(pred), PathData.getDependencyMessage(src, partialSum.getDependency(), numPaths));
-                        builder.append(pred).append(",");
+                    for (String predecessor : spl.getPredecessorPathCountMap().keySet()) {
+                        this.sendMessage(new Text(predecessor), PathData.getDependencyMessage(src, partialSum.getDependency(), numPaths));
+                        builder.append(predecessor).append(",");
                     }
                     if (builder.length() > 1) builder.deleteCharAt(builder.length() - 1);
                     LOG.debug("ID: " + id + " Step: " + step + " forwarding partial dep to predecessors (" + builder.toString() + ") {src:" + src + ", paths:" + numPaths + ", dep:" + partialSum.getDependency() + "}");
@@ -216,8 +218,8 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         // set stability, as determined in the master compute class.
         if (State.PAIR_DEPENDENCY_COMPLETE == state) {
             double approxBetweenness = vertexValue.getApproxBetweenness();
-            for (PartialDependency partialDep : vertexValue.getPartialDependencyMap().values()) {
-                approxBetweenness += partialDep.getDependency();
+            for (PartialDependency partialDependency : vertexValue.getPartialDependencyMap().values()) {
+                approxBetweenness += partialDependency.getDependency();
             }
             vertexValue.setApproxBetweenness(approxBetweenness);
             vertexValue.getPartialDependencyMap().clear();
@@ -270,7 +272,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
      * @return an empty HighBetweennessList object.
      */
     public HighBetweennessList getNewHighBetweennessList(String id, double value) {
-        int size = 1;
+        int size;
         try {
             size = Integer.parseInt(getConf().get(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE));
         } catch (NumberFormatException e) {

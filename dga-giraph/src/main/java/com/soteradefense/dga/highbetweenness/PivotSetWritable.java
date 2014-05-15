@@ -28,22 +28,36 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A Simple IntArrayWritable.
+ * A Simple PivotSetWritable.
  */
 public class PivotSetWritable implements Writable {
 
+    /**
+     * A set to store Vertex Ids.
+     */
     private Set<String> pivots;
 
+    /**
+     * Constructor that accepts a Collection of Pivots for initialization.
+     * @param pivots A Collection of pivots.
+     */
     public PivotSetWritable(Collection<String> pivots) {
         super();
         this.pivots = new HashSet<String>();
         this.pivots.addAll(pivots);
     }
 
+    /**
+     * Default constructor that initializes with an empty HashSet.
+     */
     public PivotSetWritable() {
         this(new HashSet<String>());
     }
 
+    /**
+     * Adds all pivots of another PivotSet to this PivotSet.
+     * @param other A PivotWritable object.
+     */
     public void aggregate(PivotSetWritable other) {
         pivots.addAll(other.getPivots());
     }
@@ -65,6 +79,10 @@ public class PivotSetWritable implements Writable {
         }
     }
 
+    /**
+     * Gets the set of pivots.
+     * @return A HashSet of Pivots.
+     */
     public Set<String> getPivots() {
         return pivots;
     }

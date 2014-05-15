@@ -41,8 +41,8 @@ public class LeafCompressionComputation extends BasicComputation<Text, Text, Tex
 
             for (Text incomingMessage : messages) {
                 Text messageVertex = new Text(incomingMessage.toString().split(":")[0]);
-                int value = getVertexValue(incomingMessage.toString().split(":")[1]);
-                vertex.setValue(new Text(String.format("%d", getVertexValue(vertex.getValue().toString()) + 1 + value)));
+                int messageValue = getVertexValue(incomingMessage.toString().split(":")[1]);
+                vertex.setValue(new Text(String.format("%d", getVertexValue(vertex.getValue().toString()) + 1 + messageValue)));
 
                 // Remove the vertex and its corresponding edge
                 removeVertexRequest(messageVertex);

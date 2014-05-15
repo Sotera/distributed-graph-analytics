@@ -22,7 +22,7 @@ import org.apache.giraph.aggregators.BasicAggregator;
 /**
  * Aggregator to accumulate a list of the top N vertices, ranked by approximated betweenness value.
  */
-public class HighBCSetAggregator extends BasicAggregator<HighBetweennessList> {
+public class HighBetweennessListAggregator extends BasicAggregator<HighBetweennessList> {
 
 
     /**

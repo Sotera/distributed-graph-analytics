@@ -59,14 +59,15 @@ public class PathData implements Writable {
      */
     private long numPaths;
 
-
     /**
-     * The Default Constructor for PathData
-     * * Sets Distance to the Max long value.
-     * * Sets source to -1.
-     * * Sets from to -1.
-     * * Sets dependency to -1.
-     * * Sets numPaths to -1.
+     * The Default Constructor for PathData:
+     * <ul>
+     * <li>Sets Distance to the Max long value.</li>
+     * <li>Sets source to -1.</li>
+     * <li>Sets from to -1.</li>
+     * <li>Sets dependency to -1.</li>
+     * <li>Sets numPaths to -1.</li>
+     * </ul>
      */
     public PathData() {
         distance = Long.MAX_VALUE;
@@ -75,7 +76,6 @@ public class PathData implements Writable {
         dependency = -1;
         numPaths = -1;
     }
-
 
     /**
      * Get a new PathData message for shortest path computation.
@@ -94,7 +94,6 @@ public class PathData implements Writable {
         data.setNumPaths(numPaths);
         return data;
     }
-
 
     /**
      * Get a new PathData message for sending successor / predecessor information to neighbors
@@ -124,18 +123,16 @@ public class PathData implements Writable {
         return data;
     }
 
-
-    // I/O
-
+    @Override
     public void write(DataOutput out) throws IOException {
         Text.writeString(out, source);
-        Text.writeString(out,from);
+        Text.writeString(out, from);
         out.writeLong(distance);
         out.writeLong(numPaths);
         out.writeDouble(dependency);
     }
 
-
+    @Override
     public void readFields(DataInput in) throws IOException {
 
         source = Text.readString(in);
@@ -144,10 +141,6 @@ public class PathData implements Writable {
         numPaths = in.readLong();
         dependency = in.readDouble();
     }
-
-	
-	
-	/* Getters and Setters */
 
     /**
      * Gets the distance from source to a predecessor.

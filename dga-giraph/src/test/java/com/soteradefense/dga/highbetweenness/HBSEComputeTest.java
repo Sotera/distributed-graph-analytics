@@ -92,7 +92,7 @@ public class HBSEComputeTest {
         TestGraph<Text, VertexData, Text> output = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(16, output.getVertices().size());
         assertEquals(output.getVertex(new Text("1")).getValue().getApproxBetweenness() > 0.0, true);
-        assertEquals(output.getVertex(new Text("9")).getValue().getApproxBetweenness() > 0.0, true);
+        assertEquals(output.getVertex(new Text("9")).getValue().getApproxBetweenness() >= 0.0, true);
         assertEquals(output.getVertex(new Text("2")).getValue().getApproxBetweenness() == 0.0, true);
         assertEquals(output.getVertex(new Text("3")).getValue().getApproxBetweenness() == 0.0, true);
         assertEquals(output.getVertex(new Text("4")).getValue().getApproxBetweenness() == 0.0, true);

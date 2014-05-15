@@ -43,17 +43,15 @@ public class ShortestPathList implements Writable {
     /**
      * The map of predecessor to number of shortest paths from source to that predecessor
      */
-    private Map<String, Long> predPathCountMap;
-
+    private Map<String, Long> predecessorPathCountMap;
 
     /**
      * Create a new shortest empty Path List
      */
     public ShortestPathList() {
         distance = Long.MAX_VALUE;
-        setPredPathCountMap(new HashMap<String, Long>());
+        setPredecessorPathCountMap(new HashMap<String, Long>());
     }
-
 
     /**
      * Create a new shortest path list based on a
@@ -64,21 +62,19 @@ public class ShortestPathList implements Writable {
     public ShortestPathList(PathData data) {
         this();
         this.distance = data.getDistance();
-        predPathCountMap.put(data.getFrom(), data.getNumPaths());
+        predecessorPathCountMap.put(data.getFrom(), data.getNumPaths());
     }
-
 
     /**
      * @return The number of shortest paths from source to this vertex
      */
-    public long getNumShortestPaths() {
+    public long getShortestPathCount() {
         long paths = 0L;
-        for (long pred : predPathCountMap.values()) {
-            paths += pred;
+        for (long predecessor : predecessorPathCountMap.values()) {
+            paths += predecessor;
         }
         return paths;
     }
-
 
     /**
      * Update This shortest path list based on a new shortest path message
@@ -88,52 +84,47 @@ public class ShortestPathList implements Writable {
      */
     public boolean update(PathData data) {
         if (data.getDistance() == this.distance) {
-            if (!this.predPathCountMap.containsKey(data.getFrom())) {
-                predPathCountMap.put(data.getFrom(), data.getNumPaths());
+            if (!this.predecessorPathCountMap.containsKey(data.getFrom())) {
+                predecessorPathCountMap.put(data.getFrom(), data.getNumPaths());
                 return true;
             } else {
-                long oldValue = predPathCountMap.get(data.getFrom());
+                long oldValue = predecessorPathCountMap.get(data.getFrom());
                 boolean update = oldValue != data.getNumPaths();
                 if (update) {
-                    predPathCountMap.put(data.getFrom(), data.getNumPaths());
+                    predecessorPathCountMap.put(data.getFrom(), data.getNumPaths());
                 }
                 return update;
             }
         } else if (data.getDistance() < this.distance) {
             this.distance = data.getDistance();
-            this.predPathCountMap.clear();
-            predPathCountMap.put(data.getFrom(), data.getNumPaths());
+            this.predecessorPathCountMap.clear();
+            predecessorPathCountMap.put(data.getFrom(), data.getNumPaths());
             return true;
         } else {
             return false;
         }
     }
 
-
-    // I/ O
-
+    @Override
     public void write(DataOutput out) throws IOException {
         out.writeLong(distance);
-        out.writeInt(this.predPathCountMap.size());
-        for (Entry<String, Long> entry : predPathCountMap.entrySet()) {
+        out.writeInt(this.predecessorPathCountMap.size());
+        for (Entry<String, Long> entry : predecessorPathCountMap.entrySet()) {
             Text.writeString(out, entry.getKey());
             out.writeLong(entry.getValue());
         }
 
     }
 
-
+    @Override
     public void readFields(DataInput in) throws IOException {
-        this.predPathCountMap.clear();
+        this.predecessorPathCountMap.clear();
         setDistance(in.readLong());
         int size = in.readInt();
         for (int i = 0; i < size; i++) {
-            predPathCountMap.put(Text.readString(in), in.readLong());
+            predecessorPathCountMap.put(Text.readString(in), in.readLong());
         }
     }
-
-
-    // GETTERS / SETTERS
 
     /**
      * @return The distance from a source to this vertex.
@@ -156,8 +147,8 @@ public class ShortestPathList implements Writable {
      *
      * @return The HashMap
      */
-    public Map<String, Long> getPredPathCountMap() {
-        return predPathCountMap;
+    public Map<String, Long> getPredecessorPathCountMap() {
+        return predecessorPathCountMap;
     }
 
     /**
@@ -165,8 +156,8 @@ public class ShortestPathList implements Writable {
      *
      * @param predPathCountMap The Map to set it to.
      */
-    public void setPredPathCountMap(Map<String, Long> predPathCountMap) {
-        this.predPathCountMap = predPathCountMap;
+    public void setPredecessorPathCountMap(Map<String, Long> predPathCountMap) {
+        this.predecessorPathCountMap = predPathCountMap;
     }
 
 }

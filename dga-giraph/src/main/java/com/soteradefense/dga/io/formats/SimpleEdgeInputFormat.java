@@ -28,7 +28,7 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 /**
- * Reads a comma separated, line delimited, edge file from hdfs.
+ * Reads a comma separated, line delimited, edge file from HDFS.
  * <p/>
  * WARNINGS / NOTES
  * <p/>
@@ -64,7 +64,13 @@ public class SimpleEdgeInputFormat extends TextEdgeInputFormat<Text, Text> {
      * Edge weight used by default if not provided by data or overridden in GiraphConfiguration
      */
     public static final String EDGE_WEIGHT_VALUE_DEFAULT = "1";
+    /**
+     * Configuration Identifier to use a reverse edge.
+     */
     public static final String IO_EDGE_REVERSE_DUPLICATOR = "io.edge.reverse.duplicator";
+    /**
+     * Default Value for the reverse edge duplicator.
+     */
     public static final String IO_EDGE_REVERSE_DUPLICATOR_DEFAULT = "false";
 
     @Override

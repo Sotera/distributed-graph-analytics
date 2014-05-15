@@ -60,7 +60,6 @@ public class PartialDependency implements Writable {
         this.dependency = dependency;
     }
 
-
     /**
      * Gets the dependency.
      *
@@ -116,15 +115,14 @@ public class PartialDependency implements Writable {
         this.dependency += diff;
     }
 
-
-    // I/O
-
+    @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(successors);
         out.writeDouble(dependency);
 
     }
 
+    @Override
     public void readFields(DataInput in) throws IOException {
         successors = in.readInt();
         dependency = in.readDouble();
