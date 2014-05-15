@@ -72,10 +72,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         // if this vertex is a source (pivot) send shortest path messages to neighbors
 
         if (State.SHORTEST_PATH_START == state) {
-            // If the step isn't 0 migrate the current pivots to previous pivots
-            if (!(step == 0)) {
-                setGlobalPivots(getPivotBatch(), HBSEMasterCompute.PREVIOUS_PIVOT_AGG);
-            }
+
             if (isPivotPoint(id)) {
                 LOG.info("Superstep: " + step + " Start new shortest path computation. Source = " + id);
                 for (Edge<Text, Text> edge : vertex.getEdges()) {

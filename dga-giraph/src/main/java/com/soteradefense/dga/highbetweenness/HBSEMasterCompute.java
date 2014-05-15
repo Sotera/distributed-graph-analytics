@@ -450,6 +450,9 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
                 LOG.error("INVALID STATE: " + state);
                 throw new IllegalStateException("Invalid State" + state);
         }
+        if (state == State.START && !(getSuperstep() == 0)) {
+            setGlobalPivots(getCurrentPivots().getPivots(), HBSEMasterCompute.PREVIOUS_PIVOT_AGG);
+        }
     }
 
     /**
@@ -492,12 +495,22 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     }
 
     /**
-     * Set pivots globally in the pivot aggregator
+     * Sets current pivots globally in the pivot aggregator
      *
      * @param pivots A collection of selected pivots.
      */
     private void setGlobalPivots(Collection<String> pivots) {
         this.setAggregatedValue(PIVOT_AGG, new PivotSetWritable(pivots));
+    }
+
+    /**
+     * Set pivots globally in the pivot aggregator
+     *
+     * @param pivots A collection of selected pivots.
+     * @param name Aggregator Identifier
+     */
+    private void setGlobalPivots(Collection<String> pivots, String name) {
+        this.setAggregatedValue(name, new PivotSetWritable(pivots));
     }
 
 

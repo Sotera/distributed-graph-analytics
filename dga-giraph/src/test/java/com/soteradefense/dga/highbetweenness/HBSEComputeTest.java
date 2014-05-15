@@ -83,6 +83,7 @@ public class HBSEComputeTest {
     @Test
     public void testTwoCriticalPointGraph() throws Exception {
         GiraphConfiguration conf = getConf();
+        // I had to add 9 to the pivot batch or else the test would become unpredictable.
         conf.set(HBSEMasterCompute.PIVOT_BATCH_STRING, "1,2,3,4,5,9");
         TestGraph<Text, VertexData, Text> input = getTwoCriticalPointGraph(conf);
         conf.set(HBSEMasterCompute.VERTEX_COUNT, "16");
