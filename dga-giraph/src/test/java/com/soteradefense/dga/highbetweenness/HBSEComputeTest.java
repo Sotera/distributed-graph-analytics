@@ -38,7 +38,7 @@ public class HBSEComputeTest {
         conf.set(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE, "10");
         conf.set(HBSEMasterCompute.BETWEENNESS_SET_STABILITY_COUNTER, "3");
         conf.set(HBSEMasterCompute.PIVOT_BATCH_STRING, "1,2,3,4,5");
-        conf.set(HBSEMasterCompute.PIVOT_BATCH_SIZE, "5");
+        conf.set(HBSEMasterCompute.PIVOT_BATCH_SIZE, "25");
         conf.set(HBSEMasterCompute.VERTEX_COUNT, "8");
         return conf;
     }
@@ -92,7 +92,7 @@ public class HBSEComputeTest {
         TestGraph<Text, VertexData, Text> output = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(16, output.getVertices().size());
         assertEquals(output.getVertex(new Text("1")).getValue().getApproxBetweenness() > 0.0, true);
-        assertEquals(output.getVertex(new Text("9")).getValue().getApproxBetweenness() >= 0.0, true);
+        assertEquals(output.getVertex(new Text("9")).getValue().getApproxBetweenness() > 0.0, true);
         assertEquals(output.getVertex(new Text("2")).getValue().getApproxBetweenness() == 0.0, true);
         assertEquals(output.getVertex(new Text("3")).getValue().getApproxBetweenness() == 0.0, true);
         assertEquals(output.getVertex(new Text("4")).getValue().getApproxBetweenness() == 0.0, true);

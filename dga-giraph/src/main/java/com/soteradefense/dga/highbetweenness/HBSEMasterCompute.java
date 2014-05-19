@@ -116,12 +116,12 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     public static final String BETWEENNESS_SET_MAX_SIZE = "betweenness.set.maxSize";
 
     /**
-     * Configuration Identifier for the pivot point batch size.
+     * Configuration Identifier for the pivot point batch size as a percent integer.
      */
     public static final String PIVOT_BATCH_SIZE = "pivot.batch.size";
 
     /**
-     * Configuration Identifier for the initial pivot point batch size.
+     * Configuration Identifier for the initial pivot point batch size as a percent integer.
      */
     public static final String PIVOT_BATCH_SIZE_INITIAL = PIVOT_BATCH_SIZE + ".initial";
 
@@ -305,8 +305,8 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
 
         this.setAggregatedValue(PREVIOUS_PIVOT_AGG, new PivotSetWritable());
         maxId = getRequiredHBSEConfiguration(VERTEX_COUNT);
-        this.setAggregatedValue(PIVOT_PERCENT, new DoubleWritable((double) batchSize / maxId));
-        this.setAggregatedValue(INITIAL_PIVOT_PERCENT, new DoubleWritable((double) initialBatchSize / maxId));
+        this.setAggregatedValue(PIVOT_PERCENT, new DoubleWritable((double) batchSize / 100.0));
+        this.setAggregatedValue(INITIAL_PIVOT_PERCENT, new DoubleWritable((double) initialBatchSize / 100.0));
         LOG.info(VERTEX_COUNT + "=" + maxId);
 
     }
