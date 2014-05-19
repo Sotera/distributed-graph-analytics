@@ -34,47 +34,47 @@ public class LeafCompressionComputationTest {
 
     @Test
     public void testComputationGoodData() throws Exception {
-        TestGraph<Text, Text, VIntWritable> testGraph = new TestGraph(giraphConf);
-        testGraph.addEdge(new Text("1"), new Text("2"), new VIntWritable(1));
-        testGraph.addEdge(new Text("1"), new Text("3"), new VIntWritable(1));
-        testGraph.addEdge(new Text("1"), new Text("4"), new VIntWritable(1));
-        testGraph.addEdge(new Text("1"), new Text("5"), new VIntWritable(1));
-        testGraph.addEdge(new Text("1"), new Text("6"), new VIntWritable(1));
-        testGraph.addEdge(new Text("2"), new Text("3"), new VIntWritable(1));
-        testGraph.addEdge(new Text("2"), new Text("4"), new VIntWritable(1));
-        testGraph.addEdge(new Text("2"), new Text("5"), new VIntWritable(1));
-        testGraph.addEdge(new Text("2"), new Text("1"), new VIntWritable(1));
-        testGraph.addEdge(new Text("3"), new Text("4"), new VIntWritable(1));
-        testGraph.addEdge(new Text("3"), new Text("5"), new VIntWritable(1));
-        testGraph.addEdge(new Text("3"), new Text("20"), new VIntWritable(1));
-        testGraph.addEdge(new Text("3"), new Text("1"), new VIntWritable(1));
-        testGraph.addEdge(new Text("3"), new Text("2"), new VIntWritable(1));
-        testGraph.addEdge(new Text("4"), new Text("5"), new VIntWritable(1));
-        testGraph.addEdge(new Text("4"), new Text("1"), new VIntWritable(1));
-        testGraph.addEdge(new Text("4"), new Text("2"), new VIntWritable(1));
-        testGraph.addEdge(new Text("4"), new Text("3"), new VIntWritable(1));
-        testGraph.addEdge(new Text("5"), new Text("1"), new VIntWritable(1));
-        testGraph.addEdge(new Text("5"), new Text("2"), new VIntWritable(1));
-        testGraph.addEdge(new Text("5"), new Text("3"), new VIntWritable(1));
-        testGraph.addEdge(new Text("5"), new Text("4"), new VIntWritable(1));
-        testGraph.addEdge(new Text("6"), new Text("1"), new VIntWritable(1));
-        testGraph.addEdge(new Text("6"), new Text("8"), new VIntWritable(1));
-        testGraph.addEdge(new Text("8"), new Text("6"), new VIntWritable(1));
-        testGraph.addEdge(new Text("8"), new Text("10"), new VIntWritable(1));
-        testGraph.addEdge(new Text("10"), new Text("8"), new VIntWritable(1));
-        testGraph.addEdge(new Text("10"), new Text("12"), new VIntWritable(1));
-        testGraph.addEdge(new Text("12"), new Text("10"), new VIntWritable(1));
-        testGraph.addEdge(new Text("15"), new Text("17"), new VIntWritable(1));
-        testGraph.addEdge(new Text("15"), new Text("19"), new VIntWritable(1));
-        testGraph.addEdge(new Text("17"), new Text("15"), new VIntWritable(1));
-        testGraph.addEdge(new Text("19"), new Text("15"), new VIntWritable(1));
-        testGraph.addEdge(new Text("19"), new Text("20"), new VIntWritable(1));
-        testGraph.addEdge(new Text("20"), new Text("3"), new VIntWritable(1));
-        testGraph.addEdge(new Text("20"), new Text("19"), new VIntWritable(1));
+        TestGraph<Text, Text, Text> testGraph = new TestGraph(giraphConf);
+        testGraph.addEdge(new Text("1"), new Text("2"), new Text("1"));
+        testGraph.addEdge(new Text("1"), new Text("3"), new Text("1"));
+        testGraph.addEdge(new Text("1"), new Text("4"), new Text("1"));
+        testGraph.addEdge(new Text("1"), new Text("5"), new Text("1"));
+        testGraph.addEdge(new Text("1"), new Text("6"), new Text("1"));
+        testGraph.addEdge(new Text("2"), new Text("3"), new Text("1"));
+        testGraph.addEdge(new Text("2"), new Text("4"), new Text("1"));
+        testGraph.addEdge(new Text("2"), new Text("5"), new Text("1"));
+        testGraph.addEdge(new Text("2"), new Text("1"), new Text("1"));
+        testGraph.addEdge(new Text("3"), new Text("4"), new Text("1"));
+        testGraph.addEdge(new Text("3"), new Text("5"), new Text("1"));
+        testGraph.addEdge(new Text("3"), new Text("20"), new Text("1"));
+        testGraph.addEdge(new Text("3"), new Text("1"), new Text("1"));
+        testGraph.addEdge(new Text("3"), new Text("2"), new Text("1"));
+        testGraph.addEdge(new Text("4"), new Text("5"), new Text("1"));
+        testGraph.addEdge(new Text("4"), new Text("1"), new Text("1"));
+        testGraph.addEdge(new Text("4"), new Text("2"), new Text("1"));
+        testGraph.addEdge(new Text("4"), new Text("3"), new Text("1"));
+        testGraph.addEdge(new Text("5"), new Text("1"), new Text("1"));
+        testGraph.addEdge(new Text("5"), new Text("2"), new Text("1"));
+        testGraph.addEdge(new Text("5"), new Text("3"), new Text("1"));
+        testGraph.addEdge(new Text("5"), new Text("4"), new Text("1"));
+        testGraph.addEdge(new Text("6"), new Text("1"), new Text("1"));
+        testGraph.addEdge(new Text("6"), new Text("8"), new Text("1"));
+        testGraph.addEdge(new Text("8"), new Text("6"), new Text("1"));
+        testGraph.addEdge(new Text("8"), new Text("10"), new Text("1"));
+        testGraph.addEdge(new Text("10"), new Text("8"), new Text("1"));
+        testGraph.addEdge(new Text("10"), new Text("12"), new Text("1"));
+        testGraph.addEdge(new Text("12"), new Text("10"), new Text("1"));
+        testGraph.addEdge(new Text("15"), new Text("17"), new Text("1"));
+        testGraph.addEdge(new Text("15"), new Text("19"), new Text("1"));
+        testGraph.addEdge(new Text("17"), new Text("15"), new Text("1"));
+        testGraph.addEdge(new Text("19"), new Text("15"), new Text("1"));
+        testGraph.addEdge(new Text("19"), new Text("20"), new Text("1"));
+        testGraph.addEdge(new Text("20"), new Text("3"), new Text("1"));
+        testGraph.addEdge(new Text("20"), new Text("19"), new Text("1"));
         ImmutableClassesGiraphConfiguration conf = new ImmutableClassesGiraphConfiguration(giraphConf);
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
         InternalVertexRunner.run(conf, testGraph);
-        TestGraph<Text, Text, VIntWritable> outputGraph = InMemoryVertexOutputFormat.getOutputGraph();
+        TestGraph<Text, Text, Text> outputGraph = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(5, outputGraph.getVertices().size());
         checkConnectionsFromVertex(outputGraph, "1", "2", "3", "4", "5");
         checkConnectionsFromVertex(outputGraph, "2", "3", "4", "5", "1");
@@ -87,9 +87,9 @@ public class LeafCompressionComputationTest {
         This lookup is built from all of the edges in a vertex - it allows us to reference them by the
         Edge#targetVertexId(), as a string, without converting repeatedly elsewhere
      */
-    private Map<String, Edge<Text, VIntWritable>> buildLookup(Vertex<Text, Text, VIntWritable> vertex) {
-        Map<String, Edge<Text, VIntWritable>> lookup = new HashMap<String, Edge<Text, VIntWritable>>();
-        for(Edge<Text, VIntWritable> edge : vertex.getEdges()) {
+    private Map<String, Edge<Text, Text>> buildLookup(Vertex<Text, Text, Text> vertex) {
+        Map<String, Edge<Text, Text>> lookup = new HashMap<String, Edge<Text, Text>>();
+        for(Edge<Text, Text> edge : vertex.getEdges()) {
             lookup.put(edge.getTargetVertexId().toString(), edge);
         }
         return lookup;
@@ -104,9 +104,9 @@ public class LeafCompressionComputationTest {
      */
     private void checkConnectionsFromVertex(TestGraph graph, String vertex, String ... edges) {
         Text vertexText = new Text(vertex);
-        Vertex<Text, Text, VIntWritable> vert = graph.getVertex(vertexText);
+        Vertex<Text, Text, Text> vert = graph.getVertex(vertexText);
         assertNotNull("Vertex " + vertex + " was null!", vert);
-        Map<String, Edge<Text, VIntWritable>> existingEdges = buildLookup(vert);
+        Map<String, Edge<Text, Text>> existingEdges = buildLookup(vert);
         for (String node : edges) {
             assertNotNull("Node " + node + " was not found", existingEdges.get(node));
         }
@@ -114,15 +114,15 @@ public class LeafCompressionComputationTest {
 
     @Test
     public void testComputationUnconnectedGraph() throws Exception {
-        TestGraph<Text, Text, VIntWritable> testGraph = new TestGraph(giraphConf);
+        TestGraph<Text, Text, Text> testGraph = new TestGraph(giraphConf);
         ImmutableClassesGiraphConfiguration conf = new ImmutableClassesGiraphConfiguration(giraphConf);
-        testGraph.addEdge(new Text("1"), new Text("2"), new VIntWritable(1));
-        testGraph.addEdge(new Text("4"), new Text("3"), new VIntWritable(1));
-        testGraph.addEdge(new Text("28"), new Text("16"), new VIntWritable(1));
+        testGraph.addEdge(new Text("1"), new Text("2"), new Text("1"));
+        testGraph.addEdge(new Text("4"), new Text("3"), new Text("1"));
+        testGraph.addEdge(new Text("28"), new Text("16"), new Text("1"));
 
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
         InternalVertexRunner.run(conf, testGraph);
-        TestGraph<Text, Text, VIntWritable> outputGraph = InMemoryVertexOutputFormat.getOutputGraph();
+        TestGraph<Text, Text, Text> outputGraph = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(3, outputGraph.getVertices().size());
         assertNull(outputGraph.getVertex(new Text("1")));
         assertNotNull(outputGraph.getVertex(new Text("2")));
@@ -137,20 +137,20 @@ public class LeafCompressionComputationTest {
 
     @Test
     public void testActualTextNodes() throws Exception {
-        TestGraph<Text, Text, VIntWritable> testGraph = new TestGraph(giraphConf);
+        TestGraph<Text, Text, Text> testGraph = new TestGraph(giraphConf);
         ImmutableClassesGiraphConfiguration conf = new ImmutableClassesGiraphConfiguration(giraphConf);
-        testGraph.addEdge(new Text("Jack"), new Text("Jill"), new VIntWritable(1));
-        testGraph.addEdge(new Text("Jill"), new Text("Jack"), new VIntWritable(1));
-        testGraph.addEdge(new Text("Jane"), new Text("Jill"), new VIntWritable(1));
-        testGraph.addEdge(new Text("Jill"), new Text("Jane"), new VIntWritable(1));
-        testGraph.addEdge(new Text("Jack"), new Text("Jane"), new VIntWritable(1));
-        testGraph.addEdge(new Text("Jane"), new Text("Jack"), new VIntWritable(1));
-        testGraph.addEdge(new Text("Jane"), new Text("Gregory"), new VIntWritable(1));
-        testGraph.addEdge(new Text("Gregory"), new Text("Straxx"), new VIntWritable(1));
+        testGraph.addEdge(new Text("Jack"), new Text("Jill"), new Text("1"));
+        testGraph.addEdge(new Text("Jill"), new Text("Jack"), new Text("1"));
+        testGraph.addEdge(new Text("Jane"), new Text("Jill"), new Text("1"));
+        testGraph.addEdge(new Text("Jill"), new Text("Jane"), new Text("1"));
+        testGraph.addEdge(new Text("Jack"), new Text("Jane"), new Text("1"));
+        testGraph.addEdge(new Text("Jane"), new Text("Jack"), new Text("1"));
+        testGraph.addEdge(new Text("Jane"), new Text("Gregory"), new Text("1"));
+        testGraph.addEdge(new Text("Gregory"), new Text("Straxx"), new Text("1"));
 
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
         InternalVertexRunner.run(conf, testGraph);
-        TestGraph<Text, Text, VIntWritable> outputGraph = InMemoryVertexOutputFormat.getOutputGraph();
+        TestGraph<Text, Text, Text> outputGraph = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(4, outputGraph.getVertices().size());
         checkConnectionsFromVertex(outputGraph, "Jack", "Jane", "Jill");
         checkConnectionsFromVertex(outputGraph, "Jane", "Jack", "Jill");
