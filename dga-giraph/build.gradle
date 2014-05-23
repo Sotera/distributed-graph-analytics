@@ -14,7 +14,6 @@ description = 'dga-giraph'
 dependencies {
     compile project(':dga-core')
     compile 'org.apache.giraph:giraph-core:1.1.0-SNAPSHOT'
-    compile 'org.slf4j:jcl-over-slf4j:1.6.2'
     compile 'org.apache.hadoop:hadoop-client:2.2.0-mr1-cdh5.0.0-beta-2', {
         ext {
             fatJarExclude = true

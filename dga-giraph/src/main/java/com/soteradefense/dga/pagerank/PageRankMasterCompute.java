@@ -22,10 +22,10 @@ public class PageRankMasterCompute extends DefaultMasterCompute {
         if (step > 1) {
             Logger logger = LoggerFactory.getLogger(PageRankMasterCompute.class);
             double maxDelta = ((DoubleWritable) this.getAggregatedValue(PageRankCompute.MAX_EPSILON)).get();
-            logger.info("step: " + step + " max delta: " + maxDelta);
+            logger.info("step: {}  max delta: {}", step, maxDelta);
             if (maxDelta < EPSILON) {
                 this.haltComputation();
-                logger.info(maxDelta + " < " + EPSILON + " halting computation");
+                logger.info("{} < {} halting computation", maxDelta, EPSILON);
             }
         }
 
