@@ -16,7 +16,7 @@ public class PageRankTest {
     public GiraphConfiguration getConf() {
         GiraphConfiguration conf = new GiraphConfiguration();
         conf.setMasterComputeClass(PageRankMasterCompute.class);
-        conf.setComputationClass(PageRankCompute.class);
+        conf.setComputationClass(PageRankComputation.class);
         conf.setVertexOutputFormatClass(InMemoryVertexOutputFormat.class);
         return conf;
     }

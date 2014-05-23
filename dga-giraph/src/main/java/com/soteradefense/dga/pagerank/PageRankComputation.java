@@ -5,11 +5,9 @@ import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-
 import java.io.IOException;
 
-
-public class PageRankCompute extends BasicComputation<Text, DoubleWritable, NullWritable, DoubleWritable> {
+public class PageRankComputation extends BasicComputation<Text, DoubleWritable, NullWritable, DoubleWritable> {
 
     public static final String MAX_EPSILON = "com.soteradefense.dga.MAX_EPSILON";
     public static final String DAMPING_FACTOR = "damping.factor";

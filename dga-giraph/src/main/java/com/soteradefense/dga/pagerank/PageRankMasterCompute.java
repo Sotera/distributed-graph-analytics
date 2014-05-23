@@ -12,7 +12,7 @@ public class PageRankMasterCompute extends DefaultMasterCompute {
 
     @Override
     public void initialize() throws InstantiationException, IllegalAccessException {
-        registerAggregator(PageRankCompute.MAX_EPSILON, DoubleMaxAggregator.class);
+        registerAggregator(PageRankComputation.MAX_EPSILON, DoubleMaxAggregator.class);
     }
 
 
@@ -21,7 +21,7 @@ public class PageRankMasterCompute extends DefaultMasterCompute {
         long step = this.getSuperstep();
         if (step > 1) {
             Logger logger = LoggerFactory.getLogger(PageRankMasterCompute.class);
-            double maxDelta = ((DoubleWritable) this.getAggregatedValue(PageRankCompute.MAX_EPSILON)).get();
+            double maxDelta = ((DoubleWritable) this.getAggregatedValue(PageRankComputation.MAX_EPSILON)).get();
             logger.info("step: {}  max delta: {}", step, maxDelta);
             if (maxDelta < EPSILON) {
                 this.haltComputation();
