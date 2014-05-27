@@ -25,6 +25,12 @@ shadow{
     destinationDir = String.format("%s/shadow/", buildDir)
     artifactSet {
         include 'org.apache.giraph'
+        include 'com.facebook.thirdparty.yourkit-api'
         exclude 'org.apache.hadoop'
+        exclude '*commons-*'
+        exclude '*log4j'
+        exclude 'com.google*'
+        exclude 'org.apache.zookeeper'
+        exclude 'org.codehaus.jackson'
     }
 }
