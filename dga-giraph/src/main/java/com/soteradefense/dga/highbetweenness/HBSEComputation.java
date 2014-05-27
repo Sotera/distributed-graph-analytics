@@ -17,8 +17,8 @@
  */
 package com.soteradefense.dga.highbetweenness;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.AbstractComputation;
 import org.apache.giraph.graph.Vertex;
@@ -45,7 +45,7 @@ import java.util.Map.Entry;
  */
 public class HBSEComputation extends AbstractComputation<Text, VertexData, Text, PathData, PathData> {
 
-    private static final Log LOG = LogFactory.getLog(HBSEComputation.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HBSEComputation.class);
 
     /**
      * Works in two major stages which are repeated and coordinated
