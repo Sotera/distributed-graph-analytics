@@ -17,8 +17,8 @@
  */
 package com.soteradefense.dga.highbetweenness;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.giraph.aggregators.DoubleOverwriteAggregator;
 import org.apache.giraph.aggregators.IntOverwriteAggregator;
 import org.apache.giraph.aggregators.IntSumAggregator;
@@ -62,7 +62,7 @@ import java.util.*;
  */
 public class HBSEMasterCompute extends DefaultMasterCompute {
 
-    private static final Log LOG = LogFactory.getLog(HBSEMasterCompute.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HBSEMasterCompute.class);
 
     /**
      * Aggregator Identifier that gets the state of the computation.
