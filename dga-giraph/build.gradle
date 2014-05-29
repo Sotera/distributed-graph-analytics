@@ -1,25 +1,36 @@
 buildscript {
     repositories {
         mavenCentral()
+        jcenter()
     }
     dependencies {
-        classpath 'eu.appsatori:gradle-fatjar-plugin:0.2-rc1'
-    }
+        classpath 'com.github.jengelman.gradle.plugins:shadow:0.8'    }
 }
 
-apply plugin: 'fatjar'
+apply plugin: 'shadow'
 
 description = 'dga-giraph'
 
 dependencies {
     compile project(':dga-core')
     compile 'org.apache.giraph:giraph-core:1.1.0-SNAPSHOT'
-    compile 'org.apache.hadoop:hadoop-client:2.2.0-mr1-cdh5.0.0-beta-2', {
-        ext {
-            fatJarExclude = true
-        }
-    }
+    compile 'org.apache.hadoop:hadoop-client:2.3.0-cdh5.0.0'
     testCompile "org.mockito:mockito-core:1.9.5"
     testCompile 'junit:junit:4.11'
     testCompile 'commons-httpclient:commons-httpclient:3.0.1'
+
+}
+shadow{
+    stats = true
+    destinationDir = String.format("%s/shadow/", buildDir)
+    artifactSet {
+        include 'org.apache.giraph'
+        include 'com.facebook.thirdparty.yourkit-api'
+        exclude 'org.apache.hadoop'
+        exclude '*commons-*'
+        exclude '*log4j'
+        exclude 'com.google*'
+        exclude 'org.apache.zookeeper'
+        exclude 'org.codehaus.jackson'
+    }
 }
