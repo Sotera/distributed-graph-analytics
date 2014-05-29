@@ -3,19 +3,19 @@ package com.soteradefense.dga.pagerank;
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+
 import java.io.IOException;
 
-public class PageRankComputation extends BasicComputation<Text, DoubleWritable, NullWritable, DoubleWritable> {
+public class PageRankComputation extends BasicComputation<Text, DoubleWritable, Text, DoubleWritable> {
 
-    public static final String MAX_EPSILON = "com.soteradefense.dga.MAX_EPSILON";
+    public static final String MAX_EPSILON = "com.soteradefense.dga.max.epsilon";
     public static final String DAMPING_FACTOR = "damping.factor";
     public static final float DAMPING_FACTOR_DEFAULT_VALUE = 0.85f;
 
 
     @Override
-    public void compute(Vertex<Text, DoubleWritable, NullWritable> vertex, Iterable<DoubleWritable> messages) throws IOException {
+    public void compute(Vertex<Text, DoubleWritable, Text> vertex, Iterable<DoubleWritable> messages) throws IOException {
 
         float dampingFactor = this.getConf().getFloat(DAMPING_FACTOR, DAMPING_FACTOR_DEFAULT_VALUE);
 
@@ -39,7 +39,7 @@ public class PageRankComputation extends BasicComputation<Text, DoubleWritable, 
         distributeRank(vertex);
     }
 
-    private void distributeRank(Vertex<Text, DoubleWritable, NullWritable> vertex) {
+    private void distributeRank(Vertex<Text, DoubleWritable, Text> vertex) {
         double rank = vertex.getValue().get() / vertex.getNumEdges();
         sendMessageToAllEdges(vertex, new DoubleWritable(rank));
     }
