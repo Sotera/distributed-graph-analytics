@@ -24,7 +24,7 @@ public class PageRankTest {
     @Test
     public void testEqualPageRankForSevenNodes() throws Exception {
         GiraphConfiguration conf = getConf();
-        TestGraph<Text, DoubleWritable, NullWritable> input = getTestGraph(conf);
+        TestGraph<Text, DoubleWritable, Text> input = getTestGraph(conf);
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
         InternalVertexRunner.run(conf, input);
         TestGraph<Text, DoubleWritable, Text> output = InMemoryVertexOutputFormat.getOutputGraph();
@@ -39,11 +39,11 @@ public class PageRankTest {
     }
 
     @Test
-    public void testHighPageRankForOneNode() throws Exception{
+    public void testHighPageRankForOneNode() throws Exception {
         GiraphConfiguration conf = getConf();
-        TestGraph<Text, DoubleWritable, NullWritable> input = getHighPageRankGraph(conf);
+        TestGraph<Text, DoubleWritable, Text> input = getHighPageRankGraph(conf);
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
-        InternalVertexRunner.run(conf,input);
+        InternalVertexRunner.run(conf, input);
         TestGraph<Text, DoubleWritable, Text> output = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(8, output.getVertices().size());
         assertTrue(output.getVertex(new Text("8")).getValue().get() < output.getVertex(new Text("1")).getValue().get());
@@ -55,27 +55,28 @@ public class PageRankTest {
         assertTrue(output.getVertex(new Text("7")).getValue().get() < output.getVertex(new Text("1")).getValue().get());
 
     }
-    private TestGraph<Text, DoubleWritable, NullWritable> getHighPageRankGraph(GiraphConfiguration conf) {
-        TestGraph<Text, DoubleWritable, NullWritable> testGraph = new TestGraph<Text, DoubleWritable, NullWritable>(conf);
-        testGraph.addEdge(new Text("2"), new Text("1"), NullWritable.get());
-        testGraph.addEdge(new Text("3"), new Text("1"), NullWritable.get());
-        testGraph.addEdge(new Text("4"), new Text("1"), NullWritable.get());
-        testGraph.addEdge(new Text("5"), new Text("1"), NullWritable.get());
-        testGraph.addEdge(new Text("6"), new Text("1"), NullWritable.get());
-        testGraph.addEdge(new Text("7"), new Text("1"), NullWritable.get());
-        testGraph.addEdge(new Text("8"), new Text("1"), NullWritable.get());
+
+    private TestGraph<Text, DoubleWritable, Text> getHighPageRankGraph(GiraphConfiguration conf) {
+        TestGraph<Text, DoubleWritable, Text> testGraph = new TestGraph<Text, DoubleWritable, Text>(conf);
+        testGraph.addEdge(new Text("2"), new Text("1"), new Text());
+        testGraph.addEdge(new Text("3"), new Text("1"), new Text());
+        testGraph.addEdge(new Text("4"), new Text("1"), new Text());
+        testGraph.addEdge(new Text("5"), new Text("1"), new Text());
+        testGraph.addEdge(new Text("6"), new Text("1"), new Text());
+        testGraph.addEdge(new Text("7"), new Text("1"), new Text());
+        testGraph.addEdge(new Text("8"), new Text("1"), new Text());
         return testGraph;
     }
 
-    private TestGraph<Text, DoubleWritable, NullWritable> getTestGraph(GiraphConfiguration conf) {
-        TestGraph<Text, DoubleWritable, NullWritable> testGraph = new TestGraph<Text, DoubleWritable, NullWritable>(conf);
-        testGraph.addEdge(new Text("1"), new Text("2"), NullWritable.get());
-        testGraph.addEdge(new Text("1"), new Text("3"), NullWritable.get());
-        testGraph.addEdge(new Text("1"), new Text("4"), NullWritable.get());
-        testGraph.addEdge(new Text("1"), new Text("5"), NullWritable.get());
-        testGraph.addEdge(new Text("1"), new Text("6"), NullWritable.get());
-        testGraph.addEdge(new Text("1"), new Text("7"), NullWritable.get());
-        testGraph.addEdge(new Text("1"), new Text("8"), NullWritable.get());
+    private TestGraph<Text, DoubleWritable, Text> getTestGraph(GiraphConfiguration conf) {
+        TestGraph<Text, DoubleWritable, Text> testGraph = new TestGraph<Text, DoubleWritable, Text>(conf);
+        testGraph.addEdge(new Text("1"), new Text("2"), new Text());
+        testGraph.addEdge(new Text("1"), new Text("3"), new Text());
+        testGraph.addEdge(new Text("1"), new Text("4"), new Text());
+        testGraph.addEdge(new Text("1"), new Text("5"), new Text());
+        testGraph.addEdge(new Text("1"), new Text("6"), new Text());
+        testGraph.addEdge(new Text("1"), new Text("7"), new Text());
+        testGraph.addEdge(new Text("1"), new Text("8"), new Text());
         return testGraph;
     }
 }
