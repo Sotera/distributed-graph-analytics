@@ -74,6 +74,7 @@ public class DGARunner {
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eof", HBSEOutputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
+                requiredConf.setDGAGiraphProperty("-mc", HBSEMasterCompute.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
                 DGAConfiguration minimalDefaults = new DGAConfiguration();
                 minimalDefaults.setCustomProperty(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE, "10");
