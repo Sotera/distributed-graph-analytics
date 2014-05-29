@@ -1,15 +1,6 @@
 package com.soteradefense.dga;
 
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
 import com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat;
 import com.soteradefense.dga.io.formats.SimpleEdgeOutputFormat;
 import com.soteradefense.dga.leafcompression.LeafCompressionComputation;
@@ -17,6 +8,9 @@ import org.apache.giraph.GiraphRunner;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.InputStream;
+import java.util.*;
 
 public class DGARunner {
 
