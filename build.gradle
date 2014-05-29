@@ -10,9 +10,14 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
+
     task myJavadocs(type: Javadoc) {
-        source = sourceSets.main.allJava
-        source("org.apache.giraph:giraph-core:1.1.0-SNAPSHOT")
+        source sourceSets.main.allJava
+        classpath = sourceSets.main.compileClasspath
+        destinationDir = file("build/docs")
+        options.links("http://docs.oracle.com/javase/7/docs/api/");
+        options.links("http://giraph.apache.org/apidocs/")
+        options.links("http://hadoop.apache.org/docs/r2.3.0/api/")
     }
     repositories {
         mavenLocal()
