@@ -8,8 +8,6 @@ import java.util.Map;
 
 import com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat;
 import com.soteradefense.dga.io.formats.SimpleEdgeOutputFormat;
-
-
 public class DGAConfiguration {
 
     private Map<String, String> giraphProperties;
