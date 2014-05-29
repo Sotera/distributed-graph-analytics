@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+    <system>
+        <property>
+            <name>giraph.zkList</name>
+            <value>localhost:2181</value>
+        </property>
+    </system>
+    <custom>
+        <property>
+            <name>mapred.task.timeout</name>
+            <value>600000</value>
+        </property>
+    </custom>
+    <giraph>
+        <property>
+            <name>w</name>
+            <value>21</value>
+        </property>
+    </giraph>
+</configuration>
