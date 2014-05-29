@@ -57,7 +57,7 @@ public class DGACommandLineUtil {
             for (String customArgument : customArguments) {
                 int indexOfEquals = customArgument.indexOf("=");
                 if (indexOfEquals == -1)
-                    throw new ParseException("The custom argument " + customArgument " does not follow the form -ca key=value");
+                    throw new ParseException("The custom argument " + customArgument + " does not follow the form -ca key=value");
                 String key = customArgument.substring(0, indexOfEquals);
                 String value = customArgument.substring(indexOfEquals + 1);
                 dgaConf.setCustomProperty(key, value);

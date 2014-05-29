@@ -2,11 +2,6 @@ package com.soteradefense.dga;
 
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -30,10 +25,6 @@ public class DGARunner {
         supportedAnalytics.add("hbse");
         supportedAnalytics.add("lc");
         supportedAnalytics.add("pr");
-    }
-
-    private static String [] generateDGAArgumentsFromAllSources(String computationClass, DGAConfiguration configuration) {
-        String [] dgaConfArray = configuration.convertToCommandLineArguments();
     }
 
     public static void main(String [] args) throws Exception {

@@ -6,12 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat;
-import com.soteradefense.dga.io.formats.SimpleEdgeOutputFormat;
-
-/**
- * Created by dpryce on 5/29/14.
- */
 public class DGAConfiguration {
 
     private Map<String, String> giraphProperties;
