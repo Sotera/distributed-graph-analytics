@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+    <!--
+        -Dgiraph.numComputeThreads=$COMPUTE_THREADS -Dgiraph.zkList=$ZK_LIST -Dgiraph.zkSessionMsecTimeout=$ZK_TIMEOUT
+        -Dgiraph.useSuperstepCounters=false -Dmapred.map.child.java.opts=-Xmx$MEMORY -Dgiraph.useOutOfCoreGraph=$OUT_OF_CORE_GRAPH
+        -Dgiraph.useOutOfCoreMessages=$OUT_OF_CORE_MESSAGES $VERTEX -w $WORKERS -mc $MASTER_COMPUTE -eif $EDGE_INPUT_FORMAT
+        -eip $EDGE_INPUT_PATH -vof $OUTPUT_FORMAT -op $OUTPUT_PATH_SUB_DIR -ca betweenness.shortestpath.phases=$SHORTEST_PATH_PHASES
+        -ca mapred.task.timeout=$TIMEOUT -ca pivot.batch.size=$PIVOT_BATCH_SIZE -ca pivot.batch.size.initial=$INITIAL_BATCH_SIZE
+        -ca vertex.count=$VERTEX_COUNT -ca betweenness.set.maxSize=$RESULT_SET_SIZE -ca betweenness.set.stability=$SET_STABILITY_CUTOFF
+        -ca betweenness.set.stability.counter=$SET_STABILITY_COUNTER -ca betweenness.output.dir=$OUTPUT_DIR -ca pivot.batch.string=$PIVOT_BATCH
+    -->
+    <property type="system">
+        <value>localhost:2181</value>
+    </property>
+    <property type="custom">
+        <name>mapred.task.timeout</name>
+        <value>600000</value>
+    </property>
+    <property>
+        <name>w</name>
+        <value>21</value>
+    </property>
+</configuration>
