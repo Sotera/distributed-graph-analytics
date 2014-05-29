@@ -15,33 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.soteradefense.dga.highbetweenness;
+package com.soteradefense.dga.hbse;
 
 import org.apache.giraph.aggregators.BasicAggregator;
 
 /**
- * Aggregator to accumulate a list of the top N vertices, ranked by approximated betweenness value.
+ * Stores a single PivotSetWritable for global broadcast / communication.
  */
-public class HighBetweennessListAggregator extends BasicAggregator<HighBetweennessList> {
-
+public class PivotSetAggregator extends BasicAggregator<PivotSetWritable> {
 
     /**
-     * Takes the old aggregated value and compares it to a new value wanting to be aggregated.
-     * @param value New Aggregated Value.
+     * Set the aggregated value of this aggregator to
+     * the specified value.
      */
-    public void aggregate(HighBetweennessList value) {
-        if (value == null || value.getMaxSize() == -1) return;
-        HighBetweennessList old = getAggregatedValue();
+    public void aggregate(PivotSetWritable value) {
+        if(value == null)
+            return;
+        PivotSetWritable old = getAggregatedValue();
         old.aggregate(value);
     }
 
     /**
-     * Creates an Initial HighBetweennessList
-     * @return A New HighBetweennessList.
+     * Returns an empty PivotSetWritable
      */
-    public HighBetweennessList createInitialValue() {
-        return new HighBetweennessList();
+    public PivotSetWritable createInitialValue() {
+        return new PivotSetWritable();
     }
-
 
 }

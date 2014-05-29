@@ -15,14 +15,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package com.soteradefense.dga.weaklyconnectedcomponents;
+package com.soteradefense.dga.wcc;
 
 
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.io.formats.InMemoryVertexOutputFormat;
 import org.apache.giraph.utils.InternalVertexRunner;
 import org.apache.giraph.utils.TestGraph;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.junit.Test;
 

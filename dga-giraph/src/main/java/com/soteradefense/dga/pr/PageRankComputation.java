@@ -1,4 +1,4 @@
-package com.soteradefense.dga.pagerank;
+package com.soteradefense.dga.pr;
 
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;

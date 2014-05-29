@@ -20,17 +20,38 @@ dependencies {
     testCompile 'commons-httpclient:commons-httpclient:3.0.1'
 
 }
-shadow{
+shadow {
     stats = true
-    destinationDir = String.format("%s/shadow/", buildDir)
+    outputFile = new File(String.format("%s/shadow/%s-%s.jar", buildDir, description, version))
+    exclude "log4j.properties"
+    exclude "dga-config.xml"
+
     artifactSet {
         include 'org.apache.giraph'
         include 'com.facebook.thirdparty.yourkit-api'
-        exclude 'org.apache.hadoop'
-        exclude '*commons-*'
-        exclude '*log4j'
-        exclude 'com.google*'
-        exclude 'org.apache.zookeeper'
-        exclude 'org.codehaus.jackson'
+        include 'com.yammer.metrics'
+        include 'io.netty'
+        include 'net.iharder'
+        include 'it.unimi.dsi'
+        include 'org.jodah'
+        include 'org.json'
+        include 'org.json'
+        include 'org.python'
+        include 'org.slf4j'
+//        exclude 'org.apache.hadoop'
+//        exclude '*commons-*'
+//        exclude '*log4j'
+//        exclude 'com.google*'
+//        exclude 'org.apache.zookeeper'
+//        exclude 'org.codehaus.jackson'
     }
+}
+
+task distDGA (dependsOn: 'shadowJar', type: Copy) {
+    from "${buildDir}/shadow"
+    include "**/*.jar"
+    from project(":dga-giraph").fileTree("src/main/resources")
+    include "log4j.properties"
+    include "dga-config.xml"
+    into "${buildDir}/dist"
 }

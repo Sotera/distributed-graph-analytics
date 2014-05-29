@@ -1,4 +1,4 @@
-package com.soteradefense.dga.leafcompression;
+package com.soteradefense.dga.lc;
 
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
@@ -9,7 +9,6 @@ import org.apache.giraph.utils.InMemoryVertexInputFormat;
 import org.apache.giraph.utils.InternalVertexRunner;
 import org.apache.giraph.utils.TestGraph;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.VIntWritable;
 import org.junit.Before;
 import org.junit.Test;
 

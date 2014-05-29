@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.soteradefense.dga.highbetweenness;
+package com.soteradefense.dga.hbse;
 
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.io.formats.InMemoryVertexOutputFormat;

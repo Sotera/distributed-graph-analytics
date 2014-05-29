@@ -17,14 +17,11 @@
  */
 package com.soteradefense.dga.io.formats;
 
-import com.soteradefense.dga.highbetweenness.VertexData;
+import com.soteradefense.dga.hbse.VertexData;
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
-import org.apache.giraph.io.formats.TextEdgeOutputFormat;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
