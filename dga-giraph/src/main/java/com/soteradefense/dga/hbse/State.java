@@ -1,4 +1,4 @@
-package com.soteradefense.dga.highbetweenness;
+package com.soteradefense.dga.hbse;
 
 /**
  * Global States that direct certain computation.

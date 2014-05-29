@@ -1,11 +1,10 @@
-package com.soteradefense.dga.pagerank;
+package com.soteradefense.dga.pr;
 
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.io.formats.InMemoryVertexOutputFormat;
 import org.apache.giraph.utils.InternalVertexRunner;
 import org.apache.giraph.utils.TestGraph;
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.junit.Test;
 

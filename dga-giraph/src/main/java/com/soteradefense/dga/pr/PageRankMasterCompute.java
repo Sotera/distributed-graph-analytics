@@ -1,4 +1,4 @@
-package com.soteradefense.dga.pagerank;
+package com.soteradefense.dga.pr;
 
 import org.apache.giraph.aggregators.DoubleMaxAggregator;
 import org.apache.giraph.master.DefaultMasterCompute;

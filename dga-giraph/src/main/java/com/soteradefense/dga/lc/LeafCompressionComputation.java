@@ -15,13 +15,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package com.soteradefense.dga.leafcompression;
+package com.soteradefense.dga.lc;
 
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.VIntWritable;
 
 import java.io.IOException;
 

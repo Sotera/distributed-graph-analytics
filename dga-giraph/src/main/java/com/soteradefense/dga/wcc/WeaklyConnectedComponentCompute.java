@@ -15,7 +15,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package com.soteradefense.dga.weaklyconnectedcomponents;
+package com.soteradefense.dga.wcc;
 
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.BasicComputation;

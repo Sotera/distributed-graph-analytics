@@ -17,10 +17,9 @@
  */
 package com.soteradefense.dga.io.formats;
 
-import com.soteradefense.dga.highbetweenness.VertexData;
+import com.soteradefense.dga.hbse.VertexData;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.io.formats.TextVertexOutputFormat;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 

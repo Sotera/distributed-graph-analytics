@@ -1,25 +1,21 @@
 package com.soteradefense.dga;
 
 
-import com.soteradefense.dga.highbetweenness.HBSEComputation;
-import com.soteradefense.dga.highbetweenness.HBSEMasterCompute;
+import com.soteradefense.dga.hbse.HBSEComputation;
+import com.soteradefense.dga.hbse.HBSEMasterCompute;
 import java.io.InputStream;
 import java.util.Set;
 import java.util.TreeSet;
 import com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat;
 import com.soteradefense.dga.io.formats.HBSEOutputFormat;
 import com.soteradefense.dga.io.formats.SimpleEdgeOutputFormat;
-import com.soteradefense.dga.leafcompression.LeafCompressionComputation;
-import com.soteradefense.dga.weaklyconnectedcomponents.WeaklyConnectedComponentCompute;
+import com.soteradefense.dga.lc.LeafCompressionComputation;
+import com.soteradefense.dga.wcc.WeaklyConnectedComponentCompute;
 import org.apache.commons.cli.Options;
 import org.apache.giraph.GiraphRunner;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.InputStream;
-import java.util.Set;
-import java.util.TreeSet;
 
 public class DGARunner {
 
