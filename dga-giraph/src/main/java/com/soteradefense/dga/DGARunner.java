@@ -71,7 +71,7 @@ public class DGARunner {
             } else if (analytic.equals("hbse")) {
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
-                requiredConf.setDGAGiraphProperty("-eof", HBSEOutputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-vof", HBSEOutputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-mc", HBSEMasterCompute.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-op", outputPath);

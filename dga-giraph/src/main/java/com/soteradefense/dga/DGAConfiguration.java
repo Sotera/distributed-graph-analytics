@@ -54,6 +54,10 @@ public class DGAConfiguration {
 
     public String[] convertToCommandLineArguments(String computationClassName) {
         List<String> argList = new ArrayList<String>();
+        for (String key : this.systemProperties.keySet()) {
+            argList.add("-D");
+            argList.add(key + "=" + this.systemProperties.get(key));
+        }
         argList.add(computationClassName);
         for (String key : this.giraphProperties.keySet()) {
             if (key.equals("-q")) {
@@ -69,10 +73,7 @@ public class DGAConfiguration {
             argList.add(key + "=" + this.customArgumentProperties.get(key));
         }
 
-        for (String key : this.systemProperties.keySet()) {
-            argList.add("-D");
-            argList.add(key + "=" + this.systemProperties.get(key));
-        }
+
 
         return argList.toArray(new String [0]);
     }

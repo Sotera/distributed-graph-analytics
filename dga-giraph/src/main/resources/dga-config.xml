@@ -4,7 +4,7 @@
     <system>
         <property>
             <name>giraph.zkList</name>
-            <value>localhost:2181</value>
+            <value>sc02.silverdale.dev:2181,sc03.silverdale.dev:2181,sc04.silverdale.dev:2181</value>
         </property>
     </system>
     <custom>
