@@ -84,7 +84,11 @@ public class DGARunner {
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(HBSEComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
             } else if (analytic.equals("louvain")) {
-
+                DGAConfiguration partialConfiguration = DGAConfiguration.coalesce(fileConf, commandLineConf);
+                partialConfiguration.setDGAGiraphProperty("-eip", inputPath);
+                partialConfiguration.setDGAGiraphProperty("-op", outputPath);
+                LouvainRunner louvainRunner = new LouvainRunner();
+                System.exit(louvainRunner.runUntilComplete(inputPath, outputPath, partialConfiguration));
             } else if (analytic.equals("lc")) {
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
