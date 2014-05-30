@@ -30,6 +30,7 @@ public class DGACommandLineUtil {
         Options options = new Options();
         options.addOption("h", false, "Prints this help documentation and exits");
         options.addOption("q", false, "Run analytic in quiet mode");
+        options.addOption("D", true, "System parameters to pass through to be added to the conf");
         options.addOption("w", true, "The number of giraph workers to use for the analytic");
         options.addOption("ca", true, "Any custom arguments to pass in to giraph");
         options.addOption("yh", true, "Heap size, in MB, task (YARN only.) Defaults to giraph.yarn.task.heap.mb => 1024 (integer) MB.");
@@ -72,6 +73,18 @@ public class DGACommandLineUtil {
                 String key = customArgument.substring(0, indexOfEquals);
                 String value = customArgument.substring(indexOfEquals + 1);
                 dgaConf.setCustomProperty(key, value);
+            }
+        }
+
+        if (cmd.hasOption("D")) {
+            String [] systemProperty = cmd.getOptionValues("D");
+            for (String sysProp : systemProperty) {
+                int indexOfEquals = sysProp.indexOf("=");
+                if (indexOfEquals == -1)
+                    throw new ParseException("The systemProperty " + sysProp + " does not follow the form -D key=value");
+                String key = sysProp.substring(0, indexOfEquals);
+                String value = sysProp.substring(indexOfEquals + 1);
+                dgaConf.setSystemProperty(key, value);
             }
         }
 
