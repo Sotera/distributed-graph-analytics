@@ -21,7 +21,7 @@ public class DGAConfiguration {
     }
 
     public void setGiraphProperty(String key, String value) {
-        if (key.equals("-q") || key.equals("-w")) {
+        if (key.equals("-q") || key.equals("-w") || key.equals("-yh") || key.equals("-yj")) {
             this.setDGAGiraphProperty(key, value);
         } else {
             throw new IllegalArgumentException("The key provided, " + key + ", is not allowed to be specified within DGA.");
@@ -36,12 +36,20 @@ public class DGAConfiguration {
         this.customArgumentProperties.put(key, value);
     }
 
+    public void setSystemProperty(String key, String value) {
+        this.systemProperties.put(key, value);
+    }
+
     public Map<String, String> getGiraphProperties() {
         return Collections.unmodifiableMap(this.giraphProperties);
     }
 
     public Map<String, String> getCustomArgumentProperties() {
         return Collections.unmodifiableMap(this.customArgumentProperties);
+    }
+
+    public Map<String, String> getSystemProperties() {
+        return Collections.unmodifiableMap(this.systemProperties);
     }
 
     public String[] convertToCommandLineArguments(String computationClassName) {
@@ -63,12 +71,14 @@ public class DGAConfiguration {
 
         for (String key : this.customArgumentProperties.keySet()) {
             argList.add("-ca");
-            String value = this.customArgumentProperties.get(key);
-            if (!value.startsWith("\"") && !value.endsWith("\"")) {
-                value = "\"" + value + "\"";
-            }
-            argList.add(key + "=" + value);
+            argList.add(key + "=" + this.customArgumentProperties.get(key));
         }
+
+        for (String key : this.systemProperties.keySet()) {
+            argList.add("-D");
+            argList.add(key + "=" + this.systemProperties.get(key));
+        }
+
         return argList.toArray(new String [0]);
     }
 
@@ -84,6 +94,7 @@ public class DGAConfiguration {
         for (DGAConfiguration dgaConf : configurationsInOrder) {
             conf.giraphProperties.putAll(dgaConf.giraphProperties);
             conf.customArgumentProperties.putAll(dgaConf.customArgumentProperties);
+            conf.systemProperties.putAll(dgaConf.systemProperties);
         }
         return conf;
     }

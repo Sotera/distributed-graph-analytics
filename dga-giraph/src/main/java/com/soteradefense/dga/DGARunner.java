@@ -52,7 +52,7 @@ public class DGARunner {
         }
 
         try {
-            InputStream configurationIS = ClassLoader.getSystemResourceAsStream("dga-config.xml");
+            InputStream configurationIS = Thread.currentThread().getContextClassLoader().getResourceAsStream("dga-config.xml");
 
             DGAConfiguration fileConf = DGAXMLConfigurationParser.parse(configurationIS);
             DGAConfiguration commandLineConf = DGACommandLineUtil.parseCommandLine(subsetArguments, options);

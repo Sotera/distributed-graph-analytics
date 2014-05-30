@@ -28,7 +28,9 @@ public class DGAXMLConfigurationParser {
         Document doc = builder.parse(is);
         XPath xpath = XPathFactory.newInstance().newXPath();
 
-        // First we'll set whatever system properties were specified in the configuration file but only if they aren't already set
+        // Now we'll create our DGA Configuration object
+        DGAConfiguration dgaConf = new DGAConfiguration();
+
         String expression = "//configuration/system/property";
         try {
             XPathExpression expr = xpath.compile(expression);
@@ -47,17 +49,12 @@ public class DGAXMLConfigurationParser {
 
                 if (name == null || value == null)
                     throw new IOException("Malformed XML for the this DGA configuration file");
-                if (System.getProperty(name) == null)
-                    System.setProperty(name, value);
+                dgaConf.setCustomProperty(name, value);
             }
         } catch (XPathExpressionException e) {
             logger.error("There was an error in the XPathExpression " + expression, e);
             throw e;
         }
-
-
-        // Now we'll create our DGA Configuration object
-        DGAConfiguration dgaConf = new DGAConfiguration();
 
         expression = "//configuration/custom/property";
         try {

@@ -30,8 +30,12 @@ public class DGACommandLineUtil {
         Options options = new Options();
         options.addOption("h", false, "Prints this help documentation and exits");
         options.addOption("q", false, "Run analytic in quiet mode");
+        options.addOption("D", true, "System parameters to pass through to be added to the conf");
         options.addOption("w", true, "The number of giraph workers to use for the analytic");
         options.addOption("ca", true, "Any custom arguments to pass in to giraph");
+        options.addOption("yh", true, "Heap size, in MB, task (YARN only.) Defaults to giraph.yarn.task.heap.mb => 1024 (integer) MB.");
+        options.addOption("yj", true, "comma-separated list of JAR filenames to distribute to Giraph tasks and ApplicationMaster. YARN only. Search order: CLASSPATH, HADOOP_HOME, user current dir.");
+
         return options;
     }
 
@@ -52,6 +56,14 @@ public class DGACommandLineUtil {
             dgaConf.setGiraphProperty("-w", cmd.getOptionValue("w"));
         }
 
+        if (cmd.hasOption("yj")) {
+            dgaConf.setGiraphProperty("-yj", cmd.getOptionValue("yj"));
+        }
+
+        if (cmd.hasOption("yh")) {
+            dgaConf.setGiraphProperty("-yh", cmd.getOptionValue("yh"));
+        }
+
         if (cmd.hasOption("ca")) {
             String [] customArguments = cmd.getOptionValues("ca");
             for (String customArgument : customArguments) {
@@ -61,6 +73,18 @@ public class DGACommandLineUtil {
                 String key = customArgument.substring(0, indexOfEquals);
                 String value = customArgument.substring(indexOfEquals + 1);
                 dgaConf.setCustomProperty(key, value);
+            }
+        }
+
+        if (cmd.hasOption("D")) {
+            String [] systemProperty = cmd.getOptionValues("D");
+            for (String sysProp : systemProperty) {
+                int indexOfEquals = sysProp.indexOf("=");
+                if (indexOfEquals == -1)
+                    throw new ParseException("The systemProperty " + sysProp + " does not follow the form -D key=value");
+                String key = sysProp.substring(0, indexOfEquals);
+                String value = sysProp.substring(indexOfEquals + 1);
+                dgaConf.setSystemProperty(key, value);
             }
         }
 
