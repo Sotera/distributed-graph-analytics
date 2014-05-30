@@ -19,7 +19,7 @@ public class DGAConfiguration {
     }
 
     public void setGiraphProperty(String key, String value) {
-        if (key.equals("-q") || key.equals("-w")) {
+        if (key.equals("-q") || key.equals("-w") || key.equals("-yh") || key.equals("-yj")) {
             this.setDGAGiraphProperty(key, value);
         } else {
             throw new IllegalArgumentException("The key provided, " + key + ", is not allowed to be specified within DGA.");
