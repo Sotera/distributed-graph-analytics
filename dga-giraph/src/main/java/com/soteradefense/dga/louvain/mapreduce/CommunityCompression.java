@@ -1,10 +1,10 @@
 package com.soteradefense.dga.louvain.mapreduce;
 
 import com.soteradefense.dga.louvain.giraph.LouvainVertexWritable;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import java.util.Map.Entry;
 
 
 /**
- * Map reduce job to compresse a graph in such a way that each community is represetned by a single node.
+ * Map reduce job to compress a graph in such a way that each community is represented by a single node.
  * 
  * input format:  see LouvainVertexOutputFormat
  * output format  see LouvainVertexInputFormat
@@ -24,10 +24,10 @@ public class CommunityCompression {
 
 
 
-	public static class Map extends MapReduceBase implements Mapper<LongWritable, Text, Text, LouvainVertexWritable> {
+	public static class Map extends Mapper<LongWritable, Text, Text, LouvainVertexWritable> {
 
 		@Override
-		public void map(LongWritable key, Text value, OutputCollector<Text, LouvainVertexWritable> output, Reporter reporter) throws IOException {
+		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 
 			String[] tokens = value.toString().trim().split("\t");
 			if (3 > tokens.length){
@@ -37,15 +37,15 @@ public class CommunityCompression {
 			Text outKey = new Text(tokens[1]); // group by community
 			String edgeListStr = (tokens.length == 3) ? "" : tokens[3];
 			LouvainVertexWritable outValue = LouvainVertexWritable.fromTokens(tokens[2], edgeListStr);
-			output.collect(outKey, outValue);
+			context.write(outKey, outValue);
 		}
 	}
 
 
 
-	public static class Reduce extends MapReduceBase implements Reducer<Text, LouvainVertexWritable, Text, Text> {
+	public static class Reduce extends Reducer<Text, LouvainVertexWritable, Text, Text> {
 
-		public void reduce(Text key, Iterator<LouvainVertexWritable> values, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
+		public void reduce(Text key, Iterator<LouvainVertexWritable> values, Context context) throws InterruptedException, IOException {
 			String communityId = key.toString();
 			long weight = 0;
 			HashMap<String,Long> edgeMap = new HashMap<String,Long>();
@@ -75,30 +75,30 @@ public class CommunityCompression {
 			}
 			b.setLength(b.length() - 1);
 
-			output.collect(new Text(key.toString()), new Text(b.toString()));
+			context.write(new Text(key.toString()), new Text(b.toString()));
 
 		}
 	}
-
-
-
-	public static void main(String [] args) throws Exception {
-		JobConf conf = new JobConf(CommunityCompression.class);
-		conf.setJobName("Louvain graph compression");
-
-		conf.setOutputKeyClass(Text.class);
-		conf.setOutputValueClass(LouvainVertexWritable.class);
-
-		conf.setMapperClass(Map.class);
-		conf.setReducerClass(Reduce.class);
-
-		conf.setInputFormat(TextInputFormat.class);
-		conf.setOutputFormat(TextOutputFormat.class);
-
-		FileInputFormat.setInputPaths(conf, new Path(args[0]));
-		FileOutputFormat.setOutputPath(conf, new Path(args[1]));
-
-		JobClient.runJob(conf);
-	}
+//
+//
+//
+//	public static void main(String [] args) throws Exception {
+//		JobConf conf = new JobConf(CommunityCompression.class);
+//		conf.setJobName("Louvain graph compression");
+//
+//		conf.setOutputKeyClass(Text.class);
+//		conf.setOutputValueClass(LouvainVertexWritable.class);
+//
+//		conf.setMapperClass(Map.class);
+//		conf.setReducerClass(Reduce.class);
+//
+//		conf.setInputFormat(TextInputFormat.class);
+//		conf.setOutputFormat(TextOutputFormat.class);
+//
+//		FileInputFormat.setInputPaths(conf, new Path(args[0]));
+//		FileOutputFormat.setOutputPath(conf, new Path(args[1]));
+//
+//		JobClient.runJob(conf);
+//	}
 	
 }

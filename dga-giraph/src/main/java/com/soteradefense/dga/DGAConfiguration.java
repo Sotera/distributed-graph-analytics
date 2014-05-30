@@ -12,10 +12,12 @@ public class DGAConfiguration {
 
     private Map<String, String> giraphProperties;
     private Map<String, String> customArgumentProperties;
+    private Map<String, String> systemProperties;
 
     public DGAConfiguration() {
         this.giraphProperties = new HashMap<String, String>();
         this.customArgumentProperties = new HashMap<String, String>();
+        this.systemProperties = new HashMap<String, String>();
     }
 
     public void setGiraphProperty(String key, String value) {
@@ -44,6 +46,11 @@ public class DGAConfiguration {
 
     public String[] convertToCommandLineArguments(String computationClassName) {
         List<String> argList = new ArrayList<String>();
+        for (String key : this.systemProperties.keySet()) {
+            argList.add("-D");
+            argList.add(key + "=" + this.systemProperties.get(key));
+        }
+
         argList.add(computationClassName);
         for (String key : this.giraphProperties.keySet()) {
             if (key.equals("-q")) {
