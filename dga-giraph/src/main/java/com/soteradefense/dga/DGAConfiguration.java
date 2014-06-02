@@ -74,9 +74,7 @@ public class DGAConfiguration {
             argList.add(key + "=" + this.customArgumentProperties.get(key));
         }
 
-
-
-        return argList.toArray(new String [0]);
+        return argList.toArray(new String[argList.size()]);
     }
 
     /**

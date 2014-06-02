@@ -99,9 +99,6 @@ public class DGAConfigurationTest {
 
         for (String key : customArgumentProps.keySet()) {
             String value = customArgumentProps.get(key);
-            if (!value.startsWith("\"") && !value.endsWith("\"")) {
-                value = "\"" + value + "\"";
-            }
             value = key + "=" + value;
             assertTrue("Checking for -ca : " + value, argsExistInArray(generatedArgs, "-ca", value));
         }
