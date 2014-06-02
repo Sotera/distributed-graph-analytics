@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 public class PageRankMasterCompute extends DefaultMasterCompute {
 
     public static final double EPSILON = 0.001;
+    private static final Logger logger = LoggerFactory.getLogger(PageRankMasterCompute.class);
 
     @Override
     public void initialize() throws InstantiationException, IllegalAccessException {
@@ -20,7 +21,6 @@ public class PageRankMasterCompute extends DefaultMasterCompute {
     public void compute() {
         long step = this.getSuperstep();
         if (step > 1) {
-            Logger logger = LoggerFactory.getLogger(PageRankMasterCompute.class);
             double maxDelta = ((DoubleWritable) this.getAggregatedValue(PageRankComputation.MAX_EPSILON)).get();
             logger.info("step: {}  max delta: {}", step, maxDelta);
             if (maxDelta < EPSILON) {

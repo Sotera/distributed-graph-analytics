@@ -48,6 +48,7 @@ public class VertexData implements Writable {
      */
     private Map<String, PartialDependency> partialDepMap = new HashMap<String, PartialDependency>();
 
+    private boolean wasPivotPoint = false;
     /**
      * current approximated betweenness value
      * ( equals actual betweenness when / if all vertices are used as sources)
@@ -99,6 +100,7 @@ public class VertexData implements Writable {
 
     @Override
     public void write(DataOutput out) throws IOException {
+        out.writeBoolean(wasPivotPoint);
         out.writeDouble(approxBetweenness);
         out.writeInt(pathDataMap.size());
         for (Entry<String, ShortestPathList> entry : pathDataMap.entrySet()) {
@@ -118,7 +120,7 @@ public class VertexData implements Writable {
         //Reset Maps
         pathDataMap.clear();
         partialDepMap.clear();
-
+        setWasPivotPoint(in.readBoolean());
         setApproxBetweenness(in.readDouble());
         // read the path data map
         int size = in.readInt();
@@ -194,4 +196,11 @@ public class VertexData implements Writable {
     }
 
 
+    public boolean getWasPivotPoint() {
+        return wasPivotPoint;
+    }
+
+    public void setWasPivotPoint(boolean wasPivotPoint) {
+        this.wasPivotPoint = wasPivotPoint;
+    }
 }

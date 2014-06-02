@@ -37,9 +37,8 @@ public class HBSEComputeTest {
         conf.set(HBSEMasterCompute.BETWEENNESS_SET_STABILITY, "1");
         conf.set(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE, "10");
         conf.set(HBSEMasterCompute.BETWEENNESS_SET_STABILITY_COUNTER, "3");
-        conf.set(HBSEMasterCompute.PIVOT_BATCH_STRING, "1,2,3,4,5");
         conf.set(HBSEMasterCompute.PIVOT_BATCH_SIZE, "25");
-        conf.set(HBSEMasterCompute.VERTEX_COUNT, "8");
+        conf.set(HBSEMasterCompute.VERTEX_COUNT, "6");
         return conf;
     }
 
@@ -69,7 +68,7 @@ public class HBSEComputeTest {
         InternalVertexRunner.run(conf, input);
         TestGraph<Text, VertexData, Text> output = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(8, output.getVertices().size());
-        assertEquals(output.getVertex(new Text("1")).getValue().getApproxBetweenness() == 0.0, true);
+        assertEquals(output.getVertex(new Text("1")).getValue().getApproxBetweenness() == 0.0, false);
         assertEquals(output.getVertex(new Text("2")).getValue().getApproxBetweenness() == 0.0, true);
         assertEquals(output.getVertex(new Text("3")).getValue().getApproxBetweenness() == 0.0, true);
         assertEquals(output.getVertex(new Text("4")).getValue().getApproxBetweenness() == 0.0, true);
@@ -84,9 +83,7 @@ public class HBSEComputeTest {
     public void testTwoCriticalPointGraph() throws Exception {
         GiraphConfiguration conf = getConf();
         // I had to add 9 to the pivot batch or else the test would become unpredictable.
-        conf.set(HBSEMasterCompute.PIVOT_BATCH_STRING, "1,2,3,4,5,9");
         TestGraph<Text, VertexData, Text> input = getTwoCriticalPointGraph(conf);
-        conf.set(HBSEMasterCompute.VERTEX_COUNT, "16");
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
         InternalVertexRunner.run(conf, input);
         TestGraph<Text, VertexData, Text> output = InMemoryVertexOutputFormat.getOutputGraph();
@@ -140,6 +137,13 @@ public class HBSEComputeTest {
         testGraph.addEdge(new Text("1"), new Text("6"), new Text("1"));
         testGraph.addEdge(new Text("1"), new Text("7"), new Text("1"));
         testGraph.addEdge(new Text("1"), new Text("8"), new Text("1"));
+        testGraph.addEdge(new Text("2"), new Text("1"), new Text("1"));
+        testGraph.addEdge(new Text("3"), new Text("1"), new Text("1"));
+        testGraph.addEdge(new Text("4"), new Text("1"), new Text("1"));
+        testGraph.addEdge(new Text("5"), new Text("1"), new Text("1"));
+        testGraph.addEdge(new Text("6"), new Text("1"), new Text("1"));
+        testGraph.addEdge(new Text("7"), new Text("1"), new Text("1"));
+        testGraph.addEdge(new Text("8"), new Text("1"), new Text("1"));
         return testGraph;
     }
 
