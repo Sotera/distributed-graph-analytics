@@ -298,16 +298,12 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
      * @return True if it is a pivot point.
      */
     private boolean isPivotPoint(String id) {
-        /*if (getSuperstep() == 0 && getPivotBatch().size() != 0) {
-            return getPivotBatch().contains(id);
-        } else {*/
         Random random = getRandomWithSeed(HBSEMasterCompute.PIVOT_BATCH_RANDOM_SEED);
         double percentageCutoff = getPercentageCutOff();
         double randomNumber = random.nextDouble();
         boolean isPivot = randomNumber < percentageCutoff;
         logger.info("Selected as a possible pivot: " + id);
         return isPivot;
-        //}
     }
 
 
