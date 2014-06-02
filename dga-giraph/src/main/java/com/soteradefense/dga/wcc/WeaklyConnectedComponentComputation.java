@@ -27,7 +27,7 @@ import java.io.IOException;
 /**
  * WeaklyConnectedComponents is the concept of finding how many uniquely connected nodes there are in a specific data set.
  */
-public class WeaklyConnectedComponentCompute extends BasicComputation<Text, Text, Text, Text> {
+public class WeaklyConnectedComponentComputation extends BasicComputation<Text, Text, Text, Text> {
 
     @Override
     public void compute(Vertex<Text, Text, Text> vertex, Iterable<Text> messages) throws IOException {

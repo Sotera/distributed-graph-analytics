@@ -38,7 +38,7 @@ public class DGAXMLConfigurationParserTest {
         InputStream bais = new ByteArrayInputStream(xmlBytes);
 
         DGAConfiguration conf = DGAXMLConfigurationParser.parse(bais);
-        assertEquals("localhost:2181", System.getProperty("giraph.zkList"));
+        assertEquals("localhost:2181", conf.getSystemProperties().get("giraph.zkList"));
 
         assertEquals(1, conf.getGiraphProperties().size());
         assertEquals(1, conf.getCustomArgumentProperties().size());
@@ -98,7 +98,7 @@ public class DGAXMLConfigurationParserTest {
         InputStream bais = new ByteArrayInputStream(xmlBytes);
 
         DGAConfiguration conf = DGAXMLConfigurationParser.parse(bais);
-        assertEquals("localhost:2181", System.getProperty("giraph.zkList"));
+        assertEquals("localhost:2181", conf.getSystemProperties().get("giraph.zkList"));
 
         assertEquals(1, conf.getGiraphProperties().size());
         assertEquals(0, conf.getCustomArgumentProperties().size());
@@ -165,7 +165,7 @@ public class DGAXMLConfigurationParserTest {
         InputStream bais = new ByteArrayInputStream(xmlBytes);
 
         DGAConfiguration conf = DGAXMLConfigurationParser.parse(bais);
-        assertEquals("notlocalhostatall:2181", System.getProperty("giraph.zkList"));
+        assertEquals("localhost:2181", conf.getSystemProperties().get("giraph.zkList"));
 
         assertEquals(1, conf.getGiraphProperties().size());
         assertEquals(1, conf.getCustomArgumentProperties().size());
@@ -196,7 +196,7 @@ public class DGAXMLConfigurationParserTest {
         InputStream bais = new ByteArrayInputStream(xmlBytes);
 
         DGAConfiguration conf = DGAXMLConfigurationParser.parse(bais);
-        assertEquals("localhost:2181", System.getProperty("giraph.zkList"));
+        assertEquals("localhost:2181", conf.getSystemProperties().get("giraph.zkList"));
 
         assertEquals(0, conf.getGiraphProperties().size());
         assertEquals(1, conf.getCustomArgumentProperties().size());
@@ -235,7 +235,7 @@ public class DGAXMLConfigurationParserTest {
         InputStream bais = new ByteArrayInputStream(xmlBytes);
 
         DGAConfiguration conf = DGAXMLConfigurationParser.parse(bais);
-        assertEquals("localhost:2181", System.getProperty("giraph.zkList"));
+        assertEquals("localhost:2181", conf.getSystemProperties().get("giraph.zkList"));
 
         assertEquals(1, conf.getGiraphProperties().size());
         assertEquals(1, conf.getCustomArgumentProperties().size());

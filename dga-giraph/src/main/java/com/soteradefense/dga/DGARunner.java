@@ -3,19 +3,20 @@ package com.soteradefense.dga;
 
 import com.soteradefense.dga.hbse.HBSEComputation;
 import com.soteradefense.dga.hbse.HBSEMasterCompute;
-import java.io.InputStream;
-import java.util.Set;
-import java.util.TreeSet;
 import com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat;
 import com.soteradefense.dga.io.formats.HBSEOutputFormat;
 import com.soteradefense.dga.io.formats.SimpleEdgeOutputFormat;
 import com.soteradefense.dga.lc.LeafCompressionComputation;
-import com.soteradefense.dga.wcc.WeaklyConnectedComponentCompute;
+import com.soteradefense.dga.wcc.WeaklyConnectedComponentComputation;
 import org.apache.commons.cli.Options;
 import org.apache.giraph.GiraphRunner;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.InputStream;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class DGARunner {
 
@@ -63,23 +64,25 @@ public class DGARunner {
                 requiredConf.setDGAGiraphProperty("-eof", SimpleEdgeOutputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
-                requiredConf.setDGAGiraphProperty(SimpleEdgeOutputFormat.SIMPLE_WRITE_SOURCE_VALUE, "true");
-                DGAConfiguration finalConf = DGAConfiguration.coalesce(fileConf, commandLineConf, requiredConf);
-                String[] giraphArgs = finalConf.convertToCommandLineArguments(WeaklyConnectedComponentCompute.class.getCanonicalName());
+                DGAConfiguration minimalDefaults = new DGAConfiguration();
+                minimalDefaults.setCustomProperty(SimpleEdgeOutputFormat.SIMPLE_WRITE_SOURCE_VALUE, "true");
+                DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
+                String[] giraphArgs = finalConf.convertToCommandLineArguments(WeaklyConnectedComponentComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
 
             } else if (analytic.equals("hbse")) {
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
-                requiredConf.setDGAGiraphProperty("-eof", HBSEOutputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-vof", HBSEOutputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-mc", HBSEMasterCompute.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
                 DGAConfiguration minimalDefaults = new DGAConfiguration();
                 minimalDefaults.setCustomProperty(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE, "10");
                 minimalDefaults.setCustomProperty(HBSEMasterCompute.BETWEENNESS_OUTPUT_DIR, outputPath);
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.PIVOT_BATCH_SIZE, "25");
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.VERTEX_COUNT, "10");
+                minimalDefaults.setCustomProperty(HBSEMasterCompute.PIVOT_BATCH_SIZE, "50");
+                minimalDefaults.setCustomProperty(HBSEMasterCompute.INITIAL_PIVOT_PERCENT, "75");
+                minimalDefaults.setCustomProperty(HBSEMasterCompute.VERTEX_COUNT, "5");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(HBSEComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));

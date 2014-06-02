@@ -45,7 +45,7 @@ import java.util.Map.Entry;
  */
 public class HBSEComputation extends AbstractComputation<Text, VertexData, Text, PathData, PathData> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HBSEComputation.class);
+    private static final Logger logger = LoggerFactory.getLogger(HBSEComputation.class);
 
     /**
      * Works in two major stages which are repeated and coordinated
@@ -74,11 +74,13 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         // if this vertex is a source (pivot) send shortest path messages to neighbors
 
         if (State.SHORTEST_PATH_START == state) {
-
-            if (isPivotPoint(id)) {
-                LOG.info("Superstep: " + step + " Start new shortest path computation. Source = " + id);
+            logger.info("Started the Pivot Selection Process.");
+            if (!vertexValue.getWasPivotPoint() && isPivotPoint(id)) {
+                vertexValue.setWasPivotPoint(true);
+                aggregate(HBSEMasterCompute.PIVOT_AGG, new IntWritable(1));
+                logger.info("Superstep: " + step + " Start new shortest path computation. Source = " + id);
                 for (Edge<Text, Text> edge : vertex.getEdges()) {
-                    sendMessage(edge.getTargetVertexId(), PathData.getShortestPathMessage(id, id, Long.parseLong(edge.getValue().toString()), 1));
+                    sendMessage(edge.getTargetVertexId(), PathData.getShortestPathMessage(id, id, getEdgeValue(edge.getValue().toString()), 1));
                 }
                 vertexValue.addPathData(PathData.getShortestPathMessage(id, id, 0, 1L));
                 this.aggregate(HBSEMasterCompute.UPDATE_COUNT_AGG, new IntWritable(1));
@@ -107,7 +109,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                 long numPaths = spl.getShortestPathCount();
                 updateCount++;
                 for (Edge<Text, Text> edge : vertex.getEdges()) {
-                    long newDistance = spl.getDistance() + Long.parseLong(edge.getValue().toString());
+                    long newDistance = spl.getDistance() + getEdgeValue(edge.getValue().toString());
                     this.sendMessage(edge.getTargetVertexId(), PathData.getShortestPathMessage(src, id, newDistance, numPaths));
                 }
             }
@@ -132,7 +134,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
 
             }
             if (builder.length() > 1) builder.deleteCharAt(builder.length() - 1);
-            LOG.trace("ID: " + id + " Step: " + step + " State: " + state + " sent messages (pred,source):  " + builder.toString());
+            logger.trace("ID: " + id + " Step: " + step + " State: " + state + " sent messages (pred,source):  " + builder.toString());
         }
 
 
@@ -173,7 +175,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
             }
 
             if (builder.length() > 1) builder.deleteCharAt(builder.length() - 1);
-            LOG.trace("ID: " + id + " Step: " + step + " State: " + state + " set noSuccessor " + builder.toString());
+            logger.trace("ID: " + id + " Step: " + step + " State: " + state + " set noSuccessor " + builder.toString());
 
         }
 
@@ -192,7 +194,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                 long successorNumPaths = message.getNumPaths();
                 long numPaths = vertexValue.getPathDataMap().get(src).getShortestPathCount();
                 double partialDep = ((double) numPaths / successorNumPaths) * (1 + successorDep);
-                LOG.debug("ID: " + id + " Step: " + step + " message {src:" + src + " successorPaths:" + successorNumPaths + " successorDep:" + successorDep + "} calculated {paths:" + numPaths + ", dep:" + partialDep + "}");
+                logger.debug("ID: " + id + " Step: " + step + " message {src:" + src + " successorPaths:" + successorNumPaths + " successorDep:" + successorDep + "} calculated {paths:" + numPaths + ", dep:" + partialDep + "}");
 
                 // accumulate the dependency and subtract one successor
                 PartialDependency partialSum = vertexValue.addPartialDep(src, partialDep, -1);
@@ -207,7 +209,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                         builder.append(predecessor).append(",");
                     }
                     if (builder.length() > 1) builder.deleteCharAt(builder.length() - 1);
-                    LOG.debug("ID: " + id + " Step: " + step + " forwarding partial dep to predecessors (" + builder.toString() + ") {src:" + src + ", paths:" + numPaths + ", dep:" + partialSum.getDependency() + "}");
+                    logger.debug("ID: " + id + " Step: " + step + " forwarding partial dep to predecessors (" + builder.toString() + ") {src:" + src + ", paths:" + numPaths + ", dep:" + partialSum.getDependency() + "}");
                 }
             }
         }
@@ -231,6 +233,22 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
     }
 
     /**
+     * Parses the Edge Value from a string.
+     * @param s Edge value as a string
+     * @return long edge value
+     */
+    private long getEdgeValue(String s){
+        long edgeValue;
+        try{
+            edgeValue = Long.parseLong(s);
+        }
+        catch(NumberFormatException ex){
+            edgeValue = 1;
+        }
+        return edgeValue;
+    }
+
+    /**
      * Return the current global state
      *
      * @return State that stores the current global state
@@ -238,28 +256,6 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
     private State getCurrentGlobalState() {
         IntWritable stateInt = this.getAggregatedValue(HBSEMasterCompute.STATE_AGG);
         return State.values()[stateInt.get()];
-    }
-
-
-    /**
-     * Read the global pivot batch:  the set of vertices that are to be used
-     * as sources in this phase.
-     *
-     * @return The current batch of pivot points.
-     */
-    private Set<String> getPivotBatch() {
-        PivotSetWritable iwa = this.getAggregatedValue(HBSEMasterCompute.PIVOT_AGG);
-        return getBatch(iwa);
-    }
-
-    /**
-     * Gets a Set of Pivots
-     *
-     * @param iwa A PivotSetWritable object
-     * @return A set of pivots
-     */
-    private Set<String> getBatch(PivotSetWritable iwa) {
-        return iwa.getPivots();
     }
 
 
@@ -276,7 +272,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         try {
             size = Integer.parseInt(getConf().get(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE));
         } catch (NumberFormatException e) {
-            LOG.error("betweenness.set.maxSize must be set to a valid int.");
+            logger.error("betweenness.set.maxSize must be set to a valid int.");
             throw e;
         }
         return new HighBetweennessList(size, id, value);
@@ -302,58 +298,14 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
      * @return True if it is a pivot point.
      */
     private boolean isPivotPoint(String id) {
-        if (getSuperstep() == 0 && getPivotBatch().size() != 0) {
-            return getPivotBatch().contains(id);
-        } else {
-            Random random = getRandomWithSeed(HBSEMasterCompute.PIVOT_BATCH_RANDOM_SEED);
-            double percentageCutoff = getPercentageCutOff();
-            double randomNumber = random.nextDouble();
-            boolean isPivot = randomNumber < percentageCutoff;
-            if (isPivot) {
-                isPivot = setPivot(id);
-            }
-            return isPivot;
-        }
+        Random random = getRandomWithSeed(HBSEMasterCompute.PIVOT_BATCH_RANDOM_SEED);
+        double percentageCutoff = getPercentageCutOff();
+        double randomNumber = random.nextDouble();
+        boolean isPivot = randomNumber < percentageCutoff;
+        logger.info("Selected as a possible pivot: " + id);
+        return isPivot;
     }
 
-    /**
-     * Checks to see if the vertex was used as a previous pivot.
-     * If it was a previous pivot, then true is returned.
-     *
-     * @param id Vertex Id
-     * @return True if set as a current Pivot, False if it was already used.
-     */
-    private boolean setPivot(String id) {
-        boolean wasPreviouslyUsed = true;
-        Set<String> previousBatch = getPreviousPivotBatch();
-        if (!previousBatch.contains(id)) {
-            Set<String> currentPivots = new HashSet<String>();
-            currentPivots.add(id);
-            setGlobalPivots(currentPivots, HBSEMasterCompute.PIVOT_AGG);
-            wasPreviouslyUsed = false;
-        }
-        return !wasPreviouslyUsed;
-    }
-
-    /**
-     * Sets a global set of pivots based on name
-     *
-     * @param pivots Set of Pivots
-     * @param name   Name of the aggregator to use.
-     */
-    private void setGlobalPivots(Collection<String> pivots, String name) {
-        this.aggregate(name, new PivotSetWritable(pivots));
-    }
-
-    /**
-     * Gets the previous Pivot Batch
-     *
-     * @return Set of Pivots
-     */
-    private Set<String> getPreviousPivotBatch() {
-        PivotSetWritable previousPivots = getAggregatedValue(HBSEMasterCompute.PREVIOUS_PIVOT_AGG);
-        return getBatch(previousPivots);
-    }
 
     /**
      * Gets a Random Object With A possible Seed based on a Configuration.
@@ -369,7 +321,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         } else {
             long seed = Long.parseLong(randomSeedStr);
             random = new Random(seed);
-            LOG.info("Set random seed: " + seed);
+            logger.info("Set random seed: " + seed);
         }
         return random;
     }

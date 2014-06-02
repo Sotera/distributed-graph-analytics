@@ -49,7 +49,7 @@ public class DGAXMLConfigurationParser {
 
                 if (name == null || value == null)
                     throw new IOException("Malformed XML for the this DGA configuration file");
-                dgaConf.setCustomProperty(name, value);
+                dgaConf.setSystemProperty(name, value);
             }
         } catch (XPathExpressionException e) {
             logger.error("There was an error in the XPathExpression " + expression, e);

@@ -27,12 +27,12 @@ import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 
-public class WeaklyConnectedComponentComputeTest {
+public class WeaklyConnectedComponentComputationTest {
 
     @Test
     public void testComputeOutput() throws Exception {
         GiraphConfiguration conf = new GiraphConfiguration();
-        conf.setComputationClass(WeaklyConnectedComponentCompute.class);
+        conf.setComputationClass(WeaklyConnectedComponentComputation.class);
         conf.setVertexOutputFormatClass(InMemoryVertexOutputFormat.class);
         TestGraph<Text,Text,Text> testGraph = getGraph(conf);
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
