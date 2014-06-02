@@ -232,6 +232,11 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
 
     }
 
+    /**
+     * Parses the Edge Value from a string.
+     * @param s Edge value as a string
+     * @return long edge value
+     */
     private long getEdgeValue(String s){
         long edgeValue;
         try{

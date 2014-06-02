@@ -70,7 +70,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     public static final String STATE_AGG = "com.sotera.graph.singbetweenness.STATE_AGG";
 
     /**
-     * Aggregator Identifier for the global pivot points.
+     * Aggregator Sum for the total number of pivots selected.
      */
     public static final String PIVOT_AGG = "com.sotera.graph.singbetweenness.PIVOT_AGG";
 
