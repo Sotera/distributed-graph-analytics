@@ -58,6 +58,7 @@ public class DGAConfiguration {
             argList.add("-D");
             argList.add(key + "=" + this.systemProperties.get(key));
         }
+
         argList.add(computationClassName);
         for (String key : this.giraphProperties.keySet()) {
             if (key.equals("-q")) {
