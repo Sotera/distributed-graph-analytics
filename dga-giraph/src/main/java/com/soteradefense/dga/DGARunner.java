@@ -7,6 +7,8 @@ import com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat;
 import com.soteradefense.dga.io.formats.HBSEOutputFormat;
 import com.soteradefense.dga.io.formats.SimpleEdgeOutputFormat;
 import com.soteradefense.dga.lc.LeafCompressionComputation;
+import com.soteradefense.dga.pr.PageRankComputation;
+import com.soteradefense.dga.pr.PageRankMasterCompute;
 import com.soteradefense.dga.wcc.WeaklyConnectedComponentComputation;
 import org.apache.commons.cli.Options;
 import org.apache.giraph.GiraphRunner;
@@ -107,11 +109,12 @@ public class DGARunner {
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eof", SimpleEdgeOutputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
+                requiredConf.setDGAGiraphProperty("-mc", PageRankMasterCompute.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
                 requiredConf.setDGAGiraphProperty(SimpleEdgeOutputFormat.SIMPLE_WRITE_SOURCE_VALUE, "true");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(fileConf, commandLineConf, requiredConf);
-                //String[] giraphArgs = finalConf.convertToCommandLineArguments(PageRankComputation.class.getCanonicalName());
-                //System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
+                String[] giraphArgs = finalConf.convertToCommandLineArguments(PageRankComputation.class.getCanonicalName());
+                System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
             }
 
         } catch (Exception e) {

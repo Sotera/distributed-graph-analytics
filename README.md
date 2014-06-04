@@ -8,6 +8,8 @@ Currently, DGA supports the following analytics:
 ###### Giraph
 - Weakly Connected Components
 - Leaf Compression
+- Page Rank
+- High Betweenness Set Extraction
 
 ###### GraphX
 - Louvain Modularity
@@ -19,3 +21,13 @@ Eventually, the following analytics will be supported:
 - High Betweenness Set Extraction
 - Leaf Compression
 - Page Rank
+
+
+How to Build:
+=============
+gradle clean distDGA
+
+The jar with config files will be output to the following directory: dga-giraph/build/dist/
+
+Note: You must have the hadoop jars included elsewhere.  This only builds DGA and include Giraph Dependencies that are not included with
+hadoop.
