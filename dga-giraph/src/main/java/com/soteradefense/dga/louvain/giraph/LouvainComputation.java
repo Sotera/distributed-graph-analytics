@@ -17,10 +17,16 @@
  */
 package com.soteradefense.dga.louvain.giraph;
 
+import com.soteradefense.dga.DGALoggingUtil;
+import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.edge.EdgeFactory;
 import org.apache.giraph.graph.AbstractComputation;
+import org.apache.giraph.graph.GraphState;
+import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
+import org.apache.giraph.worker.WorkerAggregatorUsage;
+import org.apache.giraph.worker.WorkerContext;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -74,6 +80,12 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
     }
 
     @Override
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, LouvainNodeState, LongWritable> workerClientRequestProcessor, GraphTaskManager<Text, LouvainNodeState, LongWritable> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
+        DGALoggingUtil.updateLoggerBasedOnConfiguration(this.getConf(), logger);
+    }
+
+    @Override
     public void compute(Vertex<Text, LouvainNodeState, LongWritable> vertex, Iterable<LouvainMessage> messages) throws IOException {
 
         long currentSuperstep = getSuperstep();
@@ -95,12 +107,12 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
             aggregate(TOTAL_EDGE_WEIGHT_AGG, new LongWritable(vertexValue.getNodeWeight() + vertexValue.getInternalWeight()));
         }
 
-        if (currentSuperstep == 0 && vertex.getNumEdges() != 0) {
+        if (currentSuperstep == 0 && vertex.getNumEdges() == 0) {
             // nodes that have no edges send themselves a message on the step 0
             this.sendMessage(vertex.getId(), new LouvainMessage());
             vertex.voteToHalt();
             return;
-        } else if (currentSuperstep == 1 && vertex.getNumEdges() != 0) {
+        } else if (currentSuperstep == 1 && vertex.getNumEdges() == 0) {
             // nodes that have no edges aggregate their Q value and exit computation on step 1
             double q = calculateActualQ(vertex, new ArrayList<LouvainMessage>());
             aggregateQ(q);

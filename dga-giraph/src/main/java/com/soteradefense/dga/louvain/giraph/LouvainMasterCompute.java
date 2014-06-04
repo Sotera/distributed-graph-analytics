@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.louvain.giraph;
 
+import com.soteradefense.dga.DGALoggingUtil;
 import org.apache.giraph.aggregators.DoubleSumAggregator;
 import org.apache.giraph.aggregators.LongSumAggregator;
 import org.apache.giraph.master.DefaultMasterCompute;
@@ -60,6 +61,7 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
         this.registerAggregator(LouvainComputation.CHANGE_AGG, LongSumAggregator.class);
         this.registerPersistentAggregator(LouvainComputation.TOTAL_EDGE_WEIGHT_AGG, LongSumAggregator.class);
         this.registerPersistentAggregator(LouvainComputation.ACTUAL_Q_AGG, DoubleSumAggregator.class);
+        DGALoggingUtil.updateLoggerBasedOnConfiguration(this.getConf(), logger);
     }
 
 

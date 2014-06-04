@@ -77,8 +77,8 @@ public abstract class DGAAbstractEdgeInputFormat<E extends Writable> extends Tex
         @Override
         public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
             super.initialize(inputSplit, context);
-            delimiter = getConf().get(LINE_TOKENIZE_VALUE, LINE_TOKENIZE_VALUE_DEFAULT);
-            defaultEdgeValue = getConf().get(EDGE_VALUE, getDefaultEdgeValue());
+            delimiter = getContext().getConfiguration().get(LINE_TOKENIZE_VALUE, LINE_TOKENIZE_VALUE_DEFAULT);
+            defaultEdgeValue = getContext().getConfiguration().get(EDGE_VALUE, getDefaultEdgeValue());
         }
 
         @Override
