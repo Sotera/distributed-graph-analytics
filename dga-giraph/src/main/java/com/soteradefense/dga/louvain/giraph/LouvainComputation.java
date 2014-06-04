@@ -82,7 +82,8 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
     @Override
     public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, LouvainNodeState, LongWritable> workerClientRequestProcessor, GraphTaskManager<Text, LouvainNodeState, LongWritable> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
         super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
-        DGALoggingUtil.updateLoggerBasedOnConfiguration(this.getConf(), logger);
+        DGALoggingUtil.setDGALogLevel(this.getConf());
+        //logger = LoggerFactory.getLogger(LouvainComputation.class);
     }
 
     @Override

@@ -61,7 +61,8 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
         this.registerAggregator(LouvainComputation.CHANGE_AGG, LongSumAggregator.class);
         this.registerPersistentAggregator(LouvainComputation.TOTAL_EDGE_WEIGHT_AGG, LongSumAggregator.class);
         this.registerPersistentAggregator(LouvainComputation.ACTUAL_Q_AGG, DoubleSumAggregator.class);
-        DGALoggingUtil.updateLoggerBasedOnConfiguration(this.getConf(), logger);
+        DGALoggingUtil.setDGALogLevel(this.getConf());
+        //logger = LoggerFactory.getLogger(LouvainMasterCompute.class);
     }
 
 
