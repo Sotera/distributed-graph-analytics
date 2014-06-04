@@ -12,6 +12,10 @@ public class DGALoggingUtil {
 
     public static void setDGALogLevel(Configuration conf) {
         String logLevel = conf.get(DGA_LOG_LEVEL, "INFO");
+        setDGALogLevel(logLevel);
+    }
+
+    public static void setDGALogLevel(String logLevel) {
         System.out.println("Setting DGA Log level to: " + logLevel);
         Level level = Level.toLevel(logLevel, Level.INFO);
         ConsoleAppender console = new ConsoleAppender();
@@ -23,6 +27,5 @@ public class DGALoggingUtil {
         //add appender to any Logger
         Logger.getLogger("com.soteradefense").addAppender(console);
         Logger.getLogger("com.soteradefense").setLevel(level);
-
     }
 }
