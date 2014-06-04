@@ -46,6 +46,7 @@ public class DGATextEdgeValueInputFormatTest extends DGATextEdgeValueInputFormat
         rr = mock(RecordReader.class);
         GiraphConfiguration giraphConf = new GiraphConfiguration();
         giraphConf.setComputationClass(BasicComputation.class);
+        giraphConf.set(DGALongEdgeValueInputFormat.LINE_TOKENIZE_VALUE, ",");
         conf = new ImmutableClassesGiraphConfiguration<Text, Text, Text>(giraphConf);
         tac = mock(TaskAttemptContext.class);
         when(tac.getConfiguration()).thenReturn(conf);
@@ -69,7 +70,7 @@ public class DGATextEdgeValueInputFormatTest extends DGATextEdgeValueInputFormat
         ter.initialize(null, tac);
         assertEquals(ter.getCurrentSourceId(), new Text("1"));
         assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text("2"));
-        assertEquals(ter.getCurrentEdge().getValue(), new Text());
+        assertEquals(ter.getCurrentEdge().getValue(), new Text(""));
 
     }
 
