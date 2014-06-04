@@ -60,7 +60,7 @@ public class LouvainVertexOutputFormat extends TextVertexOutputFormat<Text, Louv
                 b.append(e.getValue());
                 b.append(",");
             }
-            b.deleteCharAt(b.length());
+            b.deleteCharAt(b.length() - 1);
 
             getRecordWriter().write(vertex.getId(), new Text(b.toString()));
 

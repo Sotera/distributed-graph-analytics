@@ -20,8 +20,12 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LouvainRunner {
+
+    private static Logger logger = LoggerFactory.getLogger(LouvainRunner.class);
 
     private DGAConfiguration requiredConfiguration;
     private DGAConfiguration minimalDefaultConfiguration;
@@ -59,7 +63,7 @@ public class LouvainRunner {
         int iteration = 0;
         outputPath = outputPath.endsWith("/") ? outputPath : outputPath + "/";
         String interimInputPath = inputPath;
-        while ( isComplete(outputPath) ) {
+        while ( !isComplete(outputPath) ) {
             String interimOutputPath = outputPath + "giraph_" + String.valueOf(iteration);
             DGAConfiguration confForStep = DGAConfiguration.coalesce(minimalDefaultConfiguration, partiallyCoalescedConfiguration, requiredConfiguration);
             confForStep.setDGAGiraphProperty("-op", interimOutputPath);
@@ -70,11 +74,15 @@ public class LouvainRunner {
                 confForStep.setDGAGiraphProperty("-esd", interimOutputPath);
                 confForStep.convertToCommandLineArguments(LouvainComputation.class.getCanonicalName());
 
+                logger.debug("Running Giraph step {} with configuration: {}", iteration, confForStep);
+
                 dgaArguments = confForStep.convertToCommandLineArguments(LouvainComputation.class.getCanonicalName());
             } else {
                 confForStep.setDGAGiraphProperty("-vif", LouvainVertexInputFormat.class.getCanonicalName());
                 confForStep.setDGAGiraphProperty("-vip", interimInputPath);
                 confForStep.setDGAGiraphProperty("-vsd", interimOutputPath);
+
+                logger.debug("Running Giraph step {} with configuration: {}", iteration, confForStep);
                 dgaArguments = confForStep.convertToCommandLineArguments(LouvainComputation.class.getCanonicalName());
             }
             status = ToolRunner.run(new GiraphRunner(), dgaArguments);
@@ -113,6 +121,8 @@ public class LouvainRunner {
 
         job.setMapperClass(CommunityCompression.Map.class);
         job.setReducerClass(CommunityCompression.Reduce.class);
+
+        logger.debug("Running Mapreduce step with job configuration: {}", job);
 
         return job.waitForCompletion(false) ? 0 : 1;
     }

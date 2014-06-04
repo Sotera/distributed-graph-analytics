@@ -77,6 +77,36 @@ public class DGAConfiguration {
         return argList.toArray(new String[argList.size()]);
     }
 
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("dgaConfiguration=(giraphProperties: {");
+        for (Map.Entry<String, String> entry : this.giraphProperties.entrySet()) {
+            builder.append(entry.getKey());
+            builder.append(":");
+            builder.append(entry.getValue());
+            builder.append(",");
+        }
+        builder.replace(builder.length()-1, builder.length(), "}");
+        builder.append("customArgumentProperties: {");
+        for (Map.Entry<String, String> entry : this.customArgumentProperties.entrySet()) {
+            builder.append(entry.getKey());
+            builder.append(":");
+            builder.append(entry.getValue());
+            builder.append(",");
+        }
+        builder.replace(builder.length()-1, builder.length(), "}");
+        builder.append("systemProperties: {");
+        for (Map.Entry<String, String> entry : this.systemProperties.entrySet()) {
+            builder.append(entry.getKey());
+            builder.append(":");
+            builder.append(entry.getValue());
+            builder.append(",");
+        }
+        builder.replace(builder.length()-1, builder.length(), "})");
+        return builder.toString();
+    }
+
     /**
      * This method returns a new DGAConfiguration object containing the resulting coalescing activity of all provided DGAConfigurations
      * The order of the configurations is important -- the configuration with the lowest priority will be added first, then the second, and so on.
