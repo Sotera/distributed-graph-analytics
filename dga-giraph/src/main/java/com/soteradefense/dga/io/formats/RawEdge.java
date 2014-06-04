@@ -39,7 +39,8 @@ public class RawEdge {
     public void fromText(final Text line) throws IOException {
         StringTokenizer tokenizer = new StringTokenizer(line.toString(), this.delimiter);
         if (tokenizer.countTokens() < 2) {
-            throw new IOException("Line of text contained only " + tokenizer.countTokens() + " tokens.  This input format requires at least a sourceId and a targetId, with an optional edgeValue");
+            throw new IOException("Line of text contained only " + tokenizer.countTokens() + " tokens.  This input format requires at least a sourceId and a targetId, with an optional edgeValue." +
+            "raw data: " + line.toString());
         }
         this.sourceId = tokenizer.nextToken();
         this.targetId = tokenizer.nextToken();

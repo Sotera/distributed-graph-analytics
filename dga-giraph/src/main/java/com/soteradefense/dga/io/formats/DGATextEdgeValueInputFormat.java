@@ -17,7 +17,12 @@
  */
 package com.soteradefense.dga.io.formats;
 
+import org.apache.giraph.io.EdgeReader;
+import org.apache.giraph.io.ReverseEdgeDuplicator;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import java.io.IOException;
 
@@ -29,8 +34,21 @@ public class DGATextEdgeValueInputFormat extends DGAAbstractEdgeInputFormat<Text
 
     private static final String DEFAULT_EDGE_VALUE = "";
 
-    public DGAAbstractEdgeReader<Text> getEdgeReader() {
-        return new DGATextEdgeValueReader();
+    /**
+     * The create edge reader first determines if we should reverse each edge; some data sets are undirected graphs
+     * and need the input format to reverse their connected nature.
+     *
+     * Calls the abstract method getEdgeReader() which will give us the appropriate EdgeReader for the subclass.
+     * @param split
+     * @param context
+     * @return
+     * @throws IOException
+     */
+    public EdgeReader<Text, Text> createEdgeReader(InputSplit split, TaskAttemptContext context) throws IOException {
+        String duplicator = getConf().get(IO_EDGE_REVERSE_DUPLICATOR, IO_EDGE_REVERSE_DUPLICATOR_DEFAULT);
+        boolean useDuplicator = Boolean.parseBoolean(duplicator);
+        EdgeReader<Text, Text> reader = useDuplicator ? new ReverseEdgeDuplicator<Text, Text>(new DGATextEdgeValueReader()) : new DGATextEdgeValueReader();
+        return reader;
     }
 
     public class DGATextEdgeValueReader extends DGAAbstractEdgeReader<Text> {
