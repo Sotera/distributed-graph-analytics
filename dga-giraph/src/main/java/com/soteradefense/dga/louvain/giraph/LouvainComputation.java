@@ -17,13 +17,21 @@
  */
 package com.soteradefense.dga.louvain.giraph;
 
+import com.soteradefense.dga.DGALoggingUtil;
+import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.edge.EdgeFactory;
 import org.apache.giraph.graph.AbstractComputation;
+import org.apache.giraph.graph.GraphState;
+import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
+import org.apache.giraph.worker.WorkerAggregatorUsage;
+import org.apache.giraph.worker.WorkerContext;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -55,6 +63,8 @@ import java.util.Map;
  */
 public class LouvainComputation extends AbstractComputation<Text, LouvainNodeState, LongWritable, LouvainMessage, LouvainMessage> {
 
+    private static final Logger logger = LoggerFactory.getLogger(LouvainComputation.class);
+
     // constants used to register and lookup aggregators
     public static final String CHANGE_AGG = "change_aggregator";
     public static final String TOTAL_EDGE_WEIGHT_AGG = "total_edge_weight_aggregator";
@@ -70,6 +80,12 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
     }
 
     @Override
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, LouvainNodeState, LongWritable> workerClientRequestProcessor, GraphTaskManager<Text, LouvainNodeState, LongWritable> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
+        DGALoggingUtil.updateLoggerBasedOnConfiguration(this.getConf(), logger);
+    }
+
+    @Override
     public void compute(Vertex<Text, LouvainNodeState, LongWritable> vertex, Iterable<LouvainMessage> messages) throws IOException {
 
         long currentSuperstep = getSuperstep();
@@ -80,15 +96,23 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
 
         // count the total edge weight of the graph on the first super step only
         if (currentSuperstep == 0) {
+            if (!vertexValue.isFromLouvainVertexReader()) {
+                vertexValue.setCommunity(vertex.getId().toString());
+                long edgeWeightAggregation = 0;
+                for (Edge<Text, LongWritable> edge : vertex.getEdges()) {
+                    edgeWeightAggregation += edge.getValue().get();
+                }
+                vertexValue.setNodeWeight(edgeWeightAggregation);
+            }
             aggregate(TOTAL_EDGE_WEIGHT_AGG, new LongWritable(vertexValue.getNodeWeight() + vertexValue.getInternalWeight()));
         }
 
-        if (currentSuperstep == 0 && vertex.getNumEdges() != 0) {
+        if (currentSuperstep == 0 && vertex.getNumEdges() == 0) {
             // nodes that have no edges send themselves a message on the step 0
             this.sendMessage(vertex.getId(), new LouvainMessage());
             vertex.voteToHalt();
             return;
-        } else if (currentSuperstep == 1 && vertex.getNumEdges() != 0) {
+        } else if (currentSuperstep == 1 && vertex.getNumEdges() == 0) {
             // nodes that have no edges aggregate their Q value and exit computation on step 1
             double q = calculateActualQ(vertex, new ArrayList<LouvainMessage>());
             aggregateQ(q);
@@ -233,7 +257,7 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
 
         // update community and change count
         if (!state.getCommunity().equals(bestCommunityId)) {
-            // long old = state.getCommunity();
+            String old = state.getCommunity();
             LouvainMessage c = communityMap.get(bestCommunityId);
             if (!bestCommunityId.equals(c.getCommunityId())) {
                 throw new IllegalStateException("Community mapping contains wrong Id");
@@ -241,7 +265,7 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
             state.setCommunity(c.getCommunityId());
             state.setCommunitySigmaTotal(c.getCommunitySigmaTotal());
             state.setChanged(1L);
-            // System.out.println("Iteration: "+iteration+" Node: "+getId()+" changed from "+old+" -> "+state.getCommunity()+" dq: "+maxDeltaQ);
+            logger.debug("Iteration: {} Node: {} changed from {} -> {} dq: {}", iteration, vertex.getId(), old, state.getCommunity(), maxDeltaQ);
         }
 
         // send our node weight to the community hub to be summed in next

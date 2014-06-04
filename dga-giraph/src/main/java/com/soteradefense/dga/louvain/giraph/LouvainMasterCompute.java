@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.louvain.giraph;
 
+import com.soteradefense.dga.DGALoggingUtil;
 import org.apache.giraph.aggregators.DoubleSumAggregator;
 import org.apache.giraph.aggregators.LongSumAggregator;
 import org.apache.giraph.master.DefaultMasterCompute;
@@ -60,6 +61,7 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
         this.registerAggregator(LouvainComputation.CHANGE_AGG, LongSumAggregator.class);
         this.registerPersistentAggregator(LouvainComputation.TOTAL_EDGE_WEIGHT_AGG, LongSumAggregator.class);
         this.registerPersistentAggregator(LouvainComputation.ACTUAL_Q_AGG, DoubleSumAggregator.class);
+        DGALoggingUtil.updateLoggerBasedOnConfiguration(this.getConf(), logger);
     }
 
 
@@ -147,7 +149,7 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
      * @param message
      */
     private void markPipeLineComplete(String message) {
-        String outputPath = getConf().get("mapred.output.dir");
+        String outputPath = getConf().get("mapred.output.dir", getConf().get("mapreduce.output.fileoutputformat.outputdir"));
         String dir = outputPath.substring(0, outputPath.lastIndexOf("/"));
         String filename = getConf().get("fs.defaultFS") + dir + "/_COMPLETE";
         logger.debug("Writing {}", filename);
@@ -156,7 +158,7 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
 
 
     private void writeQvalue(String message) {
-        String outputPath = getConf().get("mapred.output.dir");
+        String outputPath = getConf().get("mapred.output.dir", getConf().get("mapreduce.output.fileoutputformat.outputdir"));
         int lastIndexOfSlash = outputPath.lastIndexOf("/");
         String dir = outputPath.substring(0, lastIndexOfSlash);
         String stage = outputPath.substring(lastIndexOfSlash + 1);
@@ -168,7 +170,7 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
 
 
     private double getPreviousQvalue() {
-        String outputPath = getConf().get("mapred.output.dir");
+        String outputPath = getConf().get("mapred.output.dir", getConf().get("mapreduce.output.fileoutputformat.outputdir"));
         int lastIndexOfSlash = outputPath.lastIndexOf("/");
         String dir = outputPath.substring(0, lastIndexOfSlash);
         String stage = outputPath.substring(lastIndexOfSlash + 1);
@@ -186,6 +188,7 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
 
     private void writeFile(String path, String message) {
         Path pt = new Path(path);
+        logger.debug("Writing file out to {}, message {}", path, message);
         try {
             FileSystem fs = FileSystem.get(new Configuration());
             BufferedWriter br = new BufferedWriter(new OutputStreamWriter(fs.create(pt, true)));

@@ -48,6 +48,7 @@ public class LouvainNodeState implements Writable {
     // history of total change numbers, used to determine when to halt
     private List<Long> changeHistory;
 
+    private boolean fromLouvainVertexReader = false;
 
     public LouvainNodeState() {
         this.changeHistory = new ArrayList<Long>();
@@ -96,6 +97,14 @@ public class LouvainNodeState implements Writable {
 
     public void setNodeWeight(long nodeWeight) {
         this.nodeWeight = nodeWeight;
+    }
+
+    public boolean isFromLouvainVertexReader() {
+        return fromLouvainVertexReader;
+    }
+
+    public void setFromLouvainVertexReader(boolean fromLouvainVertexReader) {
+        this.fromLouvainVertexReader = fromLouvainVertexReader;
     }
 
     @Override

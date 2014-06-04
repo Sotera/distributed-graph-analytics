@@ -19,6 +19,8 @@ package com.soteradefense.dga.louvain.giraph;
 
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -32,6 +34,8 @@ import java.util.Map;
  * by its communities.
  */
 public class LouvainVertexWritable implements Writable {
+
+    private static Logger logger = LoggerFactory.getLogger(LouvainVertexWritable.class);
 
     private long weight;
     private Map<String, Long> edges;
@@ -89,7 +93,11 @@ public class LouvainVertexWritable implements Writable {
         if (edges.length() > 0) {
             for (String edgeTuple : edges.split(",")) {
                 String[] edgeTokens = edgeTuple.split(":");
-                edgeMap.put(edgeTokens[0], Long.parseLong(edgeTokens[1]));
+                try {
+                    edgeMap.put(edgeTokens[0], Long.parseLong(edgeTokens[1]));
+                } catch (NumberFormatException e) {
+                    logger.error("Unable to parse edgeTuple {} from group of edges, {}", edgeTuple, edges);
+                }
             }
         }
         return vertex;

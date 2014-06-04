@@ -46,6 +46,7 @@ public class DGALongEdgeValueInputFormatTest extends DGALongEdgeValueInputFormat
         rr = mock(RecordReader.class);
         GiraphConfiguration giraphConf = new GiraphConfiguration();
         giraphConf.setComputationClass(BasicComputation.class);
+        giraphConf.set(DGALongEdgeValueInputFormat.LINE_TOKENIZE_VALUE, ",");
         conf = new ImmutableClassesGiraphConfiguration<Text, Text, Text>(giraphConf);
         tac = mock(TaskAttemptContext.class);
         when(tac.getConfiguration()).thenReturn(conf);

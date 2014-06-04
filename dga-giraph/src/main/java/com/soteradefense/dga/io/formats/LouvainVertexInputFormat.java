@@ -63,6 +63,7 @@ public class LouvainVertexInputFormat extends TextVertexInputFormat<Text, Louvai
 				throw new IllegalArgumentException("Invalid line: (" + line + ")");
 			}
 			LouvainNodeState state = new LouvainNodeState();
+            state.setFromLouvainVertexReader(true);
 			Text id = new Text(tokens[0]);
 			state.setCommunity(id.toString());
 			state.setInternalWeight(Long.parseLong(tokens[1]));

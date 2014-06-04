@@ -8,7 +8,6 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map.Entry;
 
 
@@ -45,40 +44,40 @@ public class CommunityCompression {
 
 	public static class Reduce extends Reducer<Text, LouvainVertexWritable, Text, Text> {
 
-		public void reduce(Text key, Iterator<LouvainVertexWritable> values, Context context) throws InterruptedException, IOException {
-			String communityId = key.toString();
-			long weight = 0;
-			HashMap<String,Long> edgeMap = new HashMap<String,Long>();
-			while (values.hasNext()){
-				LouvainVertexWritable vertex = values.next();
-				weight += vertex.getWeight();
-				for (Entry<String, Long> entry : vertex.getEdges().entrySet()){
-					String entryKey = entry.getKey();
+        @Override
+        public void reduce(Text key, Iterable<LouvainVertexWritable> values, Context context) throws IOException, InterruptedException {
+            String communityId = key.toString();
+            long weight = 0;
+            HashMap<String,Long> edgeMap = new HashMap<String,Long>();
+            for (LouvainVertexWritable vertex : values) {
+                weight += vertex.getWeight();
+                for (Entry<String, Long> entry : vertex.getEdges().entrySet()){
+                    String entryKey = entry.getKey();
 
-					if (entryKey.equals(communityId)){
-						weight += entry.getValue();
-					}
-					else if (edgeMap.containsKey(entryKey)){
-						long w = edgeMap.get(entryKey) + entry.getValue();
-						edgeMap.put(entryKey, w);
-					}
-					else{
-						edgeMap.put(entry.getKey(), entry.getValue());
-					}
-				}
-			}
+                    if (entryKey.equals(communityId)){
+                        weight += entry.getValue();
+                    }
+                    else if (edgeMap.containsKey(entryKey)){
+                        long w = edgeMap.get(entryKey) + entry.getValue();
+                        edgeMap.put(entryKey, w);
+                    }
+                    else{
+                        edgeMap.put(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
 
-			StringBuilder b = new StringBuilder();
-			b.append(weight).append("\t");
-			for (Entry<String, Long> entry : edgeMap.entrySet()){
-				b.append(entry.getKey()).append(":").append(entry.getValue()).append(",");
-			}
-			b.setLength(b.length() - 1);
+            StringBuilder b = new StringBuilder();
+            b.append(weight).append("\t");
+            for (Entry<String, Long> entry : edgeMap.entrySet()){
+                b.append(entry.getKey()).append(":").append(entry.getValue()).append(",");
+            }
+            b.setLength(b.length() - 1);
 
-			context.write(new Text(key.toString()), new Text(b.toString()));
+            context.write(new Text(key.toString()), new Text(b.toString()));
 
-		}
-	}
+        }
+    }
 //
 //
 //

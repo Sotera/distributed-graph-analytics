@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat;
-import com.soteradefense.dga.io.formats.SimpleEdgeOutputFormat;
 public class DGAConfiguration {
 
     private Map<String, String> giraphProperties;
@@ -75,6 +73,36 @@ public class DGAConfiguration {
         }
 
         return argList.toArray(new String[argList.size()]);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("dgaConfiguration=(giraphProperties: {");
+        for (Map.Entry<String, String> entry : this.giraphProperties.entrySet()) {
+            builder.append(entry.getKey());
+            builder.append(":");
+            builder.append(entry.getValue());
+            builder.append(",");
+        }
+        builder.replace(builder.length()-1, builder.length(), "}");
+        builder.append("customArgumentProperties: {");
+        for (Map.Entry<String, String> entry : this.customArgumentProperties.entrySet()) {
+            builder.append(entry.getKey());
+            builder.append(":");
+            builder.append(entry.getValue());
+            builder.append(",");
+        }
+        builder.replace(builder.length()-1, builder.length(), "}");
+        builder.append("systemProperties: {");
+        for (Map.Entry<String, String> entry : this.systemProperties.entrySet()) {
+            builder.append(entry.getKey());
+            builder.append(":");
+            builder.append(entry.getValue());
+            builder.append(",");
+        }
+        builder.replace(builder.length()-1, builder.length(), "})");
+        return builder.toString();
     }
 
     /**
