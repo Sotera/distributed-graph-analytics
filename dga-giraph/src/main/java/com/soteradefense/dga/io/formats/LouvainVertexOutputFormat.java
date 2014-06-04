@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.io.formats;
 
+import com.soteradefense.dga.DGALoggingUtil;
 import com.soteradefense.dga.louvain.giraph.LouvainNodeState;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.Vertex;
@@ -40,6 +41,7 @@ public class LouvainVertexOutputFormat extends TextVertexOutputFormat<Text, Louv
 
     @Override
     public TextVertexWriter createVertexWriter(TaskAttemptContext arg0) throws IOException, InterruptedException {
+        DGALoggingUtil.setDGALogLevel(getConf());
         return new LouvainVertexWriter();
     }
 

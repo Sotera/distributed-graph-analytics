@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.io.formats;
 
+import com.soteradefense.dga.DGALoggingUtil;
 import org.apache.giraph.io.EdgeReader;
 import org.apache.giraph.io.ReverseEdgeDuplicator;
 import org.apache.giraph.io.formats.TextEdgeInputFormat;
@@ -79,6 +80,7 @@ public abstract class DGAAbstractEdgeInputFormat<E extends Writable> extends Tex
             super.initialize(inputSplit, context);
             delimiter = getContext().getConfiguration().get(LINE_TOKENIZE_VALUE, LINE_TOKENIZE_VALUE_DEFAULT);
             defaultEdgeValue = getContext().getConfiguration().get(EDGE_VALUE, getDefaultEdgeValue());
+            DGALoggingUtil.setDGALogLevel(getContext().getConfiguration());
         }
 
         @Override
