@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.io.formats;
 
+import com.soteradefense.dga.DGALoggingUtil;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.io.formats.TextEdgeOutputFormat;
 import org.apache.hadoop.io.Text;
@@ -63,6 +64,7 @@ public class SimpleEdgeOutputFormat extends TextEdgeOutputFormat<Text, Text, Tex
 
     @Override
     public TextEdgeWriter<Text, Text, Text> createEdgeWriter(TaskAttemptContext context) throws IOException, InterruptedException {
+        DGALoggingUtil.setDGALogLevel(getConf());
         return new SimpleEdgeWriter();
     }
 

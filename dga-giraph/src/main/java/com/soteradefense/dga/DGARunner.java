@@ -53,12 +53,14 @@ public class DGARunner {
         for (int i = 0; i < subsetArguments.length; i++) {
             subsetArguments[i] = args[i + 3];
         }
+        DGAConfiguration commandLineConf = DGACommandLineUtil.parseCommandLine(subsetArguments, options);
+        String logLevel = commandLineConf.getCustomArgumentProperties().get(DGALoggingUtil.DGA_LOG_LEVEL);
+        DGALoggingUtil.setDGALogLevel(logLevel);
 
         try {
             InputStream configurationIS = Thread.currentThread().getContextClassLoader().getResourceAsStream("dga-config.xml");
 
             DGAConfiguration fileConf = DGAXMLConfigurationParser.parse(configurationIS);
-            DGAConfiguration commandLineConf = DGACommandLineUtil.parseCommandLine(subsetArguments, options);
 
             if (analytic.equals("wcc")) {
                 DGAConfiguration requiredConf = new DGAConfiguration();

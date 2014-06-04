@@ -17,9 +17,15 @@
 */
 package com.soteradefense.dga.lc;
 
+import com.soteradefense.dga.DGALoggingUtil;
+import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.BasicComputation;
+import org.apache.giraph.graph.GraphState;
+import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
+import org.apache.giraph.worker.WorkerAggregatorUsage;
+import org.apache.giraph.worker.WorkerContext;
 import org.apache.hadoop.io.Text;
 
 import java.io.IOException;
@@ -31,6 +37,12 @@ import java.io.IOException;
  * This cycle continues until all leaves have been pruned.
  */
 public class LeafCompressionComputation extends BasicComputation<Text, Text, Text, Text> {
+
+    @Override
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, Text, Text> workerClientRequestProcessor, GraphTaskManager<Text, Text, Text> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
+        DGALoggingUtil.setDGALogLevel(getConf());
+    }
 
     @Override
     public void compute(Vertex<Text, Text, Text> vertex, Iterable<Text> messages) throws IOException {
