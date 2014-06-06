@@ -62,7 +62,6 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
         this.registerPersistentAggregator(LouvainComputation.TOTAL_EDGE_WEIGHT_AGG, LongSumAggregator.class);
         this.registerPersistentAggregator(LouvainComputation.ACTUAL_Q_AGG, DoubleSumAggregator.class);
         DGALoggingUtil.setDGALogLevel(this.getConf());
-        //logger = LoggerFactory.getLogger(LouvainMasterCompute.class);
     }
 
 
@@ -75,25 +74,25 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
 
         if (currentSuperstep == 0) {
             previousQ = this.getPreviousQvalue();
-            logger.debug("Previous Q value: {}", previousQ);
+            logger.info("Previous Q value: {}", previousQ);
         }
 
 
         if (currentSuperstep == 1) {
             long m = ((LongWritable) getAggregatedValue(LouvainComputation.TOTAL_EDGE_WEIGHT_AGG)).get();
-            logger.debug("Graph Weight = {}", m);
+            logger.info("Graph Weight = {}", m);
         } else if (currentMinorstep == 1 && currentIteration > 0 && currentIteration % 2 == 0) {
             long totalChange = ((LongWritable) getAggregatedValue(LouvainComputation.CHANGE_AGG)).get();
             history.add(totalChange);
             halt = decideToHalt(history, getConf());
             if (halt) {
-                logger.debug("superstep: {} decided to halt.", currentSuperstep);
+                logger.info("superstep: {} decided to halt.", currentSuperstep);
             }
-            logger.debug("superstep: {} pass: {} totalChange: {}", currentSuperstep, (currentIteration / 2), totalChange);
+            logger.info("superstep: {} pass: {} totalChange: {}", currentSuperstep, (currentIteration / 2), totalChange);
 
         } else if (halt) {
             double actualQ = getActualQ();
-            logger.debug("superstep: {} ACTUAL Q: {}", currentSuperstep, actualQ);
+            logger.info("superstep: {} ACTUAL Q: {}", currentSuperstep, actualQ);
             this.haltComputation();
 
 
