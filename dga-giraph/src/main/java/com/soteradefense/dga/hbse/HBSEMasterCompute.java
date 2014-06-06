@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.hbse;
 
+import com.soteradefense.dga.DGALoggingUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.giraph.aggregators.DoubleOverwriteAggregator;
@@ -164,7 +165,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     /**
      * Stores the number of pivots to use per batch of nodes.
      */
-    private int batchSize;
+    private double batchSize;
 
     /**
      * Stores the number of shortest path phases to run through before completion.
@@ -231,6 +232,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      */
     @Override
     public void initialize() throws InstantiationException, IllegalAccessException {
+        DGALoggingUtil.setDGALogLevel(this.getConf());
         start = new Date();
         state = State.START;
         this.registerPersistentAggregator(STATE_AGG, IntOverwriteAggregator.class);
@@ -262,15 +264,26 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         int maxHighBCSetSize = getRequiredHBSEConfiguration(BETWEENNESS_SET_MAX_SIZE);
         logger.info(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE + "=" + maxHighBCSetSize);
 
-        batchSize = getRequiredHBSEConfiguration(PIVOT_BATCH_SIZE);
+        try {
+            batchSize = Double.parseDouble(getConf().get(PIVOT_BATCH_SIZE));
+        } catch (NumberFormatException e) {
+            logger.error("Option not set or invalid. \"" + PIVOT_BATCH_SIZE + "\" must be set to a valid double, was set to " + getConf().get(PIVOT_BATCH_SIZE), e);
+            throw e;
+        }
         logger.info(PIVOT_BATCH_SIZE + "=" + batchSize);
 
 
-        int initialBatchSize = getOptionalHBSEConfiguration(PIVOT_BATCH_SIZE_INITIAL, batchSize);
+        double initialBatchSize;
+        try {
+            initialBatchSize = Double.parseDouble(getConf().get(PIVOT_BATCH_SIZE_INITIAL, getConf().get(PIVOT_BATCH_SIZE)));
+        } catch (NumberFormatException e) {
+            logger.error("Option not set or invalid. \"" + PIVOT_BATCH_SIZE_INITIAL + "\" must be set to a valid double, was set to " + getConf().get(PIVOT_BATCH_SIZE_INITIAL), e);
+            throw e;
+        }
 
         maxId = getRequiredHBSEConfiguration(VERTEX_COUNT);
-        this.setAggregatedValue(PIVOT_PERCENT, new DoubleWritable((double) batchSize / 100.0));
-        this.setAggregatedValue(INITIAL_PIVOT_PERCENT, new DoubleWritable((double) initialBatchSize / 100.0));
+        this.setAggregatedValue(PIVOT_PERCENT, new DoubleWritable(batchSize));
+        this.setAggregatedValue(INITIAL_PIVOT_PERCENT, new DoubleWritable(initialBatchSize));
         logger.info(VERTEX_COUNT + "=" + maxId);
 
     }
