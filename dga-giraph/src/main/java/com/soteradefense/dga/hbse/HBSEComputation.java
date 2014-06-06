@@ -314,7 +314,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         double percentageCutoff = getPercentageCutOff();
         double randomNumber = random.nextDouble();
         boolean isPivot = randomNumber < percentageCutoff;
-        logger.info("Selected as a possible pivot: " + id);
+        logger.debug("Selected as a possible pivot: " + id);
         return isPivot;
     }
 
