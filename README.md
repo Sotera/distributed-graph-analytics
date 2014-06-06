@@ -10,24 +10,18 @@ Currently, DGA supports the following analytics:
 - Leaf Compression
 - Page Rank
 - High Betweenness Set Extraction
+- Louvain
 
 ###### GraphX
-- Louvain Modularity
+- Louvain Modularity (initial stage)
 
 Eventually, the following analytics will be supported:
 
-- Louvain Modularity
 - Weakly Connected Components
 - High Betweenness Set Extraction
 - Leaf Compression
 - Page Rank
 
 
-How to Build:
-=============
-gradle clean distDGA
-
-The jar with config files will be output to the following directory: dga-giraph/build/dist/
-
-Note: You must have the hadoop jars included elsewhere.  This only builds DGA and include Giraph Dependencies that are not included with
-hadoop.
+###### dga-giraph
+dga-giraph is the project that contains our Giraph implementation of DGA.  For more information, go here: (dga-giraph README.md)[https://github.com/Sotera/distributed-graph-analytics/tree/master/dga-giraph]
