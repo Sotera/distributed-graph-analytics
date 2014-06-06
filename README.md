@@ -24,4 +24,4 @@ Eventually, the following analytics will be supported:
 
 
 ###### dga-giraph
-dga-giraph is the project that contains our Giraph implementation of DGA.  For more information, go here: (dga-giraph README.md)[https://github.com/Sotera/distributed-graph-analytics/tree/master/dga-giraph]
+dga-giraph is the project that contains our Giraph implementation of DGA.  For more information, go here: [dga-giraph README.md](https://github.com/Sotera/distributed-graph-analytics/tree/master/dga-giraph)

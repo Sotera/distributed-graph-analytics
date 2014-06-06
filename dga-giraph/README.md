@@ -6,18 +6,19 @@ The dga-giraph project is a giraph implementation of the DGA library.
 - Java 7
 - CDH 5.0.0 (MRv1)
 - Gradle 1.12 (or use the gradlew wrapper included with this project)
-- Giraph 1.1.0-SNAPSHOT built for CDH 5.0.0 (instructions: <link to wiki page>)
+- Giraph 1.1.0-SNAPSHOT built for CDH 5.0.0 [(instructions)](https://github.com/Sotera/distributed-graph-analytics/wiki/Building-Giraph-1.1.0-For-CDH-5.0.0)
 
 ###### Build Instructions
 Assuming you have built giraph and installed it into your local maven repository (mvn clean install [other options])
-'''bash
+```bash
 git clone https://github.com/Sotera/distributed-graph-analytics.git
 cd distributed-graph-analytics
 gradle clean distDGA
-cp -r dga-giraph/build/dist /path/of/your/choosing'''
+cp -r dga-giraph/build/dist /path/of/your/choosing
+```
 
 ###### Using dga-giraph
-'''
+```
 usage: hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner <analytic> <input-path> <output-path> [options]
   Allowed Analytics:
                louvain - Louvain Modularity
@@ -30,7 +31,7 @@ usage: hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner <analytic
   -h          Prints this help documentation and exits
   -q          Run analytic in quiet mode
   -w <arg>    The number of giraph workers to use for the analytic
-'''
+```
 
 ###### Configuring dga-giraph
 DGA Giraph has 3 means of configuration; defaults, configuration file values, and command line configuration settings.
@@ -45,7 +46,7 @@ The options we allow you to specify are broken into 2 main types; -D key=value a
 built into Giraph (things like -w or -q) (which we call system (-D parameters), custom (-ca parameters), and default -
 do not confuse this default with the default configuration values hard coded into the class com.soteradefense.dga.DGARunner)
 
-A full list of the options that you can provide to each analytic can be found on this page: (DGA Giraph Options)[https://github.com/Sotera/distributed-graph-analytics/wiki/DGA-Giraph-Options]
+A full list of the options that you can provide to each analytic can be found on this page: [DGA Giraph Options](https://github.com/Sotera/distributed-graph-analytics/wiki/DGA-Giraph-Options)
 
 ###### Errata
 - Unfortunately, the -D key=value pair is slightly different than Giraph's, which requires it in the form of -Dkey=value (no space).
