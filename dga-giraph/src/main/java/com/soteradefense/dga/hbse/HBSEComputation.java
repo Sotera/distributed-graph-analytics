@@ -17,6 +17,12 @@
  */
 package com.soteradefense.dga.hbse;
 
+import com.soteradefense.dga.DGALoggingUtil;
+import org.apache.giraph.comm.WorkerClientRequestProcessor;
+import org.apache.giraph.graph.GraphState;
+import org.apache.giraph.graph.GraphTaskManager;
+import org.apache.giraph.worker.WorkerAggregatorUsage;
+import org.apache.giraph.worker.WorkerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.giraph.edge.Edge;
@@ -46,6 +52,12 @@ import java.util.Map.Entry;
 public class HBSEComputation extends AbstractComputation<Text, VertexData, Text, PathData, PathData> {
 
     private static final Logger logger = LoggerFactory.getLogger(HBSEComputation.class);
+
+    @Override
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, VertexData, Text> workerClientRequestProcessor, GraphTaskManager<Text, VertexData, Text> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
+        DGALoggingUtil.setDGALogLevel(this.getConf());
+    }
 
     /**
      * Works in two major stages which are repeated and coordinated
