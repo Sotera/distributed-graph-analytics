@@ -16,7 +16,7 @@ public class DGALoggingUtil {
     }
 
     public static void setDGALogLevel(String logLevel) {
-        System.out.println("Setting DGA Log level to: " + logLevel);
+        //System.out.println("Setting DGA Log level to: " + logLevel);
         Level level = Level.toLevel(logLevel, Level.INFO);
         ConsoleAppender console = new ConsoleAppender();
         //configure the appender
