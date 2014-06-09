@@ -17,28 +17,29 @@
  */
 package com.soteradefense.dga.io.formats;
 
+import java.io.IOException;
+import java.util.Iterator;
+
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.Vertex;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.Iterator;
-
 import static org.mockito.Mockito.*;
 
-public class SimpleEdgeOutputFormatTest extends SimpleEdgeOutputFormat {
+public class DGAEdgeTDTOutputFormatTest extends DGAEdgeTDTOutputFormat {
 
     private ImmutableClassesGiraphConfiguration conf;
     
     private TaskAttemptContext tac;
 
-    private Vertex<Text, Text, Text> vertex;
+    private Vertex<Text, DoubleWritable, Text> vertex;
 
     Edge<Text, Text> edge1;
 
@@ -51,11 +52,10 @@ public class SimpleEdgeOutputFormatTest extends SimpleEdgeOutputFormat {
         GiraphConfiguration giraphConfiguration = new GiraphConfiguration();
         conf = new ImmutableClassesGiraphConfiguration<Text, Text, Text>(giraphConfiguration);
         tac = mock(TaskAttemptContext.class);
-        when(tac.getConfiguration()).thenReturn(conf);
 
         vertex = mock(Vertex.class);
         when(vertex.getId()).thenReturn(new Text("34"));
-        when(vertex.getValue()).thenReturn(new Text("10"));
+        when(vertex.getValue()).thenReturn(new DoubleWritable(10.43433333389));
 
         Iterable<Edge<Text, Text>> iterable = mock(Iterable.class);
         Iterator<Edge<Text, Text>> iterator = mock(Iterator.class);
@@ -76,8 +76,8 @@ public class SimpleEdgeOutputFormatTest extends SimpleEdgeOutputFormat {
 
     }
 
-    public TextEdgeWriter<Text, Text, Text> createEdgeWriter(final RecordWriter<Text, Text> rw) {
-        return new SimpleEdgeWriter() {
+    public TextEdgeWriter<Text, DoubleWritable, Text> createEdgeWriter(final RecordWriter<Text, Text> rw) {
+        return new TDTEdgeWriter() {
             @Override
             protected RecordWriter<Text, Text> createLineRecordWriter(TaskAttemptContext context) throws IOException, InterruptedException {
                 return rw;
@@ -87,37 +87,39 @@ public class SimpleEdgeOutputFormatTest extends SimpleEdgeOutputFormat {
 
     @Test
     public void testWriteGraphAsEdges() throws Exception {
-        TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
-        conf.set(SIMPLE_WRITE_EDGE_VALUE, "true");
+        TextEdgeWriter<Text, DoubleWritable, Text> writer = createEdgeWriter(rw);
+        conf.set(WRITE_VERTEX_VALUE, "true");
         writer.setConf(conf);
+        when(tac.getConfiguration()).thenReturn(conf);
         writer.initialize(tac);
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge1);
-        verify(rw).write(new Text("34\t12\t1"), null);
+        verify(rw).write(new Text("34\t12\t10.43433333389"), null);
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge2);
-        verify(rw).write(new Text("34\t6\t4"), null);
+        verify(rw).write(new Text("34\t6\t10.43433333389"), null);
     }
 
     @Test
     public void testWriteGraphWithOverriddenSeparator() throws Exception {
-        TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
-
-        GiraphConfiguration giraphConfiguration = new GiraphConfiguration();
-        giraphConfiguration.set(SimpleEdgeOutputFormat.LINE_TOKENIZE_VALUE, ":");
-        giraphConfiguration.set(SIMPLE_WRITE_EDGE_VALUE, "true");
-        writer.setConf(new ImmutableClassesGiraphConfiguration(giraphConfiguration));
+        TextEdgeWriter<Text, DoubleWritable, Text> writer = createEdgeWriter(rw);
+        conf.set(DGAEdgeTTTOutputFormat.FIELD_DELIMITER, ":");
+        conf.set(WRITE_EDGE_VALUE, "true");
+        conf.set(WRITE_VERTEX_VALUE, "true");
+        writer.setConf(conf);
+        when(tac.getConfiguration()).thenReturn(conf);
         writer.initialize(tac);
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge1);
-        verify(rw).write(new Text("34:12:1"), null);
+        verify(rw).write(new Text("34:12:10.43433333389:1"), null);
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge2);
-        verify(rw).write(new Text("34:6:4"), null);
+        verify(rw).write(new Text("34:6:10.43433333389:4"), null);
 
     }
 
     @Test
     public void testGraphWriteWithEmptyEdgeWeight() throws Exception {
-        TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
+        TextEdgeWriter<Text, DoubleWritable, Text> writer = createEdgeWriter(rw);
 
         writer.setConf(conf);
+        when(tac.getConfiguration()).thenReturn(conf);
         writer.initialize(tac);
 
         Edge<Text, Text> edge = mock(Edge.class);
