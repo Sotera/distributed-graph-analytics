@@ -17,61 +17,56 @@
  */
 package com.soteradefense.dga.io.formats;
 
+import java.io.IOException;
+
 import com.soteradefense.dga.DGALoggingUtil;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.io.formats.TextEdgeOutputFormat;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-import java.io.IOException;
-
 /**
- * The SimpleTsvEdgeOutputFormat outputs the edges that make up our graph.
- * <p/>
- * TODO: I really dislike the edge.getValue() that we output here -- we should discuss appropriate behavior at a later date.
+ * <p>The EdgeTDTOutputFormat outputs the edges that make up our graph.<p/>
+ * <p>This output format will allow users to write out the source vertex ID, the destination vertex ID, and optionally, the vertex value and/or the edge value, using an optionally defined field delimiter (defaults to ,) <p/>
  */
-public class SimpleEdgeOutputFormat extends TextEdgeOutputFormat<Text, Text, Text> {
+public abstract class DGAAbstractEdgeOutputFormat<I extends WritableComparable, V extends Writable, E extends Writable> extends TextEdgeOutputFormat<I, V, E> {
 
     /**
      * Configuration Identifier for the file delimiter.
      */
-    public static final String LINE_TOKENIZE_VALUE = "simple.edge.delimiter";
+    public static final String FIELD_DELIMITER = "edge.delimiter";
 
     /**
      * The default value for the file delimiter.
      */
-    public static final String LINE_TOKENIZE_VALUE_DEFAULT = "\t";
+    public static final String FIELD_DELIMITER_DEFAULT = ",";
 
     /**
      * Configuration Identifier to use the source value when outputting.
      */
-    public static final String SIMPLE_WRITE_SOURCE_VALUE = "simple.write.source.value";
+    public static final String WRITE_VERTEX_VALUE = "write.vertex.value";
 
     /**
      * The default value for the Use Source Value Configuration.
      */
-    public static final String SIMPLE_WRITE_SOURCE_VALUE_DEFAULT = "false";
+    public static final String WRITE_VERTEX_VALUE_DEFAULT = "false";
 
     /**
      * Configuration Identifier to use the source value when outputting.
      */
-    public static final String SIMPLE_WRITE_EDGE_VALUE = "simple.write.edge.value";
+    public static final String WRITE_EDGE_VALUE = "write.edge.value";
 
     /**
      * The default value for the Use Source Value Configuration.
      */
-    public static final String SIMPLE_WRITE_EDGE_VALUE_DEFAULT = "false";
-
-    @Override
-    public TextEdgeWriter<Text, Text, Text> createEdgeWriter(TaskAttemptContext context) throws IOException, InterruptedException {
-        DGALoggingUtil.setDGALogLevel(getConf());
-        return new SimpleEdgeWriter();
-    }
+    public static final String WRITE_EDGE_VALUE_DEFAULT = "false";
 
     /**
-     * A Simple Edge Writer that writes each edge into a file on HDFS.
+     * A Edge Writer that writes each edge into a file on HDFS.
      */
-    protected class SimpleEdgeWriter extends TextEdgeWriterToEachLine<Text, Text, Text> {
+    protected abstract class DGAAbstractEdgeWriter<I extends WritableComparable, V extends Writable, E extends Writable> extends TextEdgeWriterToEachLine<I, V, E> {
 
         /**
          * Delimiter to use when separating values.
@@ -81,7 +76,7 @@ public class SimpleEdgeOutputFormat extends TextEdgeOutputFormat<Text, Text, Tex
         /**
          * Flag that says whether or not to use the source value when outputting.
          */
-        private boolean useSourceValue;
+        private boolean useVertexValue;
 
         /**
          * Flag that says whether or not to use the edge value when outputting.
@@ -92,35 +87,40 @@ public class SimpleEdgeOutputFormat extends TextEdgeOutputFormat<Text, Text, Tex
          * Upon intialization, determines the field separator and default weight to use from the GiraphConfiguration
          *
          * @param context
-         * @throws IOException
+         * @throws java.io.IOException
          * @throws InterruptedException
          */
         @Override
         public void initialize(TaskAttemptContext context) throws IOException, InterruptedException {
             super.initialize(context);
-            delimiter = getConf().get(LINE_TOKENIZE_VALUE, LINE_TOKENIZE_VALUE_DEFAULT);
-            useSourceValue = Boolean.parseBoolean(getConf().get(SIMPLE_WRITE_SOURCE_VALUE, SIMPLE_WRITE_SOURCE_VALUE_DEFAULT));
-            useEdgeValue = Boolean.parseBoolean(getConf().get(SIMPLE_WRITE_EDGE_VALUE, SIMPLE_WRITE_EDGE_VALUE_DEFAULT));
+            delimiter = context.getConfiguration().get(FIELD_DELIMITER, FIELD_DELIMITER_DEFAULT);
+            useVertexValue = Boolean.parseBoolean(context.getConfiguration().get(WRITE_VERTEX_VALUE, WRITE_VERTEX_VALUE_DEFAULT));
+            useEdgeValue = Boolean.parseBoolean(context.getConfiguration().get(WRITE_EDGE_VALUE, WRITE_EDGE_VALUE_DEFAULT));
         }
 
         /**
-         * Converts an edge to a writable line.
-         *
-         * @param sourceId    Vertex Id
-         * @param sourceValue Vertex Value
-         * @param edge        Edge that it is writing.
-         * @return A Text value formatted to be a line.
-         * @throws IOException
+         * The implementing classes must convert their Writable object into a String that can be appended to the String of text that will become our Text output
+         * @param vertexValue
+         * @return
          */
+        public abstract String getVertexValueAsString(V vertexValue);
+
+        /**
+         * The implementing classes must convert their Writable object into a String that can be appended to the String of text that will become our Text output
+         * @param edgeValue
+         * @return
+         */
+        public abstract String getEdgeValueAsString(E edgeValue);
+
         @Override
-        protected Text convertEdgeToLine(Text sourceId, Text sourceValue, Edge<Text, Text> edge) throws IOException {
+        protected Text convertEdgeToLine(I sourceId, V vertexValue, Edge<I, E> edge) throws IOException {
             StringBuilder builder = new StringBuilder();
             builder.append(sourceId).append(delimiter).append(edge.getTargetVertexId());
-            if (useSourceValue) {
-                builder.append(delimiter).append(sourceValue);
+            if (useVertexValue) {
+                builder.append(delimiter).append(getVertexValueAsString(vertexValue));
             }
             if (useEdgeValue) {
-                builder.append(delimiter).append(edge.getValue());
+                builder.append(delimiter).append(getEdgeValueAsString(edge.getValue()));
             }
             return new Text(builder.toString());
         }
