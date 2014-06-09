@@ -85,8 +85,8 @@ public class DGARunner {
                 DGAConfiguration minimalDefaults = new DGAConfiguration();
                 minimalDefaults.setCustomProperty(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE, "10");
                 minimalDefaults.setCustomProperty(HBSEMasterCompute.BETWEENNESS_OUTPUT_DIR, outputPath);
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.PIVOT_BATCH_SIZE, "50");
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.INITIAL_PIVOT_PERCENT, "75");
+                minimalDefaults.setCustomProperty(HBSEMasterCompute.PIVOT_BATCH_SIZE, ".1");
+                minimalDefaults.setCustomProperty(HBSEMasterCompute.INITIAL_PIVOT_PERCENT, ".1");
                 minimalDefaults.setCustomProperty(HBSEMasterCompute.VERTEX_COUNT, "5");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(HBSEComputation.class.getCanonicalName());
@@ -110,11 +110,11 @@ public class DGARunner {
             } else if (analytic.equals("pr")) {
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
-                requiredConf.setDGAGiraphProperty("-eof", DGAEdgeTTTOutputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-eof", DGAEdgeTDTOutputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-mc", PageRankMasterCompute.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
-                requiredConf.setDGAGiraphProperty(DGAEdgeTDTOutputFormat.WRITE_VERTEX_VALUE, "true");
+                requiredConf.setCustomProperty(DGAEdgeTDTOutputFormat.WRITE_VERTEX_VALUE, "true");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(fileConf, commandLineConf, requiredConf);
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(PageRankComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
