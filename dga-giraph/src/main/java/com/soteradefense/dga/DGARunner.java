@@ -110,11 +110,11 @@ public class DGARunner {
             } else if (analytic.equals("pr")) {
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
-                requiredConf.setDGAGiraphProperty("-eof", DGAEdgeTTTOutputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-eof", DGAEdgeTDTOutputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-mc", PageRankMasterCompute.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
-                requiredConf.setDGAGiraphProperty(DGAEdgeTDTOutputFormat.WRITE_VERTEX_VALUE, "true");
+                requiredConf.setCustomProperty(DGAEdgeTDTOutputFormat.WRITE_VERTEX_VALUE, "true");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(fileConf, commandLineConf, requiredConf);
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(PageRankComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
