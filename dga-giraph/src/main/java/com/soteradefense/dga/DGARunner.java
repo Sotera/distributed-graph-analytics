@@ -3,9 +3,10 @@ package com.soteradefense.dga;
 
 import com.soteradefense.dga.hbse.HBSEComputation;
 import com.soteradefense.dga.hbse.HBSEMasterCompute;
+import com.soteradefense.dga.io.formats.DGAEdgeTDTOutputFormat;
+import com.soteradefense.dga.io.formats.DGAEdgeTTTOutputFormat;
 import com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat;
 import com.soteradefense.dga.io.formats.HBSEOutputFormat;
-import com.soteradefense.dga.io.formats.SimpleEdgeOutputFormat;
 import com.soteradefense.dga.lc.LeafCompressionComputation;
 import com.soteradefense.dga.pr.PageRankComputation;
 import com.soteradefense.dga.pr.PageRankMasterCompute;
@@ -65,11 +66,11 @@ public class DGARunner {
             if (analytic.equals("wcc")) {
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
-                requiredConf.setDGAGiraphProperty("-eof", SimpleEdgeOutputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-eof", DGAEdgeTTTOutputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
                 DGAConfiguration minimalDefaults = new DGAConfiguration();
-                minimalDefaults.setCustomProperty(SimpleEdgeOutputFormat.SIMPLE_WRITE_SOURCE_VALUE, "true");
+                minimalDefaults.setCustomProperty(DGAEdgeTTTOutputFormat.WRITE_VERTEX_VALUE, "true");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(WeaklyConnectedComponentComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
@@ -99,7 +100,7 @@ public class DGARunner {
             } else if (analytic.equals("lc")) {
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
-                requiredConf.setDGAGiraphProperty("-eof", SimpleEdgeOutputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-eof", DGAEdgeTTTOutputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
                 requiredConf.setDGAGiraphProperty("-esd", outputPath);
@@ -109,11 +110,11 @@ public class DGARunner {
             } else if (analytic.equals("pr")) {
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
-                requiredConf.setDGAGiraphProperty("-eof", SimpleEdgeOutputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-eof", DGAEdgeTTTOutputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-mc", PageRankMasterCompute.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
-                requiredConf.setDGAGiraphProperty(SimpleEdgeOutputFormat.SIMPLE_WRITE_SOURCE_VALUE, "true");
+                requiredConf.setDGAGiraphProperty(DGAEdgeTDTOutputFormat.WRITE_VERTEX_VALUE, "true");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(fileConf, commandLineConf, requiredConf);
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(PageRankComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
