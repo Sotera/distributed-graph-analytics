@@ -47,7 +47,7 @@ public abstract class DGAAbstractEdgeInputFormat<E extends Writable> extends Tex
     /**
      * Default value used if no field delimiter is specified via the GiraphConfiguration
      */
-    public static final String LINE_TOKENIZE_VALUE_DEFAULT = "\t";
+    public static final String LINE_TOKENIZE_VALUE_DEFAULT = ",";
 
     /**
      * Key we use in the GiraphConfiguration to denote our default edge edgeValue

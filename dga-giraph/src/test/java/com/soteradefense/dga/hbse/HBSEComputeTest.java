@@ -39,7 +39,7 @@ public class HBSEComputeTest {
         conf.set(HBSEMasterCompute.BETWEENNESS_SET_STABILITY, "1");
         conf.set(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE, "10");
         conf.set(HBSEMasterCompute.BETWEENNESS_SET_STABILITY_COUNTER, "3");
-        conf.set(HBSEMasterCompute.PIVOT_BATCH_SIZE, "25");
+        conf.set(HBSEMasterCompute.PIVOT_BATCH_SIZE, "0.25");
         conf.set(HBSEMasterCompute.VERTEX_COUNT, "6");
         return conf;
     }

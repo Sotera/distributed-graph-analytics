@@ -1,6 +1,7 @@
 package com.soteradefense.dga;
 
 import java.io.IOException;
+import java.util.Map;
 
 import com.soteradefense.dga.io.formats.DGALongEdgeValueInputFormat;
 import com.soteradefense.dga.io.formats.LouvainVertexInputFormat;
@@ -41,7 +42,6 @@ public class LouvainRunner {
         minimalDefaultConfiguration.setCustomProperty("actual.Q.aggregators", "1");
         minimalDefaultConfiguration.setCustomProperty("minimum.progress", "2000");
         minimalDefaultConfiguration.setCustomProperty("progress.tries", "1");
-
         configuration = new Configuration();
     }
 
@@ -92,7 +92,7 @@ public class LouvainRunner {
             interimInputPath = interimOutputPath;
             interimOutputPath = outputPath + "mapreduce_" + String.valueOf(iteration);
 
-            status = runMapreduceJob(interimInputPath, interimOutputPath);
+            status = runMapreduceJob(interimInputPath, interimOutputPath, confForStep);
             if (status != 0)
                 return status;
 
@@ -103,7 +103,12 @@ public class LouvainRunner {
         return 0;
     }
 
-    private int runMapreduceJob(String inputPath, String outputPath) throws Exception {
+    private int runMapreduceJob(String inputPath, String outputPath, DGAConfiguration conf) throws Exception {
+        Configuration mrConf = new Configuration();
+        for (Map.Entry<String, String> entry : conf.getSystemProperties().entrySet()) {
+            mrConf.set(entry.getKey(), entry.getValue());
+        }
+
         Job job = Job.getInstance(configuration);
         job.setJarByClass(LouvainRunner.class);
         Path in = new Path(inputPath);
