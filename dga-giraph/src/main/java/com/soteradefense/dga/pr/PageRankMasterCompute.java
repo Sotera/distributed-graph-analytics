@@ -1,5 +1,6 @@
 package com.soteradefense.dga.pr;
 
+import com.soteradefense.dga.DGALoggingUtil;
 import org.apache.giraph.aggregators.DoubleMaxAggregator;
 import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.hadoop.io.DoubleWritable;
@@ -13,6 +14,7 @@ public class PageRankMasterCompute extends DefaultMasterCompute {
 
     @Override
     public void initialize() throws InstantiationException, IllegalAccessException {
+        DGALoggingUtil.setDGALogLevel(this.getConf());
         registerAggregator(PageRankComputation.MAX_EPSILON, DoubleMaxAggregator.class);
     }
 
