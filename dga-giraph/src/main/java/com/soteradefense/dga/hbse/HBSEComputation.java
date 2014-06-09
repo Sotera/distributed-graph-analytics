@@ -86,11 +86,11 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         // if this vertex is a source (pivot) send shortest path messages to neighbors
 
         if (State.SHORTEST_PATH_START == state) {
-            logger.info("Started the Pivot Selection Process.");
+            logger.debug("Started the Pivot Selection Process.");
             if (!vertexValue.getWasPivotPoint() && isPivotPoint(id)) {
                 vertexValue.setWasPivotPoint(true);
                 aggregate(HBSEMasterCompute.PIVOT_AGG, new IntWritable(1));
-                logger.info("Superstep: " + step + " Start new shortest path computation. Source = " + id);
+                logger.debug("Superstep: " + step + " Start new shortest path computation. Source = " + id);
                 for (Edge<Text, Text> edge : vertex.getEdges()) {
                     sendMessage(edge.getTargetVertexId(), PathData.getShortestPathMessage(id, id, getEdgeValue(edge.getValue().toString()), 1));
                 }
@@ -333,7 +333,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         } else {
             long seed = Long.parseLong(randomSeedStr);
             random = new Random(seed);
-            logger.info("Set random seed: " + seed);
+            logger.debug("Set random seed: " + seed);
         }
         return random;
     }
