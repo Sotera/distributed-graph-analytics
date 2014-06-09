@@ -14,6 +14,10 @@
             <name>mapred.map.child.java.opts</name>
             <value>-Xmx48G</value>
         </property>
+        <property>
+            <name>giraph.useSuperstepCounters</name>
+            <value>false</value>
+        </property>
     </system>
     <custom>
         <property>

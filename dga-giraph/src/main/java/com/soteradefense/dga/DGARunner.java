@@ -104,7 +104,6 @@ public class DGARunner {
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
                 requiredConf.setDGAGiraphProperty("-esd", outputPath);
-                requiredConf.setSystemProperty("giraph.useSuperstepCounters", "false");
                 DGAConfiguration finalConfiguration = DGAConfiguration.coalesce(fileConf, commandLineConf, requiredConf);
                 String[] giraphArgs = finalConfiguration.convertToCommandLineArguments(LeafCompressionComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
