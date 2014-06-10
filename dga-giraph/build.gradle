@@ -1,3 +1,4 @@
+// gives us shadow jar
 buildscript {
     repositories {
         mavenCentral()
@@ -6,26 +7,28 @@ buildscript {
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:0.8'    }
 }
-
 apply plugin: 'shadow'
+
+// defaults to cdh5version from gradle.properties file, but can be overriden via -Pcdhversion=cdh4 on command line
+// pulls all actual property values from gradle.properties
+def cdh_version = project.hasProperty('cdhversion') && cdhversion == "cdh4" ? cdh4version : cdh5version
 
 description = 'dga-giraph'
 
 dependencies {
     compile project(':dga-core')
     compile 'org.apache.giraph:giraph-core:1.1.0-SNAPSHOT'
-    compile 'org.apache.hadoop:hadoop-client:2.3.0-cdh5.0.0'
+    compile group: 'org.apache.hadoop', name: 'hadoop-client', version: cdh_version
     testCompile "org.mockito:mockito-core:1.9.5"
     testCompile 'junit:junit:4.11'
     testCompile 'commons-httpclient:commons-httpclient:3.0.1'
 
 }
+
 shadow {
     stats = true
     outputFile = new File(String.format("%s/shadow/%s-%s.jar", buildDir, description, version))
-    exclude "log4j.properties"
     exclude "dga-config.xml"
-
     artifactSet {
         include 'org.apache.giraph'
         include 'com.facebook.thirdparty.yourkit-api'
@@ -38,20 +41,13 @@ shadow {
         include 'org.json'
         include 'org.python'
         include 'org.slf4j'
-//        exclude 'org.apache.hadoop'
-//        exclude '*commons-*'
-//        exclude '*log4j'
-//        exclude 'com.google*'
-//        exclude 'org.apache.zookeeper'
-//        exclude 'org.codehaus.jackson'
     }
 }
 
-task distDGA (dependsOn: 'shadowJar', type: Copy) {
+task distDGAGiraph (dependsOn: 'shadowJar', type: Copy) {
     from "${buildDir}/shadow"
     include "**/*.jar"
     from project(":dga-giraph").fileTree("src/main/resources")
-    include "log4j.properties"
     include "dga-config.xml"
     into "${buildDir}/dist"
 }
