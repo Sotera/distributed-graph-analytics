@@ -1,0 +1,49 @@
+---
+layout: base
+---
+
+<h3><a name="wcc-examples" class="anchor" href="#wcc-examples"><span class="octicon octicon-link"></span></a>Weakly Connected
+    Components Example</h3>
+<pre>
+<code>
+    $ hadoop jar dga-giraph-1.0.0.jar com.soteradefense.dga.DGARunner wcc /input/directory /output/directory
+</code>
+</pre>
+
+<h3><a name="lc-examples" class="anchor" href="#lc-examples"><span class="octicon octicon-link"></span></a>Leaf Compression Example</h3>
+<pre>
+<code>
+    $ hadoop jar dga-giraph-1.0.0.jar com.soteradefense.dga.DGARunner lc /input/directory /output/directory
+</code>
+</pre>
+
+<h3><a name="louvain-examples" class="anchor" href="#louvain-examples"><span class="octicon octicon-link"></span></a>Louvain Modularity
+    Example</h3>
+<pre>
+<code>
+    $ hadoop jar dga-giraph-1.0.0.jar com.soteradefense.dga.DGARunner louvain /input/directory /output/directory
+</code>
+</pre>
+
+<h3><a name="hbse-examples" class="anchor" href="#hbse-examples"><span class="octicon octicon-link"></span></a>High Betweenness Set
+    Extraction Example</h3>
+<pre>
+<code>
+    $ hadoop jar dga-giraph-1.0.0.jar com.soteradefense.dga.DGARunner hbse /input/directory /output/directory
+</code>
+</pre>
+
+<h3><a name="pr-examples" class="anchor" href="#pr-examples"><span class="octicon octicon-link"></span></a>PageRank Example</h3>
+<pre>
+<code>
+    $ hadoop jar dga-giraph-1.0.0.jar com.soteradefense.dga.DGARunner pr /input/directory /output/directory
+</code>
+</pre>
+
+<h3><a name="complex-examples" class="anchor" href="#complex-examples"><span class="octicon octicon-link"></span></a>More Complex Example
+</h3>
+<pre>
+<code>
+    $ hadoop jar dga-giraph-1.0.0.jar com.soteradefense.dga.DGARunner wcc /input/directory /output/directory -w 21 -D giraph.zkList=localhost:2121 -ca simple.edge.delimiter=10
+</code>
+</pre>
