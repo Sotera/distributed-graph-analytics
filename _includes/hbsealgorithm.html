@@ -1,0 +1,14 @@
+<ol>
+    <li>
+        Shortest paths are calculated from a set of pivots (source nodes) to all other nodes in the graph.
+    </li>
+    <li>
+        The dependency of each vertex for each pivot is calculated and added to a running total approximated betweenness.
+    </li>
+    <li>
+        The highest betweenness set is extracted.
+    </li>
+    <li>
+        Set stability conditions are checked. If met algorithm exits, otherwise a new pivot batch is chosen and step 1 starts again.
+    </li>
+</ol>

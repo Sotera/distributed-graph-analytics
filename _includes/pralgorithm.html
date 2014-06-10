@@ -1,0 +1,20 @@
+<ol>
+    <li>
+        Initialize the same value to each vertex.
+    </li>
+    <li>
+        Calculate your rank based on the initial value divided by the number of edges you have.
+    </li>
+    <li>
+        Send your rank to all your edges.
+    </li>
+    <li>
+        Accumulate all incoming messages and calculate your new rank.
+    </li>
+    <li>
+        Repeat step 2.
+    </li>
+    <li>
+        Stop whenever the max change is less than an epsilon value of 0.001.
+    </li>
+</ol>

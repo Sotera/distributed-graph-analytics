@@ -1,0 +1,12 @@
+.DS_Store
+.gradle/
+.idea/
+_site/
+dga-core/
+dga-giraph/
+dga-graphx/
+dga-hama/
+distributed-graph-analytics.iml
+example.log
+example.log.1
+gradle/
