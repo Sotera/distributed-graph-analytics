@@ -1,0 +1,35 @@
+<h4><a name="ioconfig" class="anchor" href="#ioconfig"><span class="octicon octicon-link"></span></a>IO Configuration</h4>
+<table class="table table-bordered">
+    <thead>
+    <tr>
+        <th>
+            Property
+        </th>
+        <th>
+            Required
+        </th>
+        <th>
+            Description
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>simple.edge.delimiter</td>
+        <td>N</td>
+        <td>The string delimiter to use when tokenizing the row of data (default is \t) *Note*: many characters are ignored by the Apache Commons CLI library</td>
+    </tr>
+    <tr>
+        <td>simple.edge.value.default</td>
+        <td>N</td>
+        <td>The default InputFormat expects there to be 2 or 3 columns read in; if no 3rd column exists, this configuration value is used for the edge weight for the current row. For Text, this is an empty
+            String, for Long, it is the value 1.
+        </td>
+    </tr>
+    <tr>
+        <td>io.edge.reverse.duplicator</td>
+        <td>N</td>
+        <td>Many datasets are undirected; many analytics require directed graphs. The default for this is false, but specifying true will explicitly convert the provided graph into a directed graph.</td>
+    </tr>
+    </tbody>
+</table>

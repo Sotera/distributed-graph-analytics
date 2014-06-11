@@ -1,0 +1,82 @@
+<h4><a name="hbseconfig" class="anchor" href="#hbseconfig"><span class="octicon octicon-link"></span></a>High Betweenness Set Extraction Configuration</h4>
+<table class="table table-bordered">
+    <thead>
+    <tr>
+        <th>
+            Property
+        </th>
+        <th>
+            Required
+        </th>
+        <th>
+            Description
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>betweenness.output.dir</td>
+
+        <td>Y</td>
+
+        <td>Sets the betweenness set output directory.</td>
+    </tr>
+    <tr>
+        <td>betweenness.shortest.path.phases</td>
+
+        <td>N</td>
+
+        <td>Sets the number of shortest path phases that the algorithm should run through. The default is 1.</td>
+    </tr>
+    <tr>
+        <td>betweenness.set.stability</td>
+
+        <td>N</td>
+
+        <td>Sets the stability cutoff point. Defaults to 0.</td>
+    </tr>
+    <tr>
+        <td>betweenness.set.stability.counter</td>
+
+        <td>N</td>
+
+        <td>Counter for the stability cutoff point.</td>
+    </tr>
+    <tr>
+        <td>betweenness.set.maxSize</td>
+
+        <td>Y</td>
+
+        <td>Sets the maximum number of nodes in a betweenness set.</td>
+    </tr>
+    <tr>
+        <td>pivot.batch.size</td>
+
+        <td>Y</td>
+
+        <td>The percentage of pivots to select out of the nodes. Must be a decimal between 0.0 and 1.0.</td>
+    </tr>
+    <tr>
+        <td>pivot.batch.size.initial</td>
+
+        <td>N</td>
+
+        <td>The percentage of pivots to select initially. Must be a decimal between 0.0 and 1.0.</td>
+    </tr>
+    <tr>
+        <td>pivot.batch.random.seed</td>
+
+        <td>N</td>
+
+        <td>Seed the random number generator for pivot selection.</td>
+    </tr>
+    <tr>
+        <td>vertex.count</td>
+
+        <td>Y</td>
+
+        <td>Sets the total number of vertices to perform the algorithm on.</td>
+    </tr>
+
+    </tbody>
+</table>

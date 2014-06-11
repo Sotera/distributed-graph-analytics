@@ -1,0 +1,28 @@
+---
+layout: base
+---
+<h3><a name="dga-runner" class="anchor" href="#dga-runner"><span class="octicon octicon-link"></span></a>DGA Runner</h3>
+<p>
+    If you're ever confused about our runner, run the command below.
+</p>
+<pre>
+<code>
+    $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner -h
+</code>
+</pre>
+        <p>The command will output something like this.</p>
+<pre>
+<code>
+    usage: hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner &lt;analytic&gt; &lt;input-path&gt; &lt;output-path&gt; [options]
+        louvain - Louvain Modularity
+        hbse - High Betweenness Set Extraction
+        wcc - Weakly Connected Components
+        lc - Leaf Compression
+        pr - Page Rank
+        -ca &lt;arg&gt;   Any custom arguments to pass in to giraph
+        -D &lt;arg&gt;    System parameters to pass through to be added to the conf
+        -h          Prints this help documentation and exits
+        -q          Run analytic in quiet mode
+        -w &lt;arg&gt;    The number of giraph workers to use for the analytic
+</code>
+</pre>

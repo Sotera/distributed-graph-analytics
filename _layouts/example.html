@@ -1,0 +1,131 @@
+<html>
+{% include head.html %}
+<body>
+{% include navbar.html %}
+<div class="container-fluid">
+    <h3><a name="real-data-examples" class="anchor" href="#real-data-examples"><span class="octicon octicon-link"></span></a>Walkthrough With Data</h3>
+    <h4><a name="prereqs" class="anchor" href="#prereqs"><span class="octicon octicon-link"></span></a>Prerequisites</h4>
+    <ol>
+        <li>
+            <a href="/distributed-graph-analytics/HowToGet/">How To Get</a>
+        </li>
+        <li>
+            <a href="/distributed-graph-analytics/HowToBuild/">How To Build</a>
+        </li>
+        <li>
+            <a href="/distributed-graph-analytics/HowToDeploy/">How To Deploy</a>
+        </li>
+    </ol>
+    <h3><a name="started" class="anchor" href="#started"><span class="octicon octicon-link"></span></a>Let's Get Started</h3>
+
+    <p>In this example, we will be running <a href="/distributed-graph-analytics/{{page.analytic}}/">{{page.title}}</a> with DGA.</p>
+
+    <p>First, let's get some sample data from <a href="/distributed-graph-analytics/data/example.tsv">here</a></p>
+
+    <p>Second, we need to get DGA off of <a href="https://github.com/Sotera/distributed-graph-analytics">github</a>.</p>
+<pre>
+<code>
+    $ git clone git@github.com:Sotera/distributed-graph-analytics.git
+    $ cd distributed-graph-analytics
+</code>
+</pre>
+    <p>Now that we have DGA, we need to build a jar that packages Giraph and the analytics all in one jar file. We have a command for that!</p>
+<pre>
+<code>
+    $ gradle clean distDGA
+</code>
+</pre>
+    <p>Have build errors? Check out <a href="https://github.com/Sotera/distributed-graph-analytics/wiki/Building-Giraph-1.1.0-For-CDH-5.0.0">this</a> tutorial. You might need to
+        build
+        giraph for your hadoop cluster.</p>
+
+    <p>All set? Now we need to deploy this out to our cluster.</p>
+<pre>
+<code>
+    $ scp -r dga-giraph/build/dist/ hostname:/path/on/disks
+</code>
+</pre>
+    <p>Now, let's scp our data out to the cluster. Navigate to the directory you downloaded the file to and run the command below.</p>
+<pre>
+<code>
+    $ scp example.tsv hostname:/path/on/disks
+</code>
+</pre>
+    <p>We need to ssh into our cluster.</p>
+<pre>
+<code>
+    $ ssh hostname
+</code>
+</pre>
+    <p>Now let's see if our files made it to the cluster. Run the command below and you should see a dist folder and example.tsv.</p>
+<pre>
+<code>
+    $ ls -al
+</code>
+</pre>
+    <p>If everything checks out! We can now copy our data set to a directory in hdfs. For this example we will create a directory in tmp for the input. We also need to make
+        sure it is readable, writable, and executable. Check out the two commands below.</p>
+<pre>
+<code>
+    $ hadoop fs -mkdir -p /tmp/dga/{{page.analytic}}/input/
+    $ hadoop fs -chmod -R 777 /tmp/
+</code>
+</pre>
+    <p>We also need an output directory. For this example, let's make one in /tmp/. We also need to make it readable, writable, and executable.</p>
+<pre>
+<code>
+    $ hadoop fs -mkdir -p /tmp/dga/{{page.analytic}}/output/
+    $ hadoop fs -chmod -R 777 /tmp/
+</code>
+</pre>
+    <p>Now let's copy our data onto hdfs.</p>
+<pre>
+<code>
+    $ hadoop fs -copyFromLocal example.tsv /tmp/dga/{{page.analytic}}/input/
+</code>
+</pre>
+    <!-- TODO: make dgarunner page -->
+    <p>Finally, we can now run our analytic! The command below uses the built in DGARunner to run {{page.title}}.</p>
+<pre>
+<code>
+    $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner {{page.analytic}} /tmp/dga/{{page.analytic}}/input/ /tmp/dga/{{page.analytic}}/output/ -w 1 -ca io.edge.reverse.duplicator=true
+</code>
+</pre>
+    <p>The command above, runs the dga-giraph-0.0.1.jar and executes the DGARunner class. It passes in 5 command line arguments.</p>
+    <ul>
+        <li>
+            {{page.analytic}} - Tells the DGARunner which analytic it needs to run. This is required.
+        </li>
+        <li>
+            /tmp/dga/{{page.analytic}}/input/ - Tells the DGARunner where the input data is located. This is required.
+        </li>
+        <li>
+            /tmp/dga/{{page.analytic}}/output/ - Tells the DGARunner where to output the data. This is required.
+        </li>
+        <li>
+            -w 1 - This gets passed to giraph. It tells giraph how many workers to use. This is optional.
+        </li>
+        <li>
+            -ca io.edge.reverse.duplicator=true - This tells our input format to duplicate the edges so our graph becomes weakly connected. This is optional.
+        </li>
+    </ul>
+    <p>Is it done yet? If so, lets see the results!</p>
+<pre>
+<code>
+    $ mkdir results/
+    $ cd results
+    $ hadoop fs -copyToLocal /tmp/dga/{{page.analytic}}/output/* .
+</code>
+</pre>
+    <p>What are all these parts? Don't worry, let's make them one!</p>
+<pre>
+<code>
+    $ cat part-* >> bigfile.txt
+    $ vi bigfile.txt
+</code>
+</pre>
+    <p>And there you have it! You ran your first analytic with DGA!</p>
+</div>
+</body>
+{% include footer.html %}
+</html>

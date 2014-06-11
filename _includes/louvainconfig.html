@@ -1,0 +1,32 @@
+<h4><a name="louvainconfig" class="anchor" href="#louvainconfig"><span class="octicon octicon-link"></span></a>Louvain Modularity Configuration</h4>
+<table class="table table-bordered">
+    <thead>
+    <tr>
+        <th>
+            Property
+        </th>
+        <th>
+            Required
+        </th>
+        <th>
+            Description
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>minimum.progress</td>
+        <td>N</td>
+        <td>(Default: 0) The minimum delta X required to be considered progress, where X is the number of nodes that have changed their community on a particular pass. Delta X is then the difference in number
+            of nodes that changed communities on the current pass compared to the previous pass. Using the default of 0 means that any delta is considered progress.
+        </td>
+    </tr>
+    <tr>
+        <td>progress.tries</td>
+        <td>N</td>
+        <td>(Default: 1) Number of times the minimum.progress setting is not met before exiting form the current level and compressing the graph. Default of 1 means the first time minimum.progress is not met
+            the algorithm exits.
+        </td>
+    </tr>
+    </tbody>
+</table>
