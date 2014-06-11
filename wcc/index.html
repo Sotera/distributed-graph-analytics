@@ -6,4 +6,22 @@ algorithm: wccalgorithm.html
 description: wccdescription.html
 ---
 <h3><a name="output-format" class="anchor" href="#output-format"><span class="octicon octicon-link"></span></a>Output Format</h3>
-<p>For an edge: A,B and B,C. The result will be A,B,C and B,C,C. "C" is the component it belongs to.</p>
+<p>For an edge list: </p>
+<pre>
+<code>
+    A,B
+    B,C
+    D,C
+    E,H
+</code>
+</pre>
+<p>The output will be as follows:</p>
+<pre>
+<code>
+    A,B,D
+    B,C,D
+    D,C,D
+    E,H,H
+</code>
+</pre>
+<p>The third column represents the component each edge belongs to, which is the highest ascii value in the component.</p>
