@@ -3,13 +3,13 @@
 <body>
 {% include navbar.html %}
 <div class="container-fluid">
-    <h3><a name="analytic" class="anchor" href="#analytic"><span class="octicon octicon-link"></span></a>{{page.title}}</h3>
+    <h3><a name="analytic" class="anchor" href="#analytic"><span class="glyphicon glyphicon-link"></span></a> {{page.title}}</h3>
     {% include {{page.description}} %}
-    <h3><a name="algorithm" class="anchor" href="#algorithm"><span class="octicon octicon-link"></span></a>Algorithm</h3>
+    <h3><a name="algorithm" class="anchor" href="#algorithm"><span class="glyphicon glyphicon-link"></span></a> Algorithm</h3>
     {% include {{page.algorithm}} %}
     {{ content }}
 
-    <h3><a name="how-to-run" class="anchor" href="#how-to-run"><span class="octicon octicon-link"></span></a>How To Run</h3>
+    <h3><a name="how-to-run" class="anchor" href="#how-to-run"><span class="glyphicon glyphicon-link"></span></a> How To Run</h3>
 
     <p>Note: First see <a href="/distributed-graph-analytics/HowToBuild">How To Build</a></p>
 <pre>

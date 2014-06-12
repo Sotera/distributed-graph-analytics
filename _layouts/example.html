@@ -3,8 +3,8 @@
 <body>
 {% include navbar.html %}
 <div class="container-fluid">
-    <h3><a name="real-data-examples" class="anchor" href="#real-data-examples"><span class="octicon octicon-link"></span></a>Walkthrough With Data</h3>
-    <h4><a name="prereqs" class="anchor" href="#prereqs"><span class="octicon octicon-link"></span></a>Prerequisites</h4>
+    <h3><a name="real-data-examples" class="anchor" href="#real-data-examples"><span class="glyphicon glyphicon-link"></span></a> Walkthrough With Data</h3>
+    <h4><a name="prereqs" class="anchor" href="#prereqs"><span class="glyphicon glyphicon-link"></span></a> Prerequisites</h4>
     <ol>
         <li>
             <a href="/distributed-graph-analytics/HowToGet/">How To Get</a>
@@ -16,7 +16,7 @@
             <a href="/distributed-graph-analytics/HowToDeploy/">How To Deploy</a>
         </li>
     </ol>
-    <h3><a name="started" class="anchor" href="#started"><span class="octicon octicon-link"></span></a>Let's Get Started</h3>
+    <h3><a name="started" class="anchor" href="#started"><span class="glyphicon glyphicon-link"></span></a> Let's Get Started</h3>
 
     <p>In this example, we will be running <a href="/distributed-graph-analytics/{{page.analytic}}/">{{page.title}}</a> with DGA.</p>
 
@@ -29,7 +29,16 @@
     $ cd distributed-graph-analytics
 </code>
 </pre>
-    <p>Now that we have DGA, we need to build a jar that packages Giraph and the analytics all in one jar file. We have a command for that!</p>
+    <p>Now that we have DGA, we need to do some configuration before we deploy it out to the cluster.</p>
+<pre>
+<code>
+    $ vi dga-giraph/src/main/resources/dga-config.xml
+</code>
+</pre>
+    <p>Find the property giraph.zkList and replace it with the location of your zookeeper nodes! It must be comma seperated with no spaces after the comma! If you have a cluster on a local machine,
+        your node will be localhost:2181</p>
+
+    <p>Now that we have DGA configured, we need to build a jar that packages Giraph and the analytics all in one jar file. We have a command for that!</p>
 <pre>
 <code>
     $ gradle clean distDGA
@@ -51,7 +60,7 @@
     $ scp example.tsv hostname:/path/on/disks
 </code>
 </pre>
-    <p>We need to ssh into our cluster.</p>
+    <p>Next, we need to ssh into our cluster.</p>
 <pre>
 <code>
     $ ssh hostname

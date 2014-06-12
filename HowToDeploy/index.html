@@ -1,7 +1,7 @@
 ---
 layout: base
 ---
-<h3><a name="how-to-deploy-dga-giraph" class="anchor" href="#how-to-deploy-dga-giraph"><span class="octicon octicon-link"></span></a>How To
+<h3><a name="how-to-deploy-dga-giraph" class="anchor" href="#how-to-deploy-dga-giraph"><span class="glyphicon glyphicon-link"></span></a> How To
     Deploy DGA-Giraph</h3>
 <pre>
     <code>
@@ -11,9 +11,14 @@ layout: base
         $ cp -r dga-giraph/build/dist /path/of/your/choosing
     </code>
 </pre>
-
+<p><b>Note:</b> You must make sure you add your respective zookeeper nodes to the list via the command below.  The property is giraph.zkList.  It takes a comma seperated list with no spaces!</p>
+<pre>
+<code>
+    $ vi dga-giraph/src/main/resources/dga-config.xml
+</code>
+</pre>
 <h3><a name="configuring-dga-giraph" class="anchor"
-       href="#configuring-dga-giraph"><span class="octicon octicon-link"></span></a>Configuring DGA-Giraph</h3>
+       href="#configuring-dga-giraph"><span class="glyphicon glyphicon-link"></span></a> Configuring DGA-Giraph</h3>
 <p>DGA Giraph has 3 means of configuration; defaults, configuration file values, and command line configuration settings. Any configuration
     key specified in the default will be overridden by that same key if it is given in the configuration file. Any configuration key
     specified in either the default or the configuration file will be overridden by the property if specified on the command line.</p>
@@ -27,10 +32,10 @@ layout: base
     (-ca parameters), and default - do not confuse this default with the default configuration values hard coded into the class
     com.soteradefense.dga.DGARunner)</p>
 <p>A full list of the options that you can provide to each analytic can be found on this page: <a
-        href="https://github.com/Sotera/distributed-graph-analytics/wiki/DGA-Giraph-Options">DGA Giraph Options</a></p>
+        href="/distributed-graph-analytics/Configurations/">DGA Giraph Options</a></p>
 
 <h3><a name="errata" class="anchor"
-       href="#errata"><span class="octicon octicon-link"></span></a>Errata</h3>
+       href="#errata"><span class="glyphicon glyphicon-link"></span></a> Errata</h3>
 <ul>
     <li>
         Unfortunately, the -D key=value pair is slightly different than Giraph's, which requires it in the form of -Dkey=value

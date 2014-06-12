@@ -13,11 +13,11 @@ algorithm: hbsealgorithm.html
         href="http://www.inf.uni-konstanz.de/algo/publications/b-fabc-01.pdf">"U. Brandes, A Faster Algorithm
     for Betweenness Centrality"</a></p>
 
-<h3><a name="implementation" class="anchor" href="#implementation"><span class="octicon octicon-link"></span></a>Implementation</h3>
+<h3><a name="implementation" class="anchor" href="#implementation"><span class="glyphicon glyphicon-link"></span></a> Implementation</h3>
 <p>Our implementation is distributed using the BSP method on Apache giraph and built with Gradle. Giraph requires a Hadoop cluster (map
     reduce and hdfs)</p>
 
-<h3><a name="io" class="anchor" href="#io"><span class="octicon octicon-link"></span></a>I/O</h3>
+<h3><a name="io" class="anchor" href="#io"><span class="glyphicon glyphicon-link"></span></a> I/O</h3>
 
 <p>The graph is read from an edge list file in HDFS, each line in the file represents a single edge and is coded as a "key,target,weight"
     (edge weight is optional and defaults to 1)</p>
