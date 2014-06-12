@@ -32,7 +32,16 @@ layout: base
         $ gradle clean build
     </code>
 </pre>
-
+<h3><a name="how-to-build-4" class="anchor" href="#how-to-build-4"><span class="glyphicon glyphicon-link"></span></a> How To
+    Build For CDH4</h3>
+<pre>
+    <code>
+        $ gradle clean distDGA -Pcdhversion=cdh4
+    </code>
+</pre>
+<h3><a name="how-to-add" class="anchor" href="#how-to-add"><span class="glyphicon glyphicon-link"></span></a> How To Add Your Own Hadoop Build</h3>
+<p>Add the Hadoop Version of your choice to the gradle.properties file in the dga-giraph project. Now we need to move to the dga-giraph build.gradle file. You then need to add a def for your new
+    hadoop version to check for the property. In the dependency list, where it says cdh_version, replace it with the def name you just created.</p>
 <h3><a name="how-to-build-dga-giraph" class="anchor" href="#how-to-build-dga-giraph"><span class="glyphicon glyphicon-link"></span></a> How To
     Build DGA-Giraph</h3>
 <p>See: <a href="/distributed-graph-analytics/HowToDeploy">How To Deploy</a></p>

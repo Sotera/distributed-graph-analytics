@@ -14,5 +14,10 @@ layout: base
 <h4><a name="why-io-error" class="anchor" href="#why-io-error"><span class="glyphicon glyphicon-link"></span></a> Why does the job fail in your input formats?</h4>
 
 <p>Take a look at your data. Make sure there are no \t's anywhere or any other characters that might cause the input to fail.</p>
+
+<h4><a name="why-d-error" class="anchor" href="#why-d-error"><span class="glyphicon glyphicon-link"></span></a> Why don't my -D parameters work?</h4>
+
+<p>This is a difference between the DGARunner and GiraphRunner.  In Giraph, you used -Dgiraph.zkList=localhost:2181.  In DGA, you do -D giraph.zkList=localhost:2181.</p>
+
 <h4><a name="bug-report" class="anchor" href="#bug-report"><span class="glyphicon glyphicon-link"></span></a> I found a bug! How can I let you know?</h4>
 <p>Bug Reports can be submitted <a href="https://github.com/Sotera/distributed-graph-analytics/issues/new">here</a>. We will try and get it resolved as soon as possible!</p>
