@@ -13,3 +13,21 @@
         Compress each community such that they are represented by one node.
     </li>
 </ol>
+
+<h3><a name="algorithm-explanation" class="anchor" href="#algorithm-explanation"><span class="glyphicon glyphicon-link"></span></a> Algorithm Explanation</h3>
+<img src="/distributed-graph-analytics/img/louvain.PNG"/>
+<p>Our implmentation, based off of Giraph and Hadoop, is distributed and can execute against data sets with <b>hundreds of millions of nodes and edges</b> in a relatively short amount of time. This
+    implementation
+    hopes to scale the original algorithm and process to the largest of data sets by utilizing cloud-based technologies. </p>
+
+<h3><a name="code-split" class="anchor" href="#code-split"><span class="glyphicon glyphicon-link"></span></a> How is the code split up?</h3>
+<p>There are two main parts to the job.</p>
+<ol>
+    <li>
+        A giraph job, that detects communities in a graph structure.
+    </li>
+    <li>
+        A map reduce job, that compresses a graph based on its community structure.
+    </li>
+</ol>
+<p>The map reduce and giraph job then run in a cycle, detecting communities and compressing the graph until no significant progress is being made, and then exits.</p>

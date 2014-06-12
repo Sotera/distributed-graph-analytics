@@ -12,3 +12,42 @@
         Set stability conditions are checked. If met algorithm exits, otherwise a new pivot batch is chosen and step 1 starts again.
     </li>
 </ol>
+
+<h3><a name="benchmarks" class="anchor" href="#benchmarks"><span class="glyphicon glyphicon-link"></span></a>Benchmarks and Trade Offs</h3>
+<p>This method has 4 primary parameters that can greatly effect the run time and accuracy of the results. </p>
+<ul>
+    <li> Pivot batch size - The percentage of single source shortest paths computed in parallel.
+    </li>
+    <li>
+        Extracted set size - The number of high betweenness nodes to return in the result set.
+    </li>
+    <li>
+        Cutoff - The threshold for membership change of the high betweenness set
+    </li>
+    <li>
+        Counter - The number of times the cutoff value is reached before the algorithm exits.
+    </li>
+</ul>
+<p>To characterize the behavior of these parameters we've run a series of tests of 5 data sets.</p>
+<ul>
+    <li>
+        Bitcoin transaction graph 2,132,321 vertices 25 days to calculate exact betweenness on a single core.
+    </li>
+    <li>
+        Brightkite social network. 58,228 vertices, 18 minutes to calculate exact betweenness on a single core.
+    </li>
+    <li>
+        Enron email data set. 35,818 vertices, 156 seconds to calculate exact betweenness on a single core.
+    </li>
+    <li>
+        Gowalla social network. 196,591 vertices (not calculated on single core)
+    </li>
+    <li>
+        Google Plus social network. 102,118 vertices, 14.5 hours to calculate exact betweenness on a single core.
+    </li>
+</ul>
+<p>All tests below were run on an 8-node cluster using 8 giraph workers using 8 threads per worker.</p>
+<img src="/distributed-graph-analytics/img/counter_value.jpg"/>
+<img src="/distributed-graph-analytics/img/cutoff_value.jpg"/>
+<img src="/distributed-graph-analytics/img/extracted_value.jpg"/>
+<img src="/distributed-graph-analytics/img/pivotbatch_value.jpg"/>
