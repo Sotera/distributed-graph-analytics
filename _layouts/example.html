@@ -20,7 +20,7 @@
 
     <p>In this example, we will be running <a href="/distributed-graph-analytics/{{page.analytic}}/">{{page.title}}</a> with DGA.</p>
 
-    <p>First, let's get some sample data from <a href="/distributed-graph-analytics/data/example.tsv">here</a>.  Already have data you want to use? That's great! Make sure it follows <a
+    <p>First, let's get some sample data from <a href="/distributed-graph-analytics/data/example.csv">here</a>. Already have data you want to use? That's great! Make sure it follows <a
             href="/distributed-graph-analytics/FAQ/#how-data">this</a> format and it
         will work with DGA.</p>
 
@@ -74,25 +74,18 @@
     $ ls -al
 </code>
 </pre>
-    <p>If everything checks out! We can now copy our data set to a directory in hdfs. For this example we will create a directory in tmp for the input. We also need to make
-        sure it is readable, writable, and executable. Check out the two commands below.</p>
+    <p>If everything checks out! We can now copy our data set to a directory in hdfs. For this example we will create a directory in tmp for the input.</p>
 <pre>
 <code>
     $ hadoop fs -mkdir -p /tmp/dga/{{page.analytic}}/input/
-    $ hadoop fs -chmod -R 777 /tmp/
 </code>
 </pre>
-    <p>We also need an output directory. For this example, let's make one in /tmp/. We also need to make it readable, writable, and executable.</p>
-<pre>
-<code>
-    $ hadoop fs -mkdir -p /tmp/dga/{{page.analytic}}/output/
-    $ hadoop fs -chmod -R 777 /tmp/
-</code>
-</pre>
+    <p>No need to create the output directory. That will be done for us when our job is complete.</p>
+
     <p>Now let's copy our data onto hdfs.</p>
 <pre>
 <code>
-    $ hadoop fs -copyFromLocal example.tsv /tmp/dga/{{page.analytic}}/input/
+    $ hadoop fs -copyFromLocal example.csv /tmp/dga/{{page.analytic}}/input/
 </code>
 </pre>
     <!-- TODO: make dgarunner page -->
