@@ -67,5 +67,14 @@ public class DGACommandLineUtilTest {
         assertEquals(conf.getCustomArgumentProperties().size(), 2);
         assertEquals(conf.getGiraphProperties().size(), 2);
     }
+    @Test
+    public void testCustomDelimiter() throws ParseException {
+        String[] args = {"-ca", "simple.edge.delimiter=\\t"};
+        Options options = DGACommandLineUtil.generateOptions();
+        DGAConfiguration conf = DGACommandLineUtil.parseCommandLine(args, options);
+        assertEquals(conf.getCustomArgumentProperties().size(), 1);
+        assertEquals(conf.getCustomArgumentProperties().get("simple.edge.delimiter"), "\t");
+        assertEquals(conf.getGiraphProperties().size(), 0);
+    }
 
 }

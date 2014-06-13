@@ -1,13 +1,18 @@
 package com.soteradefense.dga;
 
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class DGACommandLineUtil {
+
+    private static Map<String, Character> characterMap = new HashMap<String, Character>();
+
+    static {
+        characterMap.put("\\t", '\t');
+        characterMap.put(",", ',');
+    }
 
     public static void printUsageAndExit(Options options) {
         printUsageAndExit(options, 0);
@@ -35,11 +40,10 @@ public class DGACommandLineUtil {
         options.addOption("ca", true, "Any custom arguments to pass in to giraph");
         //options.addOption("yh", true, "Heap size, in MB, task (YARN only.) Defaults to giraph.yarn.task.heap.mb => 1024 (integer) MB.");
         //options.addOption("yj", true, "comma-separated list of JAR filenames to distribute to Giraph tasks and ApplicationMaster. YARN only. Search order: CLASSPATH, HADOOP_HOME, user current dir.");
-
         return options;
     }
 
-    public static DGAConfiguration parseCommandLine(String [] args, Options options) throws ParseException {
+    public static DGAConfiguration parseCommandLine(String[] args, Options options) throws ParseException {
         CommandLineParser parser = new BasicParser();
         CommandLine cmd = parser.parse(options, args);
         if (cmd.hasOption("h")) {
@@ -65,19 +69,22 @@ public class DGACommandLineUtil {
 //        }
 
         if (cmd.hasOption("ca")) {
-            String [] customArguments = cmd.getOptionValues("ca");
+            String[] customArguments = cmd.getOptionValues("ca");
             for (String customArgument : customArguments) {
                 int indexOfEquals = customArgument.indexOf("=");
                 if (indexOfEquals == -1)
                     throw new ParseException("The custom argument " + customArgument + " does not follow the form -ca key=value");
                 String key = customArgument.substring(0, indexOfEquals);
                 String value = customArgument.substring(indexOfEquals + 1);
+                if (characterMap.containsKey(value)) {
+                    value = String.valueOf(characterMap.get(value));
+                }
                 dgaConf.setCustomProperty(key, value);
             }
         }
 
         if (cmd.hasOption("D")) {
-            String [] systemProperty = cmd.getOptionValues("D");
+            String[] systemProperty = cmd.getOptionValues("D");
             for (String sysProp : systemProperty) {
                 int indexOfEquals = sysProp.indexOf("=");
                 if (indexOfEquals == -1)
