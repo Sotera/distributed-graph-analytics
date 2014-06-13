@@ -38,8 +38,6 @@ public class DGACommandLineUtil {
         options.addOption("D", true, "System parameters to pass through to be added to the conf");
         options.addOption("w", true, "The number of giraph workers to use for the analytic");
         options.addOption("ca", true, "Any custom arguments to pass in to giraph");
-        //Option property = OptionBuilder.withArgName("property=value").hasArg().withDescription("use value for given property").create('D');
-        //options.addOption(property);
         //options.addOption("yh", true, "Heap size, in MB, task (YARN only.) Defaults to giraph.yarn.task.heap.mb => 1024 (integer) MB.");
         //options.addOption("yj", true, "comma-separated list of JAR filenames to distribute to Giraph tasks and ApplicationMaster. YARN only. Search order: CLASSPATH, HADOOP_HOME, user current dir.");
         return options;
