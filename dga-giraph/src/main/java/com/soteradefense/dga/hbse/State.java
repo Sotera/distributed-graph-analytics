@@ -15,6 +15,7 @@ package com.soteradefense.dga.hbse;
  */
 public enum State {
     START,
+    PIVOT_SELECTION,
     SHORTEST_PATH_START,
     SHORTEST_PATH_RUN,
     PAIR_DEPENDENCY_PING_PREDECESSOR,
