@@ -18,8 +18,6 @@
 package com.soteradefense.dga.hbse;
 
 import com.soteradefense.dga.DGALoggingUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.giraph.aggregators.DoubleOverwriteAggregator;
 import org.apache.giraph.aggregators.IntOverwriteAggregator;
 import org.apache.giraph.aggregators.IntSumAggregator;
@@ -27,13 +25,16 @@ import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -71,7 +72,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     public static final String STATE_AGG = "com.sotera.graph.singbetweenness.STATE_AGG";
 
     /**
-     * Aggregator Sum for the total number of pivots selected.
+     * Current List Of Pivots Being Used.
      */
     public static final String PIVOT_AGG = "com.sotera.graph.singbetweenness.PIVOT_AGG";
 
@@ -152,20 +153,9 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     public static final String STATS_CSV = "stats.csv";
 
     /**
-     * Aggregator Identifier that stores the percentage of pivots to choose per batch.
+     * Aggregator Identifier that stores the number of pivots to choose per batch.
      */
-    public static final String PIVOT_PERCENT = "pivot.percent.cutoff";
-
-    /**
-     * Aggregator Identifier that stores the percentage of initial pivots to choose per batch.
-     */
-    public static final String INITIAL_PIVOT_PERCENT = PIVOT_PERCENT + ".initial";
-
-
-    /**
-     * Stores the number of pivots to use per batch of nodes.
-     */
-    private double batchSize;
+    public static final String PIVOT_COUNT = "pivot.count.cutoff";
 
     /**
      * Stores the number of shortest path phases to run through before completion.
@@ -224,6 +214,11 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      */
     private Date end;
 
+    private boolean initialBatch;
+    private int pivotCount;
+    private int initialPivotCount;
+    private int totalPivotsSelected;
+
     /**
      * Read options from configuration file and set up aggregators (global communication)
      *
@@ -236,12 +231,10 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         start = new Date();
         state = State.START;
         this.registerPersistentAggregator(STATE_AGG, IntOverwriteAggregator.class);
-        this.registerPersistentAggregator(PIVOT_AGG, IntSumAggregator.class);
-        this.registerPersistentAggregator(PIVOT_PERCENT, DoubleOverwriteAggregator.class);
-        this.registerPersistentAggregator(INITIAL_PIVOT_PERCENT, DoubleOverwriteAggregator.class);
+        this.registerPersistentAggregator(PIVOT_AGG, PivotListAggregator.class);
+        this.registerPersistentAggregator(PIVOT_COUNT, IntOverwriteAggregator.class);
         this.registerAggregator(UPDATE_COUNT_AGG, IntSumAggregator.class);
         this.registerAggregator(HIGH_BC_SET_AGG, HighBetweennessListAggregator.class);
-
         String defaultFS = this.getDefaultFS(this.getConf());
         if (defaultFS == null) {
             throw new IllegalArgumentException(FS_DEFAULT_FS + " OR " + FS_DEFAULT_NAME + " must be set.  If not set in the environment you can set them as a custom argument to the giraph job via -ca fs.default.name=<your default fs>");
@@ -265,26 +258,25 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         logger.info(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE + "=" + maxHighBCSetSize);
 
         try {
-            batchSize = Double.parseDouble(getConf().get(PIVOT_BATCH_SIZE));
+            pivotCount = Integer.parseInt(getConf().get(PIVOT_BATCH_SIZE));
         } catch (NumberFormatException e) {
             logger.error("Option not set or invalid. \"" + PIVOT_BATCH_SIZE + "\" must be set to a valid double, was set to " + getConf().get(PIVOT_BATCH_SIZE), e);
             throw e;
         }
-        logger.info(PIVOT_BATCH_SIZE + "=" + batchSize);
+        logger.info(PIVOT_BATCH_SIZE + "=" + pivotCount);
 
 
-        double initialBatchSize;
         try {
-            initialBatchSize = Double.parseDouble(getConf().get(PIVOT_BATCH_SIZE_INITIAL, getConf().get(PIVOT_BATCH_SIZE)));
+            initialPivotCount = Integer.parseInt(getConf().get(PIVOT_BATCH_SIZE_INITIAL, getConf().get(PIVOT_BATCH_SIZE)));
         } catch (NumberFormatException e) {
             logger.error("Option not set or invalid. \"" + PIVOT_BATCH_SIZE_INITIAL + "\" must be set to a valid double, was set to " + getConf().get(PIVOT_BATCH_SIZE_INITIAL), e);
             throw e;
         }
-
+        initialBatch = true;
         maxId = getRequiredHBSEConfiguration(VERTEX_COUNT);
-        this.setAggregatedValue(PIVOT_PERCENT, new DoubleWritable(batchSize));
-        this.setAggregatedValue(INITIAL_PIVOT_PERCENT, new DoubleWritable(initialBatchSize));
+        setAggregatedValue(PIVOT_COUNT, new IntWritable(pivotCount));
         logger.info(VERTEX_COUNT + "=" + maxId);
+        totalPivotsSelected = 0;
 
     }
 
@@ -342,9 +334,25 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         logger.info("Superstep: " + step + " starting in State: " + state);
         switch (state) {
             case START:
-                state = State.SHORTEST_PATH_START;
+                state = State.PIVOT_SELECTION;
                 setGlobalState(state);
                 logger.info("Superstep: " + step + " Switched to State: " + state);
+                break;
+            case PIVOT_SELECTION:
+                boolean allPivotsAreSelected;
+                if (initialBatch) {
+                    allPivotsAreSelected = areAllPivotsSelected(initialPivotCount);
+                    initialBatch = !allPivotsAreSelected;
+                } else {
+                    allPivotsAreSelected = areAllPivotsSelected(pivotCount);
+                }
+                if (allPivotsAreSelected) {
+                    int pivotCount = ((PivotList) getAggregatedValue(PIVOT_AGG)).getPivots().size();
+                    logger.debug("Pivots have been selected!  The count is " + pivotCount);
+                    totalPivotsSelected += pivotCount;
+                    state = State.SHORTEST_PATH_START;
+                    setGlobalState(state);
+                }
                 break;
             case SHORTEST_PATH_START:
                 int updateCount = ((IntWritable) this.getAggregatedValue(UPDATE_COUNT_AGG)).get();
@@ -406,7 +414,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
                         state = State.SHORTEST_PATH_START;
                     }
 
-                } else if (((IntWritable) getAggregatedValue(PIVOT_AGG)).get() >= this.maxId) {
+                } else if (totalPivotsSelected >= this.maxId) {
                     logger.info(logprefix + " All possible pivots selected, exiting");
                     state = State.FINISHED;
                 } else {
@@ -433,8 +441,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
      * Writes the various statistics when computation finishes.
      */
     private void writeStats() {
-        int pivotsSelected = ((IntWritable) getAggregatedValue(PIVOT_AGG)).get();
-        double percentSelected = (double) pivotsSelected / this.maxId;
+        double percentSelected = (double) totalPivotsSelected / this.maxId;
         int time = (int) ((end.getTime() - start.getTime()) / 1000);
 
         String defaultFS = getDefaultFS(getConf());
@@ -445,10 +452,10 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
             BufferedWriter br = new BufferedWriter(new OutputStreamWriter(fs.create(pt, true)));
             try {
                 br.write("k: " + this.highBetweennessSet.size() + "\n");
-                br.write("delta p: " + this.batchSize + "\n");
+                br.write("delta p: " + this.pivotCount + "\n");
                 br.write("cutoff: " + this.stabilityCutoff + "\n");
                 br.write("counter: " + this.stabilityCounter + "\n");
-                br.write("pivots selected: " + pivotsSelected + "\n");
+                br.write("pivots selected: " + totalPivotsSelected + "\n");
                 br.write("percent of graph selected: " + percentSelected + "\n");
                 br.write("supsersteps: " + this.getSuperstep() + "\n");
                 br.write("cycles: " + this.cycle + "\n");
@@ -535,5 +542,11 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         return (conf.get(FS_DEFAULT_FS) != null ? conf.get(FS_DEFAULT_FS) : conf.get(FS_DEFAULT_NAME));
     }
 
-
+    private boolean areAllPivotsSelected(int numberOfPivots) {
+        PivotList pivots = getAggregatedValue(PIVOT_AGG);
+        if (pivots.getPivots().size() > numberOfPivots) {
+            pivots.trim(numberOfPivots);
+        }
+        return pivots.getPivots().size() == numberOfPivots;
+    }
 }
