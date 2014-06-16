@@ -67,5 +67,25 @@ public class DGACommandLineUtilTest {
         assertEquals(conf.getCustomArgumentProperties().size(), 2);
         assertEquals(conf.getGiraphProperties().size(), 2);
     }
+    @Test
+    public void testCustomDelimiter() throws ParseException {
+        String[] args = {"-ca", "simple.edge.delimiter=\\t"};
+        Options options = DGACommandLineUtil.generateOptions();
+        DGAConfiguration conf = DGACommandLineUtil.parseCommandLine(args, options);
+        assertEquals(conf.getCustomArgumentProperties().size(), 1);
+        assertEquals(conf.getCustomArgumentProperties().get("simple.edge.delimiter"), "\t");
+        assertEquals(conf.getGiraphProperties().size(), 0);
+    }
+    @Test
+    public void testDCommandNoSpace() throws ParseException{
+        String[] args = {"-ca", "simple.edge.delimiter=\\t", "-Dgiraph.zkList=localhost:2181"};
+        Options options = DGACommandLineUtil.generateOptions();
+        DGAConfiguration conf = DGACommandLineUtil.parseCommandLine(args, options);
+        assertEquals(conf.getCustomArgumentProperties().size(), 1);
+        assertEquals(conf.getSystemProperties().size(),1);
+        assertEquals(conf.getSystemProperties().get("giraph.zkList"), "localhost:2181");
+        assertEquals(conf.getCustomArgumentProperties().get("simple.edge.delimiter"), "\t");
+        assertEquals(conf.getGiraphProperties().size(), 0);
+    }
 
 }
