@@ -1,4 +1,4 @@
-<h4><a name="ioconfig" class="anchor" href="#ioconfig"><span class="glyphicon glyphicon-link"></span></a> IO Configuration</h4>
+<h4><a name="iconfig" class="anchor" href="#iconfig"><span class="glyphicon glyphicon-link"></span></a> Input Configuration</h4>
 <table class="table table-bordered">
     <thead>
     <tr>
@@ -32,4 +32,38 @@
         <td>Many datasets are undirected; many analytics require directed graphs. The default for this is false, but specifying true will explicitly convert the provided graph into a directed graph.</td>
     </tr>
     </tbody>
+</table>
+<h4><a name="oconfig" class="anchor" href="#oconfig"><span class="glyphicon glyphicon-link"></span></a> Output Configuration</h4>
+
+<table>
+    <thead>
+    <tr>
+        <th>
+            Property
+        </th>
+        <th>
+            Required
+        </th>
+        <th>
+            Description
+        </th>
+    </tr>
+    </thead>
+    <thead>
+    <tr>
+        <td>edge.delimiter</td>
+        <td>N</td>
+        <td>The string delimiter to use when tokenizing the row of data (default is ,) Note: many characters are ignored by the Apache Commons CLI library</td>
+    </tr>
+    <tr>
+        <td>write.vertex.value</td>
+        <td>N</td>
+        <td>The default value is false.</td>
+    </tr>
+    <tr>
+        <td>write.edge.value</td>
+        <td>N</td>
+        <td>The default value is false.</td>
+    </tr>
+    </thead>
 </table>
