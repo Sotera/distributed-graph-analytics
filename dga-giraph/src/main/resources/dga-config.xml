@@ -4,15 +4,7 @@
     <system>
         <property>
             <name>giraph.zkList</name>
-            <value>sc02.silverdale.dev:2181,sc03.silverdale.dev:2181</value>
-        </property>
-        <property>
-            <name>giraph.useBigDataIOForMessages</name>
-            <value>true</value>
-        </property>
-        <property>
-            <name>mapred.map.child.java.opts</name>
-            <value>-Xmx48G</value>
+            <value>localhost:2181</value>
         </property>
         <property>
             <name>giraph.useSuperstepCounters</name>
@@ -28,7 +20,7 @@
     <giraph>
         <property>
             <name>w</name>
-            <value>21</value>
+            <value>1</value>
         </property>
     </giraph>
 </configuration>
