@@ -93,9 +93,9 @@ public class DGAEdgeTDTOutputFormatTest extends DGAEdgeTDTOutputFormat {
         when(tac.getConfiguration()).thenReturn(conf);
         writer.initialize(tac);
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge1);
-        verify(rw).write(new Text("34\t12\t10.43433333389"), null);
+        verify(rw).write(new Text("34,12,10.43433333389"), null);
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge2);
-        verify(rw).write(new Text("34\t6\t10.43433333389"), null);
+        verify(rw).write(new Text("34,6,10.43433333389"), null);
     }
 
     @Test
@@ -127,7 +127,7 @@ public class DGAEdgeTDTOutputFormatTest extends DGAEdgeTDTOutputFormat {
         when(edge.getValue()).thenReturn(new Text());
 
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge);
-        verify(rw).write(new Text("34\t12"), null);
+        verify(rw).write(new Text("34,12"), null);
 
     }
 }
