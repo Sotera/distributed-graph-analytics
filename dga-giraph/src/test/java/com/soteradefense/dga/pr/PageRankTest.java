@@ -34,12 +34,12 @@ public class PageRankTest {
         TestGraph<Text, DoubleWritable, Text> output = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(8, output.getVertices().size());
         assertTrue(output.getVertex(new Text("1")).getValue().get() < output.getVertex(new Text("8")).getValue().get());
-        assertTrue(output.getVertex(new Text("2")).getValue().get() < output.getVertex(new Text("8")).getValue().get());
-        assertTrue(output.getVertex(new Text("3")).getValue().get() < output.getVertex(new Text("8")).getValue().get());
-        assertTrue(output.getVertex(new Text("4")).getValue().get() < output.getVertex(new Text("8")).getValue().get());
-        assertTrue(output.getVertex(new Text("5")).getValue().get() < output.getVertex(new Text("8")).getValue().get());
-        assertTrue(output.getVertex(new Text("6")).getValue().get() < output.getVertex(new Text("8")).getValue().get());
-        assertTrue(output.getVertex(new Text("7")).getValue().get() < output.getVertex(new Text("8")).getValue().get());
+        assertTrue(output.getVertex(new Text("1")).getValue().get() < output.getVertex(new Text("7")).getValue().get());
+        assertTrue(output.getVertex(new Text("1")).getValue().get() < output.getVertex(new Text("6")).getValue().get());
+        assertTrue(output.getVertex(new Text("1")).getValue().get() < output.getVertex(new Text("5")).getValue().get());
+        assertTrue(output.getVertex(new Text("1")).getValue().get() < output.getVertex(new Text("4")).getValue().get());
+        assertTrue(output.getVertex(new Text("1")).getValue().get() < output.getVertex(new Text("3")).getValue().get());
+        assertTrue(output.getVertex(new Text("1")).getValue().get() < output.getVertex(new Text("2")).getValue().get());
 
     }
 
