@@ -20,7 +20,7 @@ layout: base
     lc - Leaf Compression
     pr - Page Rank
     -ca &lt;arg&gt; Any custom arguments to pass in to giraph
-    -D &lt;arg&gt; System parameters to pass through to be added to the conf
+    -D&lt;arg&gt; System parameters to pass through to be added to the conf
     -h Prints this help documentation and exits
     -q Run analytic in quiet mode
     -w &lt;arg&gt; The number of giraph workers to use for the analytic
@@ -40,7 +40,7 @@ layout: base
 <h3><a name="system-example" class="anchor" href="#system-example"><span class="glyphicon glyphicon-link"></span></a> -D Examples</h3>
 <pre>
     <code>
-        $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner wcc /path/to/input/ /path/to/output/ -D giraph.zkList=localhost:2121
-        $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner wcc /path/to/input/ /path/to/output/ -D pivot.batch.size=0.25
+        $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner wcc /path/to/input/ /path/to/output/ -Dgiraph.zkList=localhost:2121
+        $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner wcc /path/to/input/ /path/to/output/ -Dpivot.batch.size=0.25
     </code>
 </pre>

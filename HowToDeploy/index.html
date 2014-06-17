@@ -5,13 +5,7 @@ layout: base
     Deploy DGA-Giraph</h3>
 <pre>
 <code>
-    $ cp -r dga-giraph/build/dist /path/of/your/choosing
-</code>
-</pre>
-<p><b>Note:</b> You must make sure you add your respective zookeeper nodes to the list via the command below.  The property is giraph.zkList.  It takes a comma seperated list with no spaces!</p>
-<pre>
-<code>
-    $ vi dga-giraph/src/main/resources/dga-config.xml
+    $ sudo cp -r dga-giraph/build/dist /opt/dga/
 </code>
 </pre>
 <h3><a name="configuring-dga-giraph" class="anchor"
@@ -31,4 +25,6 @@ layout: base
 <p>A full list of the options that you can provide to each analytic can be found on this page: <a
         href="/distributed-graph-analytics/Configurations/">DGA Giraph Options</a></p>
 
+<h3><a name="examples" class="anchor" href="#examples"><span class="glyphicon glyphicon-link"></span></a> Ready For Examples?</h3>
+<p>See: <a href="/distributed-graph-analytics/Examples/">Examples</a></p>
 {% include issues.html %}

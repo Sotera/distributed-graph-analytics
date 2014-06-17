@@ -17,38 +17,18 @@
         </li>
     </ol>
     <h3><a name="started" class="anchor" href="#started"><span class="glyphicon glyphicon-link"></span></a> Let's Get Started</h3>
-    <p><a href="/distributed-graph-analytics/{{page.analytic}}/xdata/">Following along on the XDATA VM?</a></p>
+
     <p>In this example, we will be running <a href="/distributed-graph-analytics/{{page.analytic}}/">{{page.title}}</a> with DGA.</p>
 
-    <p>First, let's get some sample data from <a href="/distributed-graph-analytics/data/example.csv">here</a>. Already have data you want to use? That's great! Make sure it follows <a
+    <p>First, let's get some sample data. Already have data you want to use? That's great! Make sure it follows <a
             href="/distributed-graph-analytics/FAQ/#how-data">this</a> format and it
         will work with DGA.</p>
-
-    <p>All set? Now we need to deploy this out to our cluster.</p>
 <pre>
 <code>
-    $ scp -r dga-giraph/build/dist/ hostname:/path/on/disks
+    $ wget http://sotera.github.io/distributed-graph-analytics/data/example.csv
 </code>
 </pre>
-    <p>Now, let's scp our data out to the cluster. Navigate to the directory you downloaded the file to and run the command below.</p>
-<pre>
-<code>
-    $ scp example.csv hostname:/path/on/disks
-</code>
-</pre>
-    <p>Next, we need to ssh into our cluster.</p>
-<pre>
-<code>
-    $ ssh hostname
-</code>
-</pre>
-    <p>Now let's see if our files made it to the cluster. Run the command below and you should see a dist folder and example.tsv.</p>
-<pre>
-<code>
-    $ ls -al
-</code>
-</pre>
-    <p>If everything checks out! We can now copy our data set to a directory in hdfs. For this example we will create a directory in tmp for the input.</p>
+    <p>If everything checks out! We can now copy our data set to a directory in hdfs. For this example we will create a directory in tmp for the input. You don't need to use this directory all the time.</p>
 <pre>
 <code>
     $ hadoop fs -mkdir -p /tmp/dga/{{page.analytic}}/input/
@@ -90,6 +70,7 @@
     <p>Is it done yet? If so, lets see the results!</p>
 <pre>
 <code>
+    $ cd
     $ mkdir results/
     $ cd results
     $ hadoop fs -copyToLocal /tmp/dga/{{page.analytic}}/output/* .

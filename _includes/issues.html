@@ -2,12 +2,6 @@
        href="#errata"><span class="glyphicon glyphicon-link"></span></a> Errata</h3>
 <ul>
     <li>
-        Unfortunately, the -D key=value pair is slightly different than Giraph's, which requires it in the form of -Dkey=value
-        (no space). Please note it operates exactly like Giraph's and is how you can pass <a href="http://giraph.apache.org/options.html">Giraph
-        Options</a> through to the
-        system.
-    </li>
-    <li>
         There is a current bug where the dga-config.xml located in distributed-graph-analytics/dga-giraph/main/resources is included in the
         uber jar that distDGA builds; this is a legacy issue from our attempt at adding this resource to YARN - which we don't even fully
         support yet. To make configuration changes for your cluster, please make them in this file and rebuild the uber jar. You can still
