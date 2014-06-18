@@ -114,6 +114,21 @@ public class DGAEdgeTTTOutputFormatTest extends DGAEdgeTTTOutputFormat {
     }
 
     @Test
+    // Tests Source:Dest:VertexValue
+    public void testWriteGraphWithVertexValueAndOverriddenSeparator() throws Exception {
+        TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
+        conf.set(DGAEdgeTTTOutputFormat.FIELD_DELIMITER, ":");
+        conf.set(WRITE_VERTEX_VALUE, "true");
+        writer.setConf(conf);
+        writer.initialize(tac);
+        writer.writeEdge(vertex.getId(), vertex.getValue(), edge1);
+        verify(rw).write(new Text("34:12:10"), null);
+        writer.writeEdge(vertex.getId(), vertex.getValue(), edge2);
+        verify(rw).write(new Text("34:6:10"), null);
+
+    }
+
+    @Test
     // Tests Source,Dest
     public void testGraphWriteWithEmptyEdgeWeight() throws Exception {
         TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
@@ -131,8 +146,25 @@ public class DGAEdgeTTTOutputFormatTest extends DGAEdgeTTTOutputFormat {
     }
 
     @Test
+    // Tests Source:Dest
+    public void testGraphWriteWithEmptyEdgeWeightAndOverriddenDelimiter() throws Exception {
+        TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
+        conf.set(DGAEdgeTTTOutputFormat.FIELD_DELIMITER, ":");
+        writer.setConf(conf);
+        writer.initialize(tac);
+
+        Edge<Text, Text> edge = mock(Edge.class);
+        when(edge.getTargetVertexId()).thenReturn(new Text("12"));
+        when(edge.getValue()).thenReturn(new Text());
+
+        writer.writeEdge(vertex.getId(), vertex.getValue(), edge);
+        verify(rw).write(new Text("34:12"), null);
+
+    }
+
+    @Test
     // Tests Source\tDest\tVertexValue\tEdgeValue
-    public void testWriteGraphAsEdgesAndVertexValues() throws Exception {
+    public void testWriteGraphAsEdgesAndVertexValuesAndOverriddenDelimiter() throws Exception {
         TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
         conf.set(WRITE_EDGE_VALUE, "true");
         conf.set(WRITE_VERTEX_VALUE, "true");
@@ -146,17 +178,30 @@ public class DGAEdgeTTTOutputFormatTest extends DGAEdgeTTTOutputFormat {
     }
 
     @Test
-    // Tests Source\tDest\tVertexValue
-    public void testWriteGraphAsVertexValues() throws Exception {
+    // Tests Source,Dest,VertexValue,EdgeValue
+    public void testWriteGraphAsEdgesAndVertexValues() throws Exception {
         TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
+        conf.set(WRITE_EDGE_VALUE, "true");
         conf.set(WRITE_VERTEX_VALUE, "true");
-        conf.set(FIELD_DELIMITER, "\t");
         writer.setConf(conf);
         writer.initialize(tac);
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge1);
-        verify(rw).write(new Text("34\t12\t10"), null);
+        verify(rw).write(new Text("34,12,10,1"), null);
         writer.writeEdge(vertex.getId(), vertex.getValue(), edge2);
-        verify(rw).write(new Text("34\t6\t10"), null);
+        verify(rw).write(new Text("34,6,10,4"), null);
+    }
+
+    @Test
+    // Tests Source,Dest,VertexValue
+    public void testWriteGraphAsVertexValues() throws Exception {
+        TextEdgeWriter<Text, Text, Text> writer = createEdgeWriter(rw);
+        conf.set(WRITE_VERTEX_VALUE, "true");
+        writer.setConf(conf);
+        writer.initialize(tac);
+        writer.writeEdge(vertex.getId(), vertex.getValue(), edge1);
+        verify(rw).write(new Text("34,12,10"), null);
+        writer.writeEdge(vertex.getId(), vertex.getValue(), edge2);
+        verify(rw).write(new Text("34,6,10"), null);
     }
 
 
