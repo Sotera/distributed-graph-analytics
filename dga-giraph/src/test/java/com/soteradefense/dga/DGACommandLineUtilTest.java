@@ -3,11 +3,56 @@ package com.soteradefense.dga;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.PrintStream;
+import java.security.Permission;
+
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class DGACommandLineUtilTest {
+
+    public SecurityManager defaultManager;
+    protected static class ExitException extends SecurityException
+    {
+        public final int status;
+        public ExitException(int status)
+        {
+            super("There is no escape!");
+            this.status = status;
+        }
+    }
+
+    private static class NoExitSecurityManager extends SecurityManager
+    {
+        @Override
+        public void checkPermission(Permission perm)
+        {
+            // allow anything.
+        }
+        @Override
+        public void checkPermission(Permission perm, Object context)
+        {
+            // allow anything.
+        }
+        @Override
+        public void checkExit(int status)
+        {
+            super.checkExit(status);
+            throw new ExitException(status);
+        }
+    }
+
+
+    @Before
+    public void setUp() throws Exception{
+        defaultManager = System.getSecurityManager();
+        System.setSecurityManager(new NoExitSecurityManager());
+    }
 
     @Test(expected = ParseException.class)
     public void testBadCommandLineArguments() throws ParseException {
@@ -67,6 +112,7 @@ public class DGACommandLineUtilTest {
         assertEquals(conf.getCustomArgumentProperties().size(), 2);
         assertEquals(conf.getGiraphProperties().size(), 2);
     }
+
     @Test
     public void testCustomDelimiter() throws ParseException {
         String[] args = {"-ca", "simple.edge.delimiter=\\t"};
@@ -76,16 +122,52 @@ public class DGACommandLineUtilTest {
         assertEquals(conf.getCustomArgumentProperties().get("simple.edge.delimiter"), "\t");
         assertEquals(conf.getGiraphProperties().size(), 0);
     }
+
     @Test
-    public void testDCommandNoSpace() throws ParseException{
+    public void testDCommandNoSpace() throws ParseException {
         String[] args = {"-ca", "simple.edge.delimiter=\\t", "-Dgiraph.zkList=localhost:2181"};
         Options options = DGACommandLineUtil.generateOptions();
         DGAConfiguration conf = DGACommandLineUtil.parseCommandLine(args, options);
         assertEquals(conf.getCustomArgumentProperties().size(), 1);
-        assertEquals(conf.getSystemProperties().size(),1);
+        assertEquals(conf.getSystemProperties().size(), 1);
         assertEquals(conf.getSystemProperties().get("giraph.zkList"), "localhost:2181");
         assertEquals(conf.getCustomArgumentProperties().get("simple.edge.delimiter"), "\t");
         assertEquals(conf.getGiraphProperties().size(), 0);
+    }
+
+    @Test(expected = ParseException.class)
+    public void testCACommandNoSpace() throws ParseException {
+        String[] args = {"-casimple.edge.delimiter=\\t", "-Dgiraph.zkList=localhost:2181"};
+        Options options = DGACommandLineUtil.generateOptions();
+        DGAConfiguration conf = DGACommandLineUtil.parseCommandLine(args, options);
+        assertEquals(conf.getCustomArgumentProperties().size(), 1);
+        assertEquals(conf.getSystemProperties().size(), 1);
+        assertEquals(conf.getSystemProperties().get("giraph.zkList"), "localhost:2181");
+        assertEquals(conf.getCustomArgumentProperties().get("simple.edge.delimiter"), "\t");
+        assertEquals(conf.getGiraphProperties().size(), 0);
+    }
+
+    @Test(expected = ExitException.class)
+    public void testHelpCommand() throws ParseException {
+        String[] args = {"-h"};
+        Options options = DGACommandLineUtil.generateOptions();
+        DGAConfiguration conf = DGACommandLineUtil.parseCommandLine(args, options);
+
+    }
+
+    @Test
+    public void testTooLittleArgs() throws ParseException {
+        String[] args = {"wcc"};
+        Options options = DGACommandLineUtil.generateOptions();
+        DGAConfiguration conf = DGACommandLineUtil.parseCommandLine(args, options);
+        assertEquals(conf.getGiraphProperties().size(), 0);
+        assertEquals(conf.getSystemProperties().size(), 0);
+        assertEquals(conf.getCustomArgumentProperties().size(), 0);
+    }
+
+    @After
+    public void cleanUp(){
+        System.setSecurityManager(defaultManager);
     }
 
 }

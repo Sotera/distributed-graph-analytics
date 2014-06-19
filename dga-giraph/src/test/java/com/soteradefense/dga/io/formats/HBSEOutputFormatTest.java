@@ -30,53 +30,57 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 public class HBSEOutputFormatTest extends HBSEOutputFormat {
     private ImmutableClassesGiraphConfiguration<
-            Text,VertexData,Text> conf;
+            Text, VertexData, Text> conf;
+
+    private RecordWriter<Text, Text> tw;
+    private Vertex<Text, VertexData, Text> vertex;
+    private Vertex<Text,VertexData,Text> vertex2;
+    private VertexData vertexData;
+
     @Before
     public void setUp() throws Exception {
+        tw = mock(RecordWriter.class);
         GiraphConfiguration giraphConfiguration = new GiraphConfiguration();
         giraphConfiguration.setComputationClass(BasicComputation.class);
-        conf = new ImmutableClassesGiraphConfiguration<Text,VertexData,Text>(giraphConfiguration);
+        conf = new ImmutableClassesGiraphConfiguration<Text, VertexData, Text>(giraphConfiguration);
+        vertex = mock(Vertex.class);
+        vertex2 = mock(Vertex.class);
+        when(vertex.getId()).thenReturn(new Text("1"));
+        when(vertex.getValue()).thenReturn(new VertexData());
+        when(vertex2.getId()).thenReturn(new Text("2"));
+        vertexData = new VertexData();
+        vertexData.setApproxBetweenness(1.0);
+        when(vertex2.getValue()).thenReturn(vertexData);
     }
+
     @Override
     public TextVertexWriter createVertexWriter(TaskAttemptContext context) throws IOException, InterruptedException {
         super.createVertexWriter(context);
-        final TextVertexWriter vw = mock(TextVertexWriter.class);
-        return vw;
-    }
-
-    @Test
-    public void testNewDelimiter() throws IOException, InterruptedException {
-        Text expected = new Text("1");
-        Text approx = new Text("0.0");
-        testWriter(expected, approx);
-    }
-
-    private void testWriter(Text expected, Text approx) throws IOException, InterruptedException {
-        TaskAttemptContext tac = mock(TaskAttemptContext.class);
-        when(tac.getConfiguration()).thenReturn(conf);
-
-        Vertex<Text,VertexData,Text> vertex = mock(Vertex.class);
-        when(vertex.getId()).thenReturn(new Text("1"));
-        when(vertex.getValue()).thenReturn(new VertexData());
-        // Create empty iterator == no edges
-        final RecordWriter<Text,Text> tw = mock(RecordWriter.class);
-        SBVertexWriter writer = new SBVertexWriter() {
+        return new SBVertexWriter() {
             @Override
             protected RecordWriter<Text, Text> createLineRecordWriter(
                     TaskAttemptContext context) throws IOException, InterruptedException {
                 return tw;
             }
         };
+    }
+
+    @Test
+    public void testWriterDefault() throws IOException, InterruptedException {
+        TaskAttemptContext tac = mock(TaskAttemptContext.class);
+        when(tac.getConfiguration()).thenReturn(conf);
+        TextVertexWriter writer = createVertexWriter(tac);
         writer.setConf(conf);
         writer.initialize(tac);
         writer.writeVertex(vertex);
-        verify(tw).write(expected, approx);
+        verify(tw).write(new Text("1"), new Text("0.0"));
+        writer.writeVertex(vertex2);
+        verify(tw).write(new Text("2"), new Text("1.0"));
     }
+
 }
