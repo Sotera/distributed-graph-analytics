@@ -28,6 +28,7 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.when;
 
 
 public class DGALongEdgeValueInputFormatTest extends DGALongEdgeValueInputFormat {
+
     private RecordReader<LongWritable,Text> rr;
     private ImmutableClassesGiraphConfiguration<Text, Text, Text> conf;
     private TaskAttemptContext tac;
@@ -75,6 +77,20 @@ public class DGALongEdgeValueInputFormatTest extends DGALongEdgeValueInputFormat
     }
 
     @Test
+    public void testInputParserWithDefaultWeightAndOverriddenSeparator() throws IOException, InterruptedException {
+        String input = "1\t2";
+        when(rr.getCurrentValue()).thenReturn(new Text(input));
+        EdgeReader ter = createEdgeReader(rr);
+        conf.set(LINE_TOKENIZE_VALUE, "\t");
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+        assertEquals(ter.getCurrentSourceId(), new Text("1"));
+        assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text("2"));
+        assertEquals(ter.getCurrentEdge().getValue(), new LongWritable(1L));
+
+    }
+
+    @Test
     public void testInputParserWithCustomWeight() throws IOException, InterruptedException {
         String input = "1,2,10";
         when(rr.getCurrentValue()).thenReturn(new Text(input));
@@ -84,6 +100,82 @@ public class DGALongEdgeValueInputFormatTest extends DGALongEdgeValueInputFormat
         assertEquals(ter.getCurrentSourceId(), new Text("1"));
         assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text("2"));
         assertEquals(ter.getCurrentEdge().getValue(), new LongWritable(10L));
+
+    }
+    @Test
+    public void testInputParserWithCustomWeightAndOverriddenSeparator() throws IOException, InterruptedException {
+        String input = "1\t2\t10";
+        when(rr.getCurrentValue()).thenReturn(new Text(input));
+        EdgeReader ter = createEdgeReader(rr);
+        conf.set(LINE_TOKENIZE_VALUE, "\t");
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+        assertEquals(ter.getCurrentSourceId(), new Text("1"));
+        assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text("2"));
+        assertEquals(ter.getCurrentEdge().getValue(), new LongWritable(10L));
+
+    }
+
+    @Test
+    public void testInputParserWithDelimiterInData() throws IOException, InterruptedException {
+        String input = "te\\tst@test.com\tanother@test.com\t10";
+        when(rr.getCurrentValue()).thenReturn(new Text(input));
+        EdgeReader ter = createEdgeReader(rr);
+        conf.set(LINE_TOKENIZE_VALUE, "\t");
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+        assertEquals(ter.getCurrentSourceId(), new Text("te\\tst@test.com"));
+        assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text("another@test.com"));
+        assertEquals(ter.getCurrentEdge().getValue(), new LongWritable(10L));
+
+    }
+    @Test(expected=IOException.class)
+    public void testInputParserWithDelimiterInDataNoEscape() throws IOException, InterruptedException {
+        String input = "te\tst@test.com\tanother@test.com\t10";
+        when(rr.getCurrentValue()).thenReturn(new Text(input));
+        EdgeReader ter = createEdgeReader(rr);
+        conf.set(LINE_TOKENIZE_VALUE, "\t");
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+        assertEquals(ter.getCurrentSourceId(), new Text("te\\tst@test.com"));
+        assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text("another@test.com"));
+        assertEquals(ter.getCurrentEdge().getValue(), new LongWritable(10L));
+
+    }
+    @Test(expected=IOException.class)
+    public void testInputParserWithMalformedLine() throws IOException, InterruptedException {
+        String input = "1";
+        when(rr.getCurrentValue()).thenReturn(new Text(input));
+        EdgeReader ter = createEdgeReader(rr);
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+        assertEquals(ter.getCurrentSourceId(), new Text("1"));
+        assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text());
+        assertEquals(ter.getCurrentEdge().getValue(), new LongWritable(1L));
+
+    }
+    @Test(expected=IOException.class)
+    public void testInputParserWithMalformedLineAndDelimiter() throws IOException, InterruptedException {
+        String input = "1,";
+        when(rr.getCurrentValue()).thenReturn(new Text(input));
+        EdgeReader ter = createEdgeReader(rr);
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+        assertEquals(ter.getCurrentSourceId(), new Text("1"));
+        assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text());
+        assertEquals(ter.getCurrentEdge().getValue(), new LongWritable(1L));
+
+    }
+    @Test(expected=IOException.class)
+    public void testInputParserWithMalformedLineAndDelimiterNoSource() throws IOException, InterruptedException {
+        String input = ",1";
+        when(rr.getCurrentValue()).thenReturn(new Text(input));
+        EdgeReader ter = createEdgeReader(rr);
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+        assertEquals(ter.getCurrentSourceId(), new Text());
+        assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text("1"));
+        assertEquals(ter.getCurrentEdge().getValue(), new LongWritable(1L));
 
     }
 }
