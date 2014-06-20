@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -36,30 +38,30 @@ public class DGARunner {
     }
 
     public static void main(String[] args) throws Exception {
-
         Options options = DGACommandLineUtil.generateOptions();
 
-        if (args.length < 3)
+        if (args.length < 4)
             DGACommandLineUtil.printUsageAndExit(options);
 
-        String analytic = args[0].toLowerCase();
-        String inputPath = args[1];
-        String outputPath = args[2];
+        String libDir = args[0];
+        String analytic = args[1].toLowerCase();
+        String inputPath = args[2];
+        String outputPath = args[3];
 
         if (!supportedAnalytics.contains(analytic)) {
             DGACommandLineUtil.printUsageAndExit(options);
         }
 
-        String[] subsetArguments = new String[args.length - 3];
+        String[] subsetArguments = new String[args.length - 4];
         for (int i = 0; i < subsetArguments.length; i++) {
-            subsetArguments[i] = args[i + 3];
+            subsetArguments[i] = args[i + 4];
         }
         DGAConfiguration commandLineConf = DGACommandLineUtil.parseCommandLine(subsetArguments, options);
         String logLevel = commandLineConf.getCustomArgumentProperties().get(DGALoggingUtil.DGA_LOG_LEVEL);
         DGALoggingUtil.setDGALogLevel(logLevel);
 
         try {
-            InputStream configurationIS = Thread.currentThread().getContextClassLoader().getResourceAsStream("dga-config.xml");
+            InputStream configurationIS = ClassLoader.getSystemClassLoader().getResourceAsStream("dga-config.xml");
 
             DGAConfiguration fileConf = DGAXMLConfigurationParser.parse(configurationIS);
 
@@ -72,6 +74,9 @@ public class DGARunner {
                 DGAConfiguration minimalDefaults = new DGAConfiguration();
                 minimalDefaults.setCustomProperty(DGAEdgeTTTOutputFormat.WRITE_VERTEX_VALUE, "true");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
+
+                finalConf.setLibDir(libDir);
+
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(WeaklyConnectedComponentComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
 
@@ -89,12 +94,18 @@ public class DGARunner {
                 minimalDefaults.setCustomProperty(HBSEMasterCompute.PIVOT_BATCH_SIZE_INITIAL, "10");
                 minimalDefaults.setCustomProperty(HBSEMasterCompute.VERTEX_COUNT, "5");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
+
+                finalConf.setLibDir(libDir);
+
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(HBSEComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
             } else if (analytic.equals("louvain")) {
                 DGAConfiguration partialConfiguration = DGAConfiguration.coalesce(fileConf, commandLineConf);
                 partialConfiguration.setDGAGiraphProperty("-eip", inputPath);
                 partialConfiguration.setDGAGiraphProperty("-op", outputPath);
+
+                partialConfiguration.setLibDir(libDir);
+
                 LouvainRunner louvainRunner = new LouvainRunner();
                 System.exit(louvainRunner.runUntilComplete(inputPath, outputPath, partialConfiguration));
             } else if (analytic.equals("lc")) {
@@ -104,8 +115,11 @@ public class DGARunner {
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
                 requiredConf.setDGAGiraphProperty("-esd", outputPath);
-                DGAConfiguration finalConfiguration = DGAConfiguration.coalesce(fileConf, commandLineConf, requiredConf);
-                String[] giraphArgs = finalConfiguration.convertToCommandLineArguments(LeafCompressionComputation.class.getCanonicalName());
+                DGAConfiguration finalConf = DGAConfiguration.coalesce(fileConf, commandLineConf, requiredConf);
+
+                finalConf.setLibDir(libDir);
+
+                String[] giraphArgs = finalConf.convertToCommandLineArguments(LeafCompressionComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
             } else if (analytic.equals("pr")) {
                 DGAConfiguration requiredConf = new DGAConfiguration();
@@ -116,6 +130,9 @@ public class DGARunner {
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
                 requiredConf.setCustomProperty(DGAEdgeTDTOutputFormat.WRITE_VERTEX_VALUE, "true");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(fileConf, commandLineConf, requiredConf);
+
+                finalConf.setLibDir(libDir);
+
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(PageRankComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
             }
