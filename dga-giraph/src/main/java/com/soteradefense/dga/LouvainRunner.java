@@ -92,7 +92,7 @@ public class LouvainRunner {
             interimInputPath = interimOutputPath;
             interimOutputPath = outputPath + "mapreduce_" + String.valueOf(iteration);
 
-            status = runMapreduceJob(interimInputPath, interimOutputPath, confForStep);
+            status = ToolRunner.run(new CommunityCompression(interimInputPath, interimOutputPath, confForStep), confForStep.buildLibJarsFromLibPath());
             if (status != 0)
                 return status;
 

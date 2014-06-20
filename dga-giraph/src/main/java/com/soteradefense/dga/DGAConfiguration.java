@@ -1,6 +1,10 @@
 package com.soteradefense.dga;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +15,8 @@ public class DGAConfiguration {
     private Map<String, String> giraphProperties;
     private Map<String, String> customArgumentProperties;
     private Map<String, String> systemProperties;
+
+    private String libDir = "";
 
     public DGAConfiguration() {
         this.giraphProperties = new HashMap<String, String>();
@@ -50,12 +56,58 @@ public class DGAConfiguration {
         return Collections.unmodifiableMap(this.systemProperties);
     }
 
+    public void setLibDir(String libDir) {
+        this.libDir = libDir != null && !libDir.equals("") ? libDir : this.libDir;
+    }
+
+    public String getLibDir() {
+        return libDir;
+    }
+
+    public String [] buildLibJarsFromLibPath() {
+        List<String> libJarsList = new ArrayList<String>();
+
+        File file = new File(libDir);
+        if (file.exists() && file.isDirectory()) {
+            String [] libs = file.list(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.toLowerCase().endsWith(".jar");
+                }
+            });
+
+            for (String lib : libs) {
+                libJarsList.add(libDir + lib);
+            }
+
+        }
+
+        String [] libjarsAsArgArray;
+        if (libJarsList.size() > 0) {
+            libjarsAsArgArray = new String[2];
+            libjarsAsArgArray[0] = "-libjars";
+            StringBuilder builder = new StringBuilder();
+            for (String fullLibPath : libJarsList) {
+                builder.append(fullLibPath);
+                builder.append(",");
+            }
+            builder.deleteCharAt(builder.length() - 1);
+            libjarsAsArgArray[1] = builder.toString();
+        } else {
+            libjarsAsArgArray = new String[0];
+        }
+        return libjarsAsArgArray;
+    }
+
     public String[] convertToCommandLineArguments(String computationClassName) {
         List<String> argList = new ArrayList<String>();
         for (String key : this.systemProperties.keySet()) {
             argList.add("-D");
             argList.add(key + "=" + this.systemProperties.get(key));
         }
+
+        argList.addAll(Arrays.asList(buildLibJarsFromLibPath()));
+
         argList.add(computationClassName);
         for (String key : this.giraphProperties.keySet()) {
             if (key.equals("-q")) {
@@ -100,7 +152,10 @@ public class DGAConfiguration {
             builder.append(entry.getValue());
             builder.append(",");
         }
-        builder.replace(builder.length()-1, builder.length(), "})");
+        builder.replace(builder.length()-1, builder.length(), "}");
+        builder.append(" libDir=");
+        builder.append(libDir);
+        builder.append(")");
         return builder.toString();
     }
 
@@ -114,6 +169,7 @@ public class DGAConfiguration {
     public static DGAConfiguration coalesce(DGAConfiguration ... configurationsInOrder) {
         DGAConfiguration conf = new DGAConfiguration();
         for (DGAConfiguration dgaConf : configurationsInOrder) {
+            conf.setLibDir(dgaConf.libDir);
             conf.giraphProperties.putAll(dgaConf.giraphProperties);
             conf.customArgumentProperties.putAll(dgaConf.customArgumentProperties);
             conf.systemProperties.putAll(dgaConf.systemProperties);

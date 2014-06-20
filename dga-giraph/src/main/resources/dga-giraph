@@ -1,0 +1,10 @@
+#!/bin/bash
+
+CWD=$(pwd)
+
+LIB_DIR=$CWD/lib/
+
+export HADOOP_USER_CLASSPATH_FIRST=true
+export HADOOP_CLASSPATH=lib/*:conf/
+
+hadoop jar lib/dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner $LIB_DIR "${@:1}"
