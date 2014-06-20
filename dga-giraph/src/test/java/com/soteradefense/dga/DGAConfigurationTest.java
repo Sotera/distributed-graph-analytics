@@ -7,6 +7,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class DGAConfigurationTest {
 
@@ -33,6 +34,9 @@ public class DGAConfigurationTest {
 
         dgaConf1.setCustomProperty("simple.edge.value.default", "");
         dgaConf3.setCustomProperty("simple.edge.value.default", "4");
+
+        dgaConf2.setLibDir("/path/to/lib");
+        dgaConf3.setLibDir("/");
     }
 
     @Test
@@ -47,6 +51,7 @@ public class DGAConfigurationTest {
         assertEquals("/sweeter/path", giraphProps.get("-eip"));
         assertEquals("class.name.VertexInputFormat", giraphProps.get("-vif"));
         assertEquals("8", giraphProps.get("-w"));
+        assertEquals("/", coalesced.getLibDir());
 
         assertEquals("\t", customArgumentProps.get("simple.edge.delimiter"));
         assertEquals("4", customArgumentProps.get("simple.edge.value.default"));
@@ -61,6 +66,7 @@ public class DGAConfigurationTest {
         assertEquals("/sweet/path", giraphProps.get("-eip"));
         assertEquals("class.name.VertexInputFormat", giraphProps.get("-vif"));
         assertEquals("12", giraphProps.get("-w"));
+        assertEquals("/", coalesced.getLibDir());
 
         assertEquals(",", customArgumentProps.get("simple.edge.delimiter"));
         assertEquals("", customArgumentProps.get("simple.edge.value.default"));
@@ -74,6 +80,7 @@ public class DGAConfigurationTest {
         assertEquals("/sweet/path", giraphProps.get("-eip"));
         assertEquals("class.name.VertexInputFormat", giraphProps.get("-vif"));
         assertEquals("4", giraphProps.get("-w"));
+        assertEquals("/path/to/lib", coalesced.getLibDir());
 
         assertEquals("\t", customArgumentProps.get("simple.edge.delimiter"));
         assertEquals("", customArgumentProps.get("simple.edge.value.default"));
@@ -114,6 +121,10 @@ public class DGAConfigurationTest {
         }
 
         assertEquals("test.class.Name", generatedArgs[0]);
+
+        // neither should work because neither contains any jar files, if they even exist
+        assertTrue(!argsExistInArray(generatedArgs, "-libjars", "/"));
+        assertTrue(!argsExistInArray(generatedArgs, "-libjars", "/path/to/lib"));
     }
 
     private boolean argsExistInArray(String[] args, String key, String value) {

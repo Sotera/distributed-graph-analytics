@@ -1,24 +1,33 @@
-// gives us shadow jar
-buildscript {
-    repositories {
-        mavenCentral()
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:0.8'    }
-}
-apply plugin: 'shadow'
-
 // defaults to cdh5version from gradle.properties file, but can be overriden via -Pcdhversion=cdh4 on command line
 // pulls all actual property values from gradle.properties
 def cdh_version = project.hasProperty('cdhversion') && cdhversion == "cdh4" ? cdh4version : cdh5version
 
 description = 'dga-giraph'
 
+sourceSets {
+    main {
+        resources {
+            exclude 'dga-config.xml'
+            exclude 'dga'
+        }
+    }
+}
+
+configurations {
+    hadoopProvided {
+        transitive = true
+    }
+    compile {
+        extendsFrom hadoopProvided
+    }
+}
+
 dependencies {
-    compile project(':dga-core')
-    compile 'org.apache.giraph:giraph-core:1.1.0-SNAPSHOT'
-    compile group: 'org.apache.hadoop', name: 'hadoop-client', version: cdh_version
+    compile('org.apache.giraph:giraph-core:1.1.0-SNAPSHOT') {
+        exclude module: 'guava'
+        exclude module: 'zookeeper'
+    }
+    hadoopProvided group: 'org.apache.hadoop', name: 'hadoop-client', version: cdh_version
     testCompile "org.mockito:mockito-core:1.9.5"
     testCompile 'junit:junit:4.11'
     testCompile 'commons-httpclient:commons-httpclient:3.0.1'
@@ -26,29 +35,19 @@ dependencies {
     testCompile 'org.powermock:powermock-api-mockito:1.5.5'
 }
 
-shadow {
-    stats = true
-    outputFile = new File(String.format("%s/shadow/%s-%s.jar", buildDir, description, version))
-    exclude "dga-config.xml"
-    artifactSet {
-        include 'org.apache.giraph'
-        include 'com.facebook.thirdparty.yourkit-api'
-        include 'com.yammer.metrics'
-        include 'io.netty'
-        include 'net.iharder'
-        include 'it.unimi.dsi'
-        include 'org.jodah'
-        include 'org.json'
-        include 'org.json'
-        include 'org.python'
-        include 'org.slf4j'
-    }
+task distJars(dependsOn: 'distConf', type: Copy) {
+        from configurations.runtime - configurations.hadoopProvided
+        from jar
+        include "**/*.jar"
+        into "${buildDir}/dist/lib"
 }
 
-task distDGAGiraph (dependsOn: 'shadowJar', type: Copy) {
-    from "${buildDir}/shadow"
-    include "**/*.jar"
-    from project(":dga-giraph").fileTree("src/main/resources")
-    include "dga-config.xml"
-    into "${buildDir}/dist"
+task distConf(dependsOn: 'assemble', type: Copy) {
+        from project.file("src/main/resources/dga-config.xml")
+        into "${buildDir}/dist/conf"
+}
+
+task dist(dependsOn: 'distJars', type: Copy) {
+        from project.file("src/main/resources/dga-giraph")
+	into "${buildDir}/dist/bin"
 }
