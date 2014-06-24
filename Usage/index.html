@@ -5,7 +5,7 @@ layout: base
 <h3><a name="help-examples" class="anchor" href="#help-examples"><span class="glyphicon glyphicon-link"></span></a> Help</h3>
 <pre>
 <code>
-    $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner -h
+    $ ./bin/dga-giraph -h
 </code>
 </pre>
 
@@ -13,14 +13,14 @@ layout: base
     Components Example</h3>
 <pre>
 <code>
-    $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner wcc /input/directory /output/directory
+    $ ./bin/dga-giraph wcc /input/directory /output/directory
 </code>
 </pre>
 
 <h3><a name="lc-examples" class="anchor" href="#lc-examples"><span class="glyphicon glyphicon-link"></span></a> Leaf Compression Example</h3>
 <pre>
 <code>
-    $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner lc /input/directory /output/directory
+    $ ./bin/dga-giraph lc /input/directory /output/directory
 </code>
 </pre>
 
@@ -28,7 +28,7 @@ layout: base
     Example</h3>
 <pre>
 <code>
-    $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner louvain /input/directory /output/directory
+    $ ./bin/dga-giraph louvain /input/directory /output/directory
 </code>
 </pre>
 
@@ -36,14 +36,14 @@ layout: base
     Extraction Example</h3>
 <pre>
 <code>
-    $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner hbse /input/directory /output/directory
+    $ ./bin/dga-giraph hbse /input/directory /output/directory
 </code>
 </pre>
 
 <h3><a name="pr-examples" class="anchor" href="#pr-examples"><span class="glyphicon glyphicon-link"></span></a> PageRank Example</h3>
 <pre>
 <code>
-    $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner pr /input/directory /output/directory
+    $ ./bin/dga-giraph pr /input/directory /output/directory
 </code>
 </pre>
 
@@ -51,6 +51,6 @@ layout: base
 </h3>
 <pre>
 <code>
-    $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner wcc /input/directory /output/directory -w 21 -D giraph.zkList=localhost:2121
+    $ ./bin/dga-giraph wcc /input/directory /output/directory -w 21 -D giraph.zkList=localhost:2121
 </code>
 </pre>

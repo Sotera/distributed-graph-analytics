@@ -31,8 +31,8 @@ layout: base
 
 <pre>
     <code>
-        $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner wcc /path/to/input/ /path/to/output/ -ca io.edge.reverse.duplicator=true
-        $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner wcc /path/to/input/ /path/to/output/ -ca pivot.batch.size=0.25
+        $ ./bin/dga-giraph wcc /path/to/input/ /path/to/output/ -ca io.edge.reverse.duplicator=true
+        $ ./bin/dga-giraph wcc /path/to/input/ /path/to/output/ -ca pivot.batch.size=0.25
     </code>
 </pre>
 <p>See <a href="/distributed-graph-analytics/Configurations/">Configurations</a> for a property list.</p>
@@ -40,7 +40,7 @@ layout: base
 <h3><a name="system-example" class="anchor" href="#system-example"><span class="glyphicon glyphicon-link"></span></a> -D Examples</h3>
 <pre>
     <code>
-        $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner wcc /path/to/input/ /path/to/output/ -Dgiraph.zkList=localhost:2121
-        $ hadoop jar dga-giraph-0.0.1.jar com.soteradefense.dga.DGARunner wcc /path/to/input/ /path/to/output/ -Dpivot.batch.size=0.25
+        $ ./bin/dga-giraph wcc /path/to/input/ /path/to/output/ -Dgiraph.zkList=localhost:2121
+        $ ./bin/dga-giraph wcc /path/to/input/ /path/to/output/ -Dpivot.batch.size=0.25
     </code>
 </pre>
