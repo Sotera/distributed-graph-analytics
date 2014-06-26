@@ -12,7 +12,7 @@ object IpAddress {
     // with more than 4 bytes causes InetAddress to interpret it as a (bad) IPv6 address
     val tmp = new Array[Byte](4)
     Array.copy(addressBytes.array, 4, tmp, 0, 4)
-    InetAddress.getByAddress(tmp).getHostAddress()
+    InetAddress.getByAddress(tmp).getHostAddress
   }
   
   

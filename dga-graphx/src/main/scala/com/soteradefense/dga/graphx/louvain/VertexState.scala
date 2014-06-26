@@ -4,16 +4,14 @@ package com.soteradefense.dga.graphx.louvain
  * Louvain vertex state
  * Contains all information needed for louvain community detection
  */
-class VertexState extends Serializable{
+class VertexState(var community: Long, var communitySigmaTot: Long, var internalWeight: Long, var nodeWeight: Long, var changed: Boolean) extends Serializable {
 
-  var community = -1L
-  var communitySigmaTot = 0L
-  var internalWeight = 0L  // self edges
-  var nodeWeight = 0L;  //out degree
-  var changed = false
-   
-  override def toString(): String = {
-    "{community:"+community+",communitySigmaTot:"+communitySigmaTot+
-    ",internalWeight:"+internalWeight+",nodeWeight:"+nodeWeight+"}"
+  def this() {
+    this(-1L, 0L, 0L, 0L, false)
+  }
+
+  override def toString: String = {
+    "{community:" + community + ",communitySigmaTot:" + communitySigmaTot +
+      ",internalWeight:" + internalWeight + ",nodeWeight:" + nodeWeight + "}"
   }
 }

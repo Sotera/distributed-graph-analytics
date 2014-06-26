@@ -1,30 +1,29 @@
 package com.soteradefense.dga.graphx.wcc
 
-import com.esotericsoftware.kryo.Kryo
-import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esotericsoftware.kryo.serializers.DefaultSerializers
+import com.esotericsoftware.kryo.Serializer
+import com.soteradefense.dga.graphx.harness.Harness
+import com.twitter.chill._
 import org.apache.spark.graphx.Graph
 
 import scala.reflect.ClassTag
 
-class HDFSWCCRunner(var output_dir: String, var delimiter: String) extends WeaklyConnectedComponentsHarness {
-  val serializer = new DefaultSerializers.StringSerializer
-  override def save[VD: ClassTag](graph: Graph[VD, Long]): Unit = {
+case class HDFSWCCRunner(var output_dir: String, var delimiter: String) extends Harness with Serializable{
+  def run[VD: ClassTag](graph: Graph[VD, Long]) = {
+    save(WeaklyConnectionComponentsCore.wcc(graph))
+  }
+
+  def save[VD: ClassTag](graph: Graph[VD, Long]): Unit = {
     graph.triplets.map(t => s"${t.srcId}$delimiter${t.dstId}$delimiter${t.srcAttr}").saveAsTextFile(output_dir)
   }
+}
 
-  override def write(kryo: Kryo, output: Output): Unit = {
-    serializer.write(kryo, output, output_dir)
-    serializer.write(kryo, output, delimiter)
-//    kryo.writeObject(output, output_dir)
-//    kryo.writeObject(output, delimiter)
+class HDFSWCCRunnerSerializer extends Serializer[HDFSWCCRunner] {
+  override def write(kryo: Kryo, out: Output, obj: HDFSWCCRunner): Unit = {
+    kryo.writeObject(out, obj.output_dir)
+    kryo.writeObject(out, obj.delimiter)
   }
 
-  override def read(kryo: Kryo, input: Input): Unit = {
-    this.output_dir = serializer.read(kryo, input, classOf[String])
-    this.delimiter = serializer.read(kryo, input, classOf[String])
-
-//    this.output_dir = kryo.readObject(input, classOf[String])
-//    this.delimiter = kryo.readObject(input, classOf[String])
+  override def read(kryo: Kryo, in: Input, cls: Class[HDFSWCCRunner]): HDFSWCCRunner = {
+    new HDFSWCCRunner(kryo.readObject(in, classOf[String]), kryo.readObject(in, classOf[String]))
   }
 }

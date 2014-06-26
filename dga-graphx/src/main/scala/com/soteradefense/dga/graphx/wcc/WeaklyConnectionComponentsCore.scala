@@ -9,5 +9,4 @@ object WeaklyConnectionComponentsCore {
   def wcc[VD: ClassTag](graph: Graph[VD, Long]): (Graph[VertexId, Long]) = {
     graph.connectedComponents()
   }
-
 }
