@@ -8,5 +8,5 @@ import scala.reflect.ClassTag
 trait Harness {
   def run[VD: ClassTag](graph: Graph[VD, Long])
 
-  def save[VD: ClassTag](graph: Graph[VD, Long])
+  def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Unit
 }

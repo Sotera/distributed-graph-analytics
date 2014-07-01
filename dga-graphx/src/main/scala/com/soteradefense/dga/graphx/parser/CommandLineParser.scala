@@ -11,9 +11,10 @@ class CommandLineParser {
       opt[String]('o', "outputPath") action { (x, c) => c.copy(output = x)} text "Output path in HDFS"
       opt[String]('d', "delimiter") action { (x, c: Config) => c.copy(edgeDelimiter = x)} text "Input Delimiter"
       opt[String]('m', "master") action { (x, c) => c.copy(master = x)} text "Spark Master, local[N] or spark://host:port default=local"
-      opt[String]('h', "sparkHome") action { (x, c) => c.copy(sparkHome = x)} text "SPARK_HOME Required to run on a cluster"
+      opt[String]('s', "sparkHome") action { (x, c) => c.copy(sparkHome = x)} text "SPARK_HOME Required to run on a cluster"
       opt[String]('n', "jobName") action { (x, c) => c.copy(appName = x)} text "Job Name"
       opt[String]('j', "jars") action { (x, c) => c.copy(jars = x)} text "Comma Separated List of jars"
+      help("help") text "prints this usage text"
       arg[(String, String)]("ca") unbounded() optional() action { case ((k, v), c) => c.copy(customArguments = c.customArguments += k -> v)} keyValueName("<argumentstring>", "<argumentvalue>")
       arg[(String, String)]("<property>=<value>....") unbounded() optional() action { case ((k, v), c) => c.copy(properties = c.properties :+(k, v))}
     }

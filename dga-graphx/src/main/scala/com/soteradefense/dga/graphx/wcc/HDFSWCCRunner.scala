@@ -11,8 +11,11 @@ case class HDFSWCCRunner(var output_dir: String, var delimiter: String) extends 
   def run[VD: ClassTag](graph: Graph[VD, Long]) = {
     save(WeaklyConnectionComponentsCore.wcc(graph))
   }
+  def runGraphXImplementation[VD: ClassTag](graph: Graph[VD, Long]) = {
+    save(WeaklyConnectionComponentsCore.wccGraphX(graph))
+  }
 
-  def save[VD: ClassTag](graph: Graph[VD, Long]): Unit = {
+  def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Unit = {
     graph.triplets.map(t => s"${t.srcId}$delimiter${t.dstId}$delimiter${t.srcAttr}").saveAsTextFile(output_dir)
   }
 }
