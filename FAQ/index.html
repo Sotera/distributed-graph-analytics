@@ -2,26 +2,14 @@
 layout: base
 ---
 <h3><a name="faq" class="anchor" href="#faq"><span class="glyphicon glyphicon-link"></span></a> FAQ</h3>
-<h4><a name="why-giraph-error" class="anchor" href="#why-giraph-error"><span class="glyphicon glyphicon-link"></span></a> Why does the job fail in Giraph?</h4>
-<p>There is a good chance you got a bad commit when you pulled down giraph. This is the trade off when you use SNAPSHOT builds. We've tested it using this commit checksum:
-    f0b6cddd3e255e9e31e3afe22d0f69b3c046d554</p>
-<p>To switch back to that commit run the following command below.</p>
-<pre>
-<code>
-    $ git reset --hard f0b6cddd3e255e9e31e3afe22d0f69b3c046d554
-</code>
-</pre>
 <h4><a name="why-io-error" class="anchor" href="#why-io-error"><span class="glyphicon glyphicon-link"></span></a> Why does the job fail in your input formats?</h4>
 
 <p>Take a look at your data. Make sure there are no \t's anywhere or any other characters that might cause the input to fail.</p>
 
-<h4><a name="why-d-error" class="anchor" href="#why-d-error"><span class="glyphicon glyphicon-link"></span></a> Why don't my -D parameters work?</h4>
-
-<p>This is a difference between the DGARunner and GiraphRunner. In Giraph, you used -Dgiraph.zkList=localhost:2181. In DGA, you do -D giraph.zkList=localhost:2181.</p>
-
 <h4><a name="how-data" class="anchor" href="#how-data"><span class="glyphicon glyphicon-link"></span></a> How do I format my data, so it will work with DGA?</h4>
 <p>Using your own data with DGA is simple! Make sure the file is an edge list of the following format.</p>
 <p>Source,Target,EdgeValue</p>
+<p>It must be a character separated file, so you can use commas, TABS, etc. If you use anything other than the default, then you must let us know via a configuration value.</p>
 
 <h4><a name="bug-report" class="anchor" href="#bug-report"><span class="glyphicon glyphicon-link"></span></a> I found a bug! How can I let you know?</h4>
 <p>Bug Reports can be submitted <a href="https://github.com/Sotera/distributed-graph-analytics/issues/new">here</a>. We will try and get it resolved as soon as possible!</p>

@@ -9,6 +9,18 @@ layout: base
         Connected Components</a>, <a href="pr">Page Rank</a>, <a href="lc">Leaf
         Compression</a>,
     and <a href="louvain">Louvain Modularity</a>.</p>
+
+<h3>
+    <a name="who" class="anchor" href="#who"><span class="glyphicon glyphicon-link"></span></a> Who can use this?
+</h3>
+<p>Anyone who has a data set and wants to do data analysis! We package analytics implemented in both Giraph and GraphX. Some knowledge of a cluster, java, and Linux is required,
+    but it not necessary.</p>
+<h3>
+    <a name="want" class="anchor" href="#want"><span class="glyphicon glyphicon-link"></span></a> Why would I want this?
+</h3>
+<p>Tools like Gephi are nice, but can only handle small data sets on a single machine. DGA uses the power of <a href="http://hadoop.apache.org/">Hadoop</a>, <a href="http://giraph.apache.org/">Giraph</a>, and
+    <a href="https://github.com/apache/spark">GraphX</a> to create a distributed approach to the analytics,
+    so it can handle a much larger data sets in parallel.</p>
 <h3>
     <a name="support" class="anchor" href="#support"><span class="glyphicon glyphicon-link"></span></a> Current Supported Analytics
 </h3>
@@ -17,21 +29,11 @@ layout: base
     <a name="giraph-package" class="anchor" href="#giraph-package"><span class="glyphicon glyphicon-link"></span></a> Giraph
 </h3>
 <ul>
-    <li>
-        Weakly Connected Components
-    </li>
-    <li>
-        Leaf Compression
-    </li>
-    <li>
-        Page Rank
-    </li>
-    <li>
-        High Betweenness Set Extraction
-    </li>
-    <li>
-        Lovain Modularity
-    </li>
+    <li><a href="/distributed-graph-analytics/hbse/">High Betweenness Set Extraction</a></li>
+    <li><a href="/distributed-graph-analytics/louvain/">Louvain Modularity</a></li>
+    <li><a href="/distributed-graph-analytics/pr/">Page Rank</a></li>
+    <li><a href="/distributed-graph-analytics/wcc/">Weakly Connected Components</a></li>
+    <li><a href="/distributed-graph-analytics/lc/">Leaf Compression</a></li>
 </ul>
 <h3>
     <a name="graphx-package" class="anchor" href="#graphx-package"><span class="glyphicon glyphicon-link"></span></a> GraphX
@@ -62,4 +64,4 @@ layout: base
 <h3>
     <a name="how-to-get" class="anchor" href="#how-to-get"><span class="glyphicon glyphicon-link"></span></a> How Do I Get It?
 </h3>
-        <p>See: <a href="/distributed-graph-analytics/HowToGet/">How To Get DGA</a></p>
+<p>See: <a href="/distributed-graph-analytics/HowToGet/">How To Get DGA</a></p>
