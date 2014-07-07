@@ -1,4 +1,4 @@
-package com.soteradefense.dga.graphx.lc
+package com.soteradefense.dga.graphx.hbse
 
 import com.soteradefense.dga.graphx.io.formats.EdgeInputFormat
 import com.soteradefense.dga.graphx.parser.CommandLineParser
@@ -14,11 +14,12 @@ object Main {
       .setAppName(cmdLine.appName)
       .setSparkHome(cmdLine.sparkHome)
       .setJars(cmdLine.jars.split(","))
+    conf.setAll(cmdLine.customArguments)
     val sc = new SparkContext(conf)
     val inputFormat = new EdgeInputFormat(cmdLine.input, cmdLine.edgeDelimiter)
     val edgeRDD = inputFormat.getEdgeRDD(sc)
     val graph = Graph.fromEdges(edgeRDD, None)
-    val runner = new HDFSLCRunner(cmdLine.output, cmdLine.edgeDelimiter)
+    val runner = new HDFSHBSERunner(cmdLine.output, cmdLine.edgeDelimiter)
     runner.run(sc, graph)
   }
 }

@@ -3,13 +3,14 @@ package com.soteradefense.dga.graphx.pr
 import com.esotericsoftware.kryo.Serializer
 import com.soteradefense.dga.graphx.harness.Harness
 import com.twitter.chill._
+import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Graph
 
 import scala.reflect.ClassTag
 
 
 class HDFSPRRunner(var output_dir: String, var delimiter: String, var delta: Double) extends Harness with Serializable {
-  override def run[VD: ClassTag](graph: Graph[VD, Long]): Unit = {
+  override def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): Unit = {
     save(PageRankCore.pr(graph, delta))
   }
 

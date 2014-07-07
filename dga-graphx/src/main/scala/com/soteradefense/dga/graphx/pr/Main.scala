@@ -20,6 +20,6 @@ object Main {
     val graph = Graph.fromEdges(edgeRDD, None)
     val delta = cmdLine.customArguments.getOrElse("delta", "0.001").toDouble
     val runner = new HDFSPRRunner(cmdLine.output, cmdLine.edgeDelimiter, delta)
-    runner.run(graph)
+    runner.run(sc, graph)
   }
 }

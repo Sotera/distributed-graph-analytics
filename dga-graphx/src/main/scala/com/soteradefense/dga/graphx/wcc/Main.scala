@@ -18,7 +18,7 @@ object Main {
     val edgeRDD = inputFormat.getEdgeRDD(sc)
     val graph = Graph.fromEdges(edgeRDD, None)
     val runner = new HDFSWCCRunner(cmdLine.output, cmdLine.edgeDelimiter)
-    runner.run(graph)
+    runner.run(sc, graph)
 
 
     // This portion works with kryo
