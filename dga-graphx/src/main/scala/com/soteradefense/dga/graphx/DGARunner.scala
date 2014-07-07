@@ -26,7 +26,7 @@ object DGARunner {
       wcc.Main.main(newArgs)
     }
     else if (analytic.equals("hbse")) {
-      //TODO: Call HBSE
+      hbse.Main.main(newArgs)
     }
     else if (analytic.equals("louvain")) {
       louvain.Main.main(newArgs)
