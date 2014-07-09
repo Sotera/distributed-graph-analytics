@@ -10,7 +10,7 @@ class VertexData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList
 
   def addPathData(pathData: PathData): ShortestPathList = {
     var list: ShortestPathList = null
-    val source: Long = pathData.getSource
+    val source: Long = pathData.getMessageSource
     if (!pathDataMap.contains(source)) {
       list = new ShortestPathList(pathData)
       this.pathDataMap.put(source, list)

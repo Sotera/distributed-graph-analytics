@@ -21,7 +21,7 @@ object DGARunner {
     val inputFormat = new EdgeInputFormat(cmdLine.input, cmdLine.edgeDelimiter)
     val edgeRDD = inputFormat.getEdgeRDD(sc)
     val graph = Graph.fromEdges(edgeRDD, None)
-
+    //TODO: Needs to be done better than calling a Main
     if (analytic.equals("wcc")) {
       wcc.Main.main(newArgs)
     }

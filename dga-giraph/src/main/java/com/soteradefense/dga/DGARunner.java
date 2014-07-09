@@ -51,9 +51,7 @@ public class DGARunner {
         }
 
         String[] subsetArguments = new String[args.length - 3];
-        for (int i = 0; i < subsetArguments.length; i++) {
-            subsetArguments[i] = args[i + 3];
-        }
+        System.arraycopy(args, 3, subsetArguments, 0, subsetArguments.length);
         DGAConfiguration commandLineConf = DGACommandLineUtil.parseCommandLine(subsetArguments, options);
         String logLevel = commandLineConf.getCustomArgumentProperties().get(DGALoggingUtil.DGA_LOG_LEVEL);
         DGALoggingUtil.setDGALogLevel(logLevel);
