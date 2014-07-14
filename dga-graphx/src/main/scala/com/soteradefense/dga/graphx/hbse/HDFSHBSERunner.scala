@@ -4,18 +4,23 @@ import com.esotericsoftware.kryo.Serializer
 import com.twitter.chill._
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Graph
+import org.apache.spark.rdd.RDD
 
 import scala.reflect.ClassTag
 
 
 class HDFSHBSERunner(var output_dir: String, var delimiter: String) extends Serializable {
 
+  final val highBetweennessDirectory = "highBetweennessSetData"
+
   def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): Unit = {
-    save(HBSECore.hbse(sc, graph))
+    val hbseOutput = HBSECore.hbse(sc, graph)
+    save(hbseOutput._1, hbseOutput._2)
   }
 
-  def save[ED: ClassTag](graph: Graph[VertexData, ED]): Unit = {
+  def save[ED: ClassTag](betweennessSet: RDD[(Long, Double)], graph: Graph[VertexData, ED]): Unit = {
     graph.vertices.map(m=> s"${m._1}$delimiter${m._2.getApproximateBetweenness}").saveAsTextFile(output_dir)
+    betweennessSet.map(f=> s"${f._1}$delimiter${f._2}").saveAsTextFile(s"$output_dir$highBetweennessDirectory")
   }
 
 }

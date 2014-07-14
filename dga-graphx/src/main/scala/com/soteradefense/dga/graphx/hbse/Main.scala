@@ -4,11 +4,13 @@ import com.soteradefense.dga.graphx.io.formats.EdgeInputFormat
 import com.soteradefense.dga.graphx.parser.CommandLineParser
 import org.apache.spark.graphx.Graph
 import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.log4j.PropertyConfigurator
 
 
 object Main {
   def main(args: Array[String]) {
     val cmdLine = new CommandLineParser().parseCommandLine(args)
+    PropertyConfigurator.configure(getClass.getResource("/log4j.properties"))
     cmdLine.properties.foreach({ case (k, v) => System.setProperty(k, v)})
     val conf = new SparkConf().setMaster(cmdLine.master)
       .setAppName(cmdLine.appName)

@@ -1,6 +1,7 @@
 package com.soteradefense.dga.graphx.hbse
 
 import org.apache.spark.graphx._
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{Logging, SparkContext}
 
 import scala.collection.mutable
@@ -27,9 +28,10 @@ object HBSECore extends Logging {
       }
     }
 
-  def hbse[VD: ClassTag, ED: ClassTag](sc: SparkContext, graph: Graph[VD, ED]): Graph[VertexData, Long] = {
+  def hbse[VD: ClassTag, ED: ClassTag](sc: SparkContext, graph: Graph[VD, ED]): (RDD[(Long, Double)], Graph[VertexData, Long]) = {
     hbseConf = new HBSEConf(sc.getConf)
     var currentBetweennessMap = new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
+    var runningBetweennessMap = new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
     var delta = 0
     var keepRunning = true
     var stabilityCutOffMetCount = 0
@@ -45,16 +47,22 @@ object HBSECore extends Logging {
       hbseGraph = pingPredecessorsAndFindSuccessors(hbseGraph)
       logInfo("Get High Betweenness List")
       hbseGraph = computeHighBetweenness(hbseGraph)
-      val newBetweennessMap = getHighBetweennessSet(hbseGraph)
-      delta = compareHighBetweennessSets(currentBetweennessMap, newBetweennessMap)
-      currentBetweennessMap = newBetweennessMap
+      runningBetweennessMap = getHighBetweennessSet(hbseGraph, runningBetweennessMap)
+      delta = compareHighBetweennessSets(currentBetweennessMap, runningBetweennessMap)
+      currentBetweennessMap = runningBetweennessMap
       previousPivots ++= pivots
       val shouldKeepRunningTupleResult = shouldKeepRunning(delta, stabilityCutOffMetCount)
       stabilityCutOffMetCount = shouldKeepRunningTupleResult._2
       keepRunning = shouldKeepRunningTupleResult._1
       if (previousPivots.size == hbseGraph.vertices.count()) keepRunning = false
     } while (keepRunning)
-    Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData())
+    // Create an RDD to write the High Betweenness Set.
+    val betweennessVertices = sc.parallelize(runningBetweennessMap.toSeq)
+    // Save the running set to the respective vertices.
+    hbseGraph.vertices.foreach(f => {
+      f._2.setApproxBetweenness(runningBetweennessMap.find(p => p._1.equals(f._1)).getOrElse((f._1,f._2.getApproximateBetweenness))._2)
+    })
+    (betweennessVertices, Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData()))
   }
 
   def shouldKeepRunning(delta: Int, stabilityCutOffMetCount: Int) = {
@@ -74,10 +82,9 @@ object HBSECore extends Logging {
     }
   }
 
-  def getHighBetweennessSet(graph: Graph[VertexData, Long]) = {
-    val betweennessQueue = new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
-    graph.vertices.foreach(f => betweennessQueue += ((f._1, f._2.getApproximateBetweenness)))
-    betweennessQueue ++ graph.vertices.map(f => (f._1, f._2.getApproximateBetweenness)).takeOrdered(hbseConf.betweennessSetMaxSize)(orderedBetweennessSet)
+  def getHighBetweennessSet(graph: Graph[VertexData, Long], runningBetweennessSet: mutable.TreeSet[(Long, Double)]) = {
+    graph.vertices.foreach(f => runningBetweennessSet += ((f._1, f._2.getApproximateBetweenness)))
+    runningBetweennessSet ++ graph.vertices.map(f => (f._1, f._2.getApproximateBetweenness)).takeOrdered(hbseConf.betweennessSetMaxSize)(orderedBetweennessSet)
   }
 
   def compareHighBetweennessSets(x: mutable.TreeSet[(Long, Double)], y: mutable.TreeSet[(Long, Double)]) = {
@@ -292,7 +299,6 @@ object HBSECore extends Logging {
 
   def sendPingMessage(triplet: EdgeTriplet[VertexData, Long]) = {
     val messageMap = new mutable.HashMap[Long, List[PathData]]
-    System.out.println(s"PathMap Size: ${triplet.dstAttr.getPathDataMap.size}")
     logInfo(s"About to Ping ${triplet.srcId} Predecessors")
     for ((source, shortestPathList) <- triplet.dstAttr.getPathDataMap) {
       val distance = shortestPathList.getDistance
