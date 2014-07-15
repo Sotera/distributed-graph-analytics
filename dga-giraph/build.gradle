@@ -44,6 +44,8 @@ shadow {
     }
 }
 
+
+
 task distDGAGiraph (dependsOn: 'shadowJar', type: Copy) {
     from "${buildDir}/shadow"
     include "**/*.jar"

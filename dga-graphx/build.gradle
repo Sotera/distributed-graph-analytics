@@ -27,13 +27,22 @@ dependencies {
     )
 }
 
-
-task dist(dependsOn: 'assemble', type: Copy) {
+task distJars(dependsOn: 'distConf', type: Copy) {
     from configurations.runtime
     from jar
     include "dga-core*.jar"
     include "dga-graphx*.jar"
     include "*graphx*.jar"
+    into "${buildDir}/dist/lib"
+}
+
+task distConf(dependsOn: 'assemble', type: Copy) {
+    from project.file("src/main/resources/log4j.properties")
+    into "${buildDir}/dist/conf"
+}
+
+
+task distDGAGraphX(dependsOn: 'distJars', type: Copy) {
     from project(":dga-graphx").fileTree("bin")
     include "dga-graphx"
     into "${buildDir}/dist"
