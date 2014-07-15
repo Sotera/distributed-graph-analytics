@@ -8,8 +8,8 @@ import com.soteradefense.dga.graphx.louvain.HDFSLouvainRunner
 import com.soteradefense.dga.graphx.parser.CommandLineParser
 import com.soteradefense.dga.graphx.pr.HDFSPRRunner
 import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.graphx.Graph
+import org.apache.spark.{SparkConf, SparkContext}
 
 object DGARunner {
   def main(args: Array[String]) {
@@ -23,6 +23,8 @@ object DGARunner {
       .setAppName(cmdLine.appName)
       .setSparkHome(cmdLine.sparkHome)
       .setJars(cmdLine.jars.split(","))
+    //.set("spark.serializer", classOf[KryoSerializer].getCanonicalName)
+    //.set("spark.kryo.registrator", classOf[DGAKryoRegistrator].getCanonicalName)
     val sc = new SparkContext(conf)
     val inputFormat = new EdgeInputFormat(cmdLine.input, cmdLine.edgeDelimiter)
     var edgeRDD = inputFormat.getEdgeRDD(sc)
@@ -50,7 +52,7 @@ object DGARunner {
       runner = new HDFSPRRunner(cmdLine.output, cmdLine.edgeDelimiter, delta)
     }
     else {
-      sys.exit(1)
+      throw new IllegalArgumentException(s"$analytic is not supported")
     }
     runner.run(sc, graph)
   }

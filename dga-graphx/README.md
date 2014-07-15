@@ -114,6 +114,10 @@ To run on a cluster be sure your input and output paths are of the form "hdfs://
 
 To change the level of parallelism use the -p or --parallelism option.  If this option is not set parallelism will be based on the layout of the input data in HDFS.  The number of partitions of the input file sets the level of parallelism.   
 
+### How To Run:
+
+./dga-graphx wcc -i hdfs://spark.hostname:8020/path/to/input/example.csv -o hdfs://spark.hostname:8020/path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
+
 ### advanced
 
 If you would like to include the louvain algorithm in your own compute pipeline or create a custom output format, etc you can easily do so by extending the com.soteradefense.dga.graphx.louvain.LouvainHarness class.  See HDFSLouvainRunner which extends LouvainHarness and is called by Main for the example above

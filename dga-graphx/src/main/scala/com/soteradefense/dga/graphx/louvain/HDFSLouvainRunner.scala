@@ -21,7 +21,7 @@ class HDFSLouvainRunner(var minProgress: Int, var progressCounter: Int, var outp
   var vertexSavePath: String = outputdir
   var edgeSavePath: String = outputdir
 
-  def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]) = {
+  override def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]) = {
 
     var louvainGraph = LouvainCore.createLouvainGraph(graph)
 

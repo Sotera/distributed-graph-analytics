@@ -31,7 +31,11 @@ dependencies {
 task dist(dependsOn: 'assemble', type: Copy) {
     from configurations.runtime
     from jar
-    include "**/*.jar"
+    include "dga-core*.jar"
+    include "dga-graphx*.jar"
+    include "*graphx*.jar"
+    from project(":dga-graphx").fileTree("bin")
+    include "dga-graphx"
     into "${buildDir}/dist"
 }
 
