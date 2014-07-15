@@ -2,6 +2,8 @@ package com.soteradefense.dga.graphx.hbse
 
 import java.util.Date
 
+import com.esotericsoftware.kryo.io.{Input, Output}
+import com.esotericsoftware.kryo.{Kryo, Serializer}
 import com.soteradefense.dga.hbse.HBSEConfigurationConstants
 import org.apache.spark.SparkConf
 
@@ -34,4 +36,25 @@ class HBSEConf(var betweennessOutputDir: String,
 
 
   def increaseStabilityCounter() = this.setStabilityCounter += 1
+}
+
+class HBSEConfSerializer extends Serializer[HBSEConf] {
+  override def write(kryo: Kryo, output: Output, obj: HBSEConf): Unit = {
+    kryo.writeObject(output, obj.betweennessOutputDir)
+    kryo.writeObject(output, obj.shortestPathPhases)
+    kryo.writeObject(output, obj.setStability)
+    kryo.writeObject(output, obj.setStabilityCounter)
+    kryo.writeObject(output, obj.betweennessSetMaxSize)
+    kryo.writeObject(output, obj.pivotBatchSize)
+    kryo.writeObject(output, obj.initialPivotBatchSize)
+    kryo.writeObject(output, obj.pivotSelectionRandomSeed)
+    kryo.writeObject(output, obj.vertexCount)
+    kryo.writeObject(output, obj.defaultFileSystem)
+  }
+
+  override def read(kryo: Kryo, input: Input, classType: Class[HBSEConf]): HBSEConf = {
+    new HBSEConf(kryo.readObject(input, classOf[String]),
+      kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]),
+      kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Long]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[String]))
+  }
 }
