@@ -4,20 +4,21 @@ import com.soteradefense.dga.graphx.harness.Harness
 import com.soteradefense.dga.graphx.hbse.HDFSHBSERunner
 import com.soteradefense.dga.graphx.io.formats.EdgeInputFormat
 import com.soteradefense.dga.graphx.lc.HDFSLCRunner
-import com.soteradefense.dga.graphx.louvain.{HDFSLouvainRunner, LouvainRunner}
+import com.soteradefense.dga.graphx.louvain.HDFSLouvainRunner
 import com.soteradefense.dga.graphx.parser.CommandLineParser
 import com.soteradefense.dga.graphx.pr.HDFSPRRunner
 import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
-import org.apache.spark.graphx.Graph
 import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.graphx.Graph
 
 object DGARunner {
   def main(args: Array[String]) {
     val analytic = args(0)
-    val newArgs = new Array[String](args.length - 1)
-    Array.copy(args, 1, newArgs, 0, newArgs.length)
+    println(s"Analytic: $analytic")
+    val newArgs = args.slice(1, args.length)
     val cmdLine = new CommandLineParser().parseCommandLine(newArgs)
     cmdLine.properties.foreach({ case (k, v) => System.setProperty(k, v)})
+    cmdLine.jars.split(",").foreach(println(_))
     val conf = new SparkConf().setMaster(cmdLine.master)
       .setAppName(cmdLine.appName)
       .setSparkHome(cmdLine.sparkHome)
@@ -29,7 +30,7 @@ object DGARunner {
     if (parallelism != -1)
       edgeRDD = edgeRDD.coalesce(parallelism, shuffle = true)
     val graph = Graph.fromEdges(edgeRDD, None)
-    var runner: Harness = null;
+    var runner: Harness = null
     if (analytic.equals("wcc")) {
       runner = new HDFSWCCRunner(cmdLine.output, cmdLine.edgeDelimiter)
     }

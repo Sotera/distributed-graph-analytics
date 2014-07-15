@@ -6,7 +6,7 @@ class CommandLineParser {
 
   def parseCommandLine(args: Array[String]): Config = {
     val parser = new scopt.OptionParser[Config](this.getClass.toString) {
-      head("dga-giraph", "0.1")
+      head("dga-graphx", "0.1")
       opt[String]('i', "inputPath") action { (x, c) => c.copy(input = x)} text "Input path in HDFS"
       opt[String]('o', "outputPath") action { (x, c) => c.copy(output = x)} text "Output path in HDFS"
       opt[String]('d', "delimiter") action { (x, c: Config) => c.copy(edgeDelimiter = x)} text "Input Delimiter"
