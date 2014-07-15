@@ -10,7 +10,7 @@ import org.apache.spark.{SparkConf, SparkContext}
  * Execute the louvain distributed community detection.
  * Requires an edge file and output directory in hdfs (local files for local mode only)
  */
-object Main {
+object LouvainRunner {
 
   def main(args: Array[String]) {
 

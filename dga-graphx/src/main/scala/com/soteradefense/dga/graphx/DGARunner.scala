@@ -1,11 +1,16 @@
 package com.soteradefense.dga.graphx
 
+import com.soteradefense.dga.graphx.harness.Harness
+import com.soteradefense.dga.graphx.hbse.HDFSHBSERunner
 import com.soteradefense.dga.graphx.io.formats.EdgeInputFormat
+import com.soteradefense.dga.graphx.lc.HDFSLCRunner
+import com.soteradefense.dga.graphx.louvain.{HDFSLouvainRunner, LouvainRunner}
 import com.soteradefense.dga.graphx.parser.CommandLineParser
+import com.soteradefense.dga.graphx.pr.HDFSPRRunner
+import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
 import org.apache.spark.graphx.Graph
 import org.apache.spark.{SparkConf, SparkContext}
 
-//TODO: Inject a string to long method or process.
 object DGARunner {
   def main(args: Array[String]) {
     val analytic = args(0)
@@ -19,26 +24,33 @@ object DGARunner {
       .setJars(cmdLine.jars.split(","))
     val sc = new SparkContext(conf)
     val inputFormat = new EdgeInputFormat(cmdLine.input, cmdLine.edgeDelimiter)
-    val edgeRDD = inputFormat.getEdgeRDD(sc)
+    var edgeRDD = inputFormat.getEdgeRDD(sc)
+    val parallelism = Integer.parseInt(cmdLine.customArguments.getOrElse("parallelism", "-1"))
+    if (parallelism != -1)
+      edgeRDD = edgeRDD.coalesce(parallelism, shuffle = true)
     val graph = Graph.fromEdges(edgeRDD, None)
-    //TODO: Needs to be done better than calling a Main
+    var runner: Harness = null;
     if (analytic.equals("wcc")) {
-      wcc.Main.main(newArgs)
+      runner = new HDFSWCCRunner(cmdLine.output, cmdLine.edgeDelimiter)
     }
     else if (analytic.equals("hbse")) {
-      hbse.Main.main(newArgs)
+      runner = new HDFSHBSERunner(cmdLine.output, cmdLine.edgeDelimiter)
     }
     else if (analytic.equals("louvain")) {
-      louvain.Main.main(newArgs)
+      val minProgress = Integer.parseInt(cmdLine.customArguments.getOrElse("minProgress", "2000"))
+      val progressCounter = Integer.parseInt(cmdLine.customArguments.getOrElse("progressCounter", "1"))
+      runner = new HDFSLouvainRunner(minProgress, progressCounter, cmdLine.output)
     }
     else if (analytic.equals("lc")) {
-      lc.Main.main(newArgs)
+      runner = new HDFSLCRunner(cmdLine.output, cmdLine.edgeDelimiter)
     }
     else if (analytic.equals("pr")) {
-      pr.Main.main(newArgs)
+      val delta = cmdLine.customArguments.getOrElse("delta", "0.001").toDouble
+      runner = new HDFSPRRunner(cmdLine.output, cmdLine.edgeDelimiter, delta)
     }
     else {
       sys.exit(1)
     }
+    runner.run(sc, graph)
   }
 }

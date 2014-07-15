@@ -5,7 +5,7 @@ import com.soteradefense.dga.graphx.parser.CommandLineParser
 import org.apache.spark.graphx.Graph
 import org.apache.spark.{SparkConf, SparkContext}
 
-object Main {
+object WeaklyConnectedComponentsRunner {
   def main(args: Array[String]) {
     val cmdLine = new CommandLineParser().parseCommandLine(args)
     cmdLine.properties.foreach({ case (k, v) => System.setProperty(k, v)})
@@ -19,19 +19,6 @@ object Main {
     val graph = Graph.fromEdges(edgeRDD, None)
     val runner = new HDFSWCCRunner(cmdLine.output, cmdLine.edgeDelimiter)
     runner.run(sc, graph)
-
-
-    // This portion works with kryo
-    //    val typeConversionMethod: String => Long = _.toLong
-    //    val edgeRDD = sc.textFile(cmdLine.input).map(row => {
-    //      val tokens = row.split(cmdLine.edgeDelimiter).map(_.trim())
-    //      tokens.length match {
-    //        case 2 => new Edge(typeConversionMethod(tokens(0)), typeConversionMethod(tokens(1)), 1L)
-    //        case 3 => new Edge(typeConversionMethod(tokens(0)), typeConversionMethod(tokens(1)), tokens(2).toLong)
-    //        case _ => throw new IllegalArgumentException("invalid input line: " + row)
-    //      }
-    //    })
-    //    val graph = Graph.fromEdges(edgeRDD, None)
-    //    graph.connectedComponents().triplets.map(t => s"${t.srcId}${cmdLine.edgeDelimiter}${t.dstId}${cmdLine.edgeDelimiter}${t.srcAttr}").saveAsTextFile(cmdLine.output)
   }
+
 }

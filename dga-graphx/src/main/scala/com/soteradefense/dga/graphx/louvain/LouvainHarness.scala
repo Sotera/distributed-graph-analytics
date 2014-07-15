@@ -35,7 +35,7 @@ import org.apache.spark.Logging
  *
  *
  */
-class LouvainHarness(minProgress: Int, progressCounter: Int) extends Serializable {
+abstract class LouvainHarness(minProgress: Int, progressCounter: Int) extends Serializable with Harness {
 
 
   def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]) = {

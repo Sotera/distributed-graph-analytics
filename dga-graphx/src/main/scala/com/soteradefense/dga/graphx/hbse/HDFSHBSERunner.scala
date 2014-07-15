@@ -1,6 +1,7 @@
 package com.soteradefense.dga.graphx.hbse
 
 import com.esotericsoftware.kryo.Serializer
+import com.soteradefense.dga.graphx.harness.Harness
 import com.twitter.chill._
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Graph
@@ -9,7 +10,7 @@ import org.apache.spark.rdd.RDD
 import scala.reflect.ClassTag
 
 
-class HDFSHBSERunner(var output_dir: String, var delimiter: String) extends Serializable {
+class HDFSHBSERunner(var output_dir: String, var delimiter: String) extends Harness with Serializable {
 
   final val highBetweennessDirectory = "highBetweennessSetData"
 
@@ -19,8 +20,12 @@ class HDFSHBSERunner(var output_dir: String, var delimiter: String) extends Seri
   }
 
   def save[ED: ClassTag](betweennessSet: RDD[(Long, Double)], graph: Graph[VertexData, ED]): Unit = {
-    graph.vertices.map(m=> s"${m._1}$delimiter${m._2.getApproximateBetweenness}").saveAsTextFile(output_dir)
-    betweennessSet.map(f=> s"${f._1}$delimiter${f._2}").saveAsTextFile(s"$output_dir$highBetweennessDirectory")
+    betweennessSet.map(f => s"${f._1}$delimiter${f._2}").saveAsTextFile(s"$output_dir$highBetweennessDirectory")
+    save(graph)
+  }
+
+  override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Unit = {
+    graph.vertices.map(m => s"${m._1}$delimiter${m._2.asInstanceOf[VertexData].getApproximateBetweenness}").saveAsTextFile(output_dir)
   }
 
 }

@@ -5,8 +5,10 @@ import com.soteradefense.dga.graphx.parser.CommandLineParser
 import org.apache.spark.graphx.Graph
 import org.apache.spark.{SparkConf, SparkContext}
 
+import scala.reflect.ClassTag
 
-object Main {
+
+object LeafCompressionRunner {
   def main(args: Array[String]) {
     val cmdLine = new CommandLineParser().parseCommandLine(args)
     cmdLine.properties.foreach({ case (k, v) => System.setProperty(k, v)})
@@ -21,4 +23,5 @@ object Main {
     val runner = new HDFSLCRunner(cmdLine.output, cmdLine.edgeDelimiter)
     runner.run(sc, graph)
   }
+
 }
