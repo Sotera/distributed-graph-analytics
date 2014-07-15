@@ -20,8 +20,8 @@ class HDFSHBSERunner(var output_dir: String, var delimiter: String) extends Harn
   }
 
   def save[ED: ClassTag](betweennessSet: RDD[(Long, Double)], graph: Graph[VertexData, ED]): Unit = {
-    betweennessSet.map(f => s"${f._1}$delimiter${f._2}").saveAsTextFile(s"$output_dir$highBetweennessDirectory")
     save(graph)
+    betweennessSet.map(f => s"${f._1}$delimiter${f._2}").saveAsTextFile(s"$output_dir$highBetweennessDirectory")
   }
 
   override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Unit = {

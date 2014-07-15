@@ -93,9 +93,6 @@ object HBSECore extends Logging {
 
   def computeHighBetweenness(graph: Graph[VertexData, Long]) = {
     val hbseGraph = graph.cache()
-    // Makes it work.  Wat..
-    hbseGraph.triplets.count()
-    hbseGraph.vertices.count()
     hbseGraph.vertices.foreach(f => {
       var approxBetweenness = f._2.getApproximateBetweenness
       f._2.getPartialDependencyMap.values.foreach(dep => {
@@ -111,8 +108,6 @@ object HBSECore extends Logging {
   def shortestPathRun(graph: Graph[VertexData, Long]) = {
     var shortestPathPhasesCompleted = 0
     val hbseGraph = graph.cache()
-    hbseGraph.triplets.count()
-    hbseGraph.vertices.count()
     var messageRDD: VertexRDD[List[PathData]] = null
     do {
 
@@ -159,9 +154,6 @@ object HBSECore extends Logging {
 
   def pingPredecessorsAndFindSuccessors(graph: Graph[VertexData, Long]) = {
     var hbseGraph = graph.cache()
-    // Makes it work.  Wat..
-    hbseGraph.vertices.count()
-    hbseGraph.triplets.count()
 
     //Ping Predecessor
     var pingRDD = hbseGraph.mapReduceTriplets(sendPingMessage, mergePathDataMessage).cache()
@@ -188,19 +180,12 @@ object HBSECore extends Logging {
       (noSuccessor, vdata)
     }).cache()
 
-    // Send the messages with the nodes that have no successor.
-    mergedGraph.triplets.count()
-    mergedGraph.vertices.count()
     logInfo("Sending Dependency Messages")
     // Find Successors
 
-    //TODO: Maybe broken past here
     pingRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, mergePathDataMessage)
     var updateCount = 0
-    //hbseGraph = Graph(mergedGraph.vertices.map(f => (f._1,f._2._2)).cache(), hbseGraph.edges)
     hbseGraph = mergedGraph.mapVertices((vid, vdata) => vdata._2).cache()
-    hbseGraph.vertices.count()
-    hbseGraph.triplets.count()
     // Pair Dependency Run State
     do {
       val partialDepGraph = hbseGraph.outerJoinVertices(pingRDD.cache())((vid, vdata, predList) => {
@@ -215,18 +200,13 @@ object HBSECore extends Logging {
               val partialDep = (numPaths.toDouble / successorNumberOfPaths.toDouble) * (1 + successorDep)
               val partialSum = vdata.addPartialDependency(pd.getMessageSource, partialDep, -1)
               val depMessage = PathData.createDependencyMessage(pd.getMessageSource, partialSum.getDependency, numPaths)
-              //val listItem = (pd.getMessageSource, vdata.getPathDataMap.get(pd.getMessageSource).get, partialSum, numPaths)
               val listItem = (partialSum.getSuccessors == 0, depMessage, vdata.getPathDataMap.get(pd.getMessageSource).get)
               newBuf += listItem
-              //buffer += listItem
             }
           })
         }
-        //buffer.toList
         newBuf.toList
       }).cache()
-      partialDepGraph.vertices.count()
-      partialDepGraph.triplets.count()
       pingRDD = partialDepGraph.mapReduceTriplets(sendPairDependencyRunMessage, mergePathDataMessage)
 
       updateCount = pingRDD.count().toInt
@@ -237,7 +217,6 @@ object HBSECore extends Logging {
   }
 
   def sendPairDependencyRunMessage(triplets: EdgeTriplet[(List[(Boolean, PathData, ShortestPathList)]), Long]) = {
-    //def sendPairDependencyRunMessage(triplets: EdgeTriplet[(List[(Long, ShortestPathList, PartialDependency, Long)]), Long]) = {
     val messageMap = new mutable.HashMap[Long, List[PathData]]
     triplets.dstAttr.foreach(item => {
       val successorsHitZero = item._1
@@ -252,22 +231,6 @@ object HBSECore extends Logging {
         }
       }
     })
-    //    triplets.dstAttr.foreach(item => {
-    //      val src = item._1
-    //      val spl = item._2
-    //      val partialSum = item._3
-    //      val numPaths = item._4
-    //      if (partialSum.getSuccessors == 0) {
-    //        if (spl.getPredecessorPathCountMap.keySet.contains(triplets.srcId)) {
-    //          if (!messageMap.contains(triplets.srcId))
-    //            messageMap.put(triplets.srcId, new ListBuffer[PathData].toList)
-    //          logInfo(s"Sending Pair Dependency Message to: ${triplets.srcId}")
-    //          val dependencyMessage = PathData.createDependencyMessage(src, partialSum.getDependency, numPaths)
-    //          val updatedList = messageMap.get(triplets.srcId).get :+ dependencyMessage
-    //          messageMap.put(triplets.srcId, updatedList)
-    //        }
-    //      }
-    //    })
 
     messageMap.iterator
   }
