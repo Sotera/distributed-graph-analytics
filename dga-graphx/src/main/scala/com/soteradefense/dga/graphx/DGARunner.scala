@@ -8,6 +8,7 @@ import com.soteradefense.dga.graphx.louvain.HDFSLouvainRunner
 import com.soteradefense.dga.graphx.parser.CommandLineParser
 import com.soteradefense.dga.graphx.pr.HDFSPRRunner
 import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
+import org.apache.log4j.PropertyConfigurator
 import org.apache.spark.graphx.Graph
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -16,9 +17,9 @@ object DGARunner {
     val analytic = args(0)
     println(s"Analytic: $analytic")
     val newArgs = args.slice(1, args.length)
+    PropertyConfigurator.configure(getClass.getResource("/log4j.properties"))
     val cmdLine = new CommandLineParser().parseCommandLine(newArgs)
     cmdLine.properties.foreach({ case (k, v) => System.setProperty(k, v)})
-    cmdLine.jars.split(",").foreach(println(_))
     val conf = new SparkConf().setMaster(cmdLine.master)
       .setAppName(cmdLine.appName)
       .setSparkHome(cmdLine.sparkHome)
