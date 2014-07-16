@@ -13,7 +13,7 @@ layout: base
     Components Example</h3>
 <pre>
 <code>
-    $ ./bin/dga-giraph wcc /input/directory /output/directory
+    $ ./bin/dga-giraph wcc /input/directory /output/directory -ca io.edge.reverse.duplicator=true
 </code>
 </pre>
 
@@ -51,6 +51,6 @@ layout: base
 </h3>
 <pre>
 <code>
-    $ ./bin/dga-giraph wcc /input/directory /output/directory -w 21 -D giraph.zkList=localhost:2121
+    $ ./bin/dga-giraph wcc /input/directory /output/directory -w 21 -D giraph.zkList=localhost:2121 -ca io.edge.reverse.duplicator=true
 </code>
 </pre>
