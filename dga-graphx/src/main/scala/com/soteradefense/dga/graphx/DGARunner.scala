@@ -23,15 +23,13 @@ object DGARunner {
       .setAppName(cmdLine.appName)
       .setSparkHome(cmdLine.sparkHome)
       .setJars(cmdLine.jars.split(","))
-    conf.setAll(cmdLine.customArguments)
     //.set("spark.serializer", classOf[KryoSerializer].getCanonicalName)
     //.set("spark.kryo.registrator", classOf[DGAKryoRegistrator].getCanonicalName)
+    conf.setAll(cmdLine.customArguments)
     val sc = new SparkContext(conf)
-    val inputFormat = new EdgeInputFormat(cmdLine.input, cmdLine.edgeDelimiter)
-    var edgeRDD = inputFormat.getEdgeRDD(sc)
     val parallelism = Integer.parseInt(cmdLine.customArguments.getOrElse("parallelism", "-1"))
-    if (parallelism != -1)
-      edgeRDD = edgeRDD.coalesce(parallelism, shuffle = true)
+    val inputFormat = if (parallelism != -1) new EdgeInputFormat(cmdLine.input, cmdLine.edgeDelimiter, parallelism) else new EdgeInputFormat(cmdLine.input, cmdLine.edgeDelimiter)
+    val edgeRDD = inputFormat.getEdgeRDD(sc)
     val graph = Graph.fromEdges(edgeRDD, None)
     var runner: Harness = null
     if (analytic.equals("wcc")) {

@@ -7,9 +7,9 @@ import org.apache.spark.graphx.Edge
 import org.apache.spark.rdd.RDD
 
 
-case class EdgeInputFormat(var inputFile: String, var delimiter: String) extends Serializable  {
+case class EdgeInputFormat(var inputFile: String, var delimiter: String, var parallelism: Int = 20) extends Serializable  {
   def getEdgeRDD(sc: SparkContext, typeConversionMethod: String => Long = _.toLong): RDD[Edge[Long]] = {
-    sc.textFile(inputFile).map(row => {
+    sc.textFile(inputFile, parallelism).map(row => {
       val tokens = row.split(delimiter).map(_.trim())
       tokens.length match {
         case 2 => new Edge(typeConversionMethod(tokens(0)), typeConversionMethod(tokens(1)), 1L)
@@ -24,9 +24,10 @@ class EdgeInputFormatSerializer extends Serializer[EdgeInputFormat] {
   override def write(kryo: Kryo, out: Output, obj: EdgeInputFormat): Unit = {
     kryo.writeObject(out, obj.inputFile)
     kryo.writeObject(out, obj.delimiter)
+    kryo.writeObject(out, obj.parallelism)
   }
 
   override def read(kryo: Kryo, in: Input, cls: Class[EdgeInputFormat]): EdgeInputFormat = {
-    new EdgeInputFormat(kryo.readObject(in, classOf[String]), kryo.readObject(in, classOf[String]))
+    new EdgeInputFormat(kryo.readObject(in, classOf[String]), kryo.readObject(in, classOf[String]), kryo.readObject(in, classOf[Int]))
   }
 }

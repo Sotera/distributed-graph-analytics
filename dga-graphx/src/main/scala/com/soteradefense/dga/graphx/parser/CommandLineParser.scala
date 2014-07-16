@@ -16,7 +16,7 @@ class CommandLineParser {
       opt[String]('j', "jars") action { (x, c) => c.copy(jars = x)} text "Comma Separated List of jars"
       help("help") text "prints this usage text"
       opt[(String, String)]("ca") unbounded() optional() action { case ((k, v), c) => c.copy(customArguments = c.customArguments += k -> v)} keyValueName("<argumentstring>", "<argumentvalue>")
-      arg[(String, String)]("<property>=<value>....") unbounded() optional() action { case ((k, v), c) => c.copy(properties = c.properties :+(k, v))}
+      opt[(String, String)]("S") unbounded() optional() action { case ((k, v), c) => c.copy(properties = c.properties :+(k, v))}
     }
     var cmdLine = Config()
     parser.parse(args, Config()) map {
