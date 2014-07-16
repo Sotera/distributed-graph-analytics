@@ -93,6 +93,8 @@ object HBSECore extends Logging {
 
   def computeHighBetweenness(graph: Graph[VertexData, Long]) = {
     val hbseGraph = graph.cache()
+    hbseGraph.vertices.count()
+    hbseGraph.triplets.count()
     hbseGraph.vertices.foreach(f => {
       var approxBetweenness = f._2.getApproximateBetweenness
       f._2.getPartialDependencyMap.values.foreach(dep => {
@@ -108,18 +110,23 @@ object HBSECore extends Logging {
   def shortestPathRun(graph: Graph[VertexData, Long]) = {
     var shortestPathPhasesCompleted = 0
     val hbseGraph = graph.cache()
+    hbseGraph.vertices.count()
+    hbseGraph.triplets.count()
     var messageRDD: VertexRDD[List[PathData]] = null
     do {
 
       // Shortest Path Message Sends
-      messageRDD = hbseGraph.mapReduceTriplets(sendShortestPathMessage, mergePathDataMessage)
+      messageRDD = hbseGraph.mapReduceTriplets(sendShortestPathMessage, mergePathDataMessage).cache()
+      messageRDD.count()
       var updateCount = 0
 
 
       // Shortest Path Run
       do {
+        messageRDD.cache()
+        messageRDD.count()
         // Join the HBSEGraph with the VertexRDD to Process the Messages
-        val updatedPaths = hbseGraph.outerJoinVertices(messageRDD.cache())((vid, vdata, shortestPathMessages) => {
+        val updatedPaths = hbseGraph.outerJoinVertices(messageRDD)((vid, vdata, shortestPathMessages) => {
           //Stores the Paths that were updated
           val updatedPathMap = new mutable.HashMap[Long, ShortestPathList]
           //Process Incoming Messages
@@ -138,6 +145,8 @@ object HBSECore extends Logging {
           }
           updatedPathMap
         }).cache()
+        updatedPaths.vertices.count()
+        updatedPaths.triplets.count()
         // Get the update count based on the size of each hashmap
         updateCount = updatedPaths.vertices.map(verticesWithUpdatedPaths => verticesWithUpdatedPaths._2.size).reduce((a, b) => a + b)
         logInfo(s"Update Count is: $updateCount")
@@ -154,7 +163,8 @@ object HBSECore extends Logging {
 
   def pingPredecessorsAndFindSuccessors(graph: Graph[VertexData, Long]) = {
     var hbseGraph = graph.cache()
-
+    hbseGraph.vertices.count()
+    hbseGraph.triplets.count()
     //Ping Predecessor
     var pingRDD = hbseGraph.mapReduceTriplets(sendPingMessage, mergePathDataMessage).cache()
 
@@ -179,13 +189,16 @@ object HBSECore extends Logging {
       logInfo(s"No Successor Count is: ${noSuccessor.size}")
       (noSuccessor, vdata)
     }).cache()
-
+    mergedGraph.vertices.count()
+    mergedGraph.triplets.count()
     logInfo("Sending Dependency Messages")
     // Find Successors
 
     pingRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, mergePathDataMessage)
     var updateCount = 0
     hbseGraph = mergedGraph.mapVertices((vid, vdata) => vdata._2).cache()
+    hbseGraph.vertices.count()
+    hbseGraph.triplets.count()
     // Pair Dependency Run State
     do {
       val partialDepGraph = hbseGraph.outerJoinVertices(pingRDD.cache())((vid, vdata, predList) => {
@@ -212,7 +225,8 @@ object HBSECore extends Logging {
       updateCount = pingRDD.count().toInt
 
     } while (!(updateCount == 0))
-
+    hbseGraph.vertices.count()
+    hbseGraph.triplets.count()
     Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData())
   }
 
@@ -301,6 +315,7 @@ object HBSECore extends Logging {
 
   def sendShortestPathMessage(triplet: EdgeTriplet[VertexData, Long]) = {
     //val destAttr = triplet.otherVertexAttr(triplet.dstId)
+    logInfo(s"PIVOT COUNT IS: ${pivots.size}")
     if (pivots.contains(triplet.srcId)) {
       // Add a PathData to my node.
       val hashMap = new mutable.HashMap[VertexId, List[PathData]]

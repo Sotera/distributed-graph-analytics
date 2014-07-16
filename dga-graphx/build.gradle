@@ -21,6 +21,8 @@ dependencies {
     compile group: 'org.apache.spark', name: 'spark-core_2.10', version: '1.0.1'
     compile group: 'org.apache.spark', name: 'spark-graphx_2.10', version: '1.0.1'
     compile group: 'com.github.scopt', name: 'scopt_2.10', version: '3.2.0'
+    testCompile 'org.specs2:specs2_2.10:2.3.13'
+    testCompile 'junit:junit:4.11'
     compile(
             [group: 'org.slf4j', name: 'slf4j-api', version: '1.6.6'],
             [group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.6.6']
@@ -37,8 +39,8 @@ task distJars(dependsOn: 'distConf', type: Copy) {
 }
 
 task distConf(dependsOn: 'assemble', type: Copy) {
-    from project.file("src/main/resources/log4j.properties")
-    into "${buildDir}/dist/conf"
+//    from project.file("src/main/resources/log4j.properties")
+//    into "${buildDir}/dist/conf"
 }
 
 
