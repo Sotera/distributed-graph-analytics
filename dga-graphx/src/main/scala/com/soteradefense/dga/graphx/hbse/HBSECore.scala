@@ -60,7 +60,7 @@ object HBSECore extends Logging {
     val betweennessVertices = sc.parallelize(runningBetweennessMap.toSeq)
     // Save the running set to the respective vertices.
     hbseGraph.vertices.foreach(f => {
-      f._2.setApproxBetweenness(runningBetweennessMap.find(p => p._1.equals(f._1)).getOrElse((f._1,f._2.getApproximateBetweenness))._2)
+      f._2.setApproxBetweenness(runningBetweennessMap.find(p => p._1.equals(f._1)).getOrElse((f._1, f._2.getApproximateBetweenness))._2)
     })
     (betweennessVertices, Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData()))
   }
@@ -116,8 +116,8 @@ object HBSECore extends Logging {
     do {
 
       // Shortest Path Message Sends
-      messageRDD = hbseGraph.mapReduceTriplets(sendShortestPathMessage, mergePathDataMessage).cache()
-      messageRDD.count()
+      messageRDD = hbseGraph.mapReduceTriplets(sendShortestPathMessage, mergePathDataMessage)
+      logInfo(s"Message Count is ${messageRDD.count()}")
       var updateCount = 0
 
 
