@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.mockito.Mockito.*;
-
+@SuppressWarnings("unchecked")
 public class DGAEdgeTDTOutputFormatTest extends DGAEdgeTDTOutputFormat {
 
     private ImmutableClassesGiraphConfiguration conf;

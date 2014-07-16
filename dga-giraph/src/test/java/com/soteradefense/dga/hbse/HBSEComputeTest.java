@@ -24,8 +24,8 @@ import org.apache.giraph.utils.TestGraph;
 import org.apache.hadoop.io.Text;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotSame;
 
 
@@ -54,12 +54,12 @@ public class HBSEComputeTest {
         assertEquals(8, output.getVertices().size());
         assertTrue(output.getVertex(new Text("2")).getValue().getApproxBetweenness() > 0.0);
         assertTrue(output.getVertex(new Text("1")).getValue().getApproxBetweenness() > 0.0);
-        assertEquals(output.getVertex(new Text("3")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("4")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("5")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("6")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("7")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("8")).getValue().getApproxBetweenness(), 0.0);
+        assertEquals(output.getVertex(new Text("3")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("4")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("5")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("6")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("7")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("8")).getValue().getApproxBetweenness(), 0.0, 0.0);
     }
 
     @Test
@@ -71,13 +71,13 @@ public class HBSEComputeTest {
         TestGraph<Text, VertexData, Text> output = InMemoryVertexOutputFormat.getOutputGraph();
         assertEquals(8, output.getVertices().size());
         assertNotSame(output.getVertex(new Text("1")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("2")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("3")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("4")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("5")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("6")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("7")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("8")).getValue().getApproxBetweenness(), 0.0);
+        assertEquals(output.getVertex(new Text("2")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("3")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("4")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("5")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("6")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("7")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("8")).getValue().getApproxBetweenness(), 0.0, 0.0);
 
     }
 
@@ -92,20 +92,20 @@ public class HBSEComputeTest {
         assertEquals(16, output.getVertices().size());
         assertTrue(output.getVertex(new Text("1")).getValue().getApproxBetweenness() >= 0.0);
         assertTrue(output.getVertex(new Text("9")).getValue().getApproxBetweenness() >= 0.0);
-        assertEquals(output.getVertex(new Text("2")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("3")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("4")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("5")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("6")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("7")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("8")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("10")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("11")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("12")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("13")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("14")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("15")).getValue().getApproxBetweenness(), 0.0);
-        assertEquals(output.getVertex(new Text("16")).getValue().getApproxBetweenness(), 0.0);
+        assertEquals(output.getVertex(new Text("2")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("3")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("4")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("5")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("6")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("7")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("8")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("10")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("11")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("12")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("13")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("14")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("15")).getValue().getApproxBetweenness(), 0.0, 0.0);
+        assertEquals(output.getVertex(new Text("16")).getValue().getApproxBetweenness(), 0.0, 0.0);
 
     }
 

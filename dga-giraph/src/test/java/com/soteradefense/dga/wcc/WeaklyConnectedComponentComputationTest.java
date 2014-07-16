@@ -25,7 +25,7 @@ import org.apache.giraph.utils.TestGraph;
 import org.apache.hadoop.io.Text;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class WeaklyConnectedComponentComputationTest {
 

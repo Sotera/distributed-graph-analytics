@@ -32,11 +32,11 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
+@SuppressWarnings("unchecked")
 public class DGALongEdgeValueInputFormatTest extends DGALongEdgeValueInputFormat {
 
     private RecordReader<LongWritable,Text> rr;

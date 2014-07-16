@@ -32,7 +32,7 @@ import java.io.IOException;
 
 import static org.mockito.Mockito.*;
 
-
+@SuppressWarnings("unchecked")
 public class HBSEOutputFormatTest extends HBSEOutputFormat {
     private ImmutableClassesGiraphConfiguration<
             Text, VertexData, Text> conf;

@@ -43,8 +43,7 @@ task distConf(dependsOn: 'assemble', type: Copy) {
 
 
 task dist(dependsOn: 'distJars', type: Copy) {
-    from project(":dga-graphx").fileTree("bin")
-    include "dga-graphx"
+    from project.file("src/main/resources/dga-graphx")
     into "${buildDir}/dist"
 }
 

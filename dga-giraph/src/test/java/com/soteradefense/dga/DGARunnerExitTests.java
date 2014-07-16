@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import java.security.Permission;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class DGARunnerExitTests {
 

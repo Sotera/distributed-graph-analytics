@@ -31,6 +31,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
  * <p>The EdgeTDTOutputFormat outputs the edges that make up our graph.<p/>
  * <p>This output format will allow users to write out the source vertex ID, the destination vertex ID, and optionally, the vertex value and/or the edge value, using an optionally defined field delimiter (defaults to ,) <p/>
  */
+@SuppressWarnings("unchecked")
 public abstract class DGAAbstractEdgeOutputFormat<I extends WritableComparable, V extends Writable, E extends Writable> extends TextEdgeOutputFormat<I, V, E> {
 
     /**

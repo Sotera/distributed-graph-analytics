@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import static org.mockito.Mockito.*;
-
+@SuppressWarnings("unchecked")
 public class DGAEdgeTTTOutputFormatTest extends DGAEdgeTTTOutputFormat {
 
     private ImmutableClassesGiraphConfiguration conf;

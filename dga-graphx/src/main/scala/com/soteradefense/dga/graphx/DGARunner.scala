@@ -3,12 +3,14 @@ package com.soteradefense.dga.graphx
 import com.soteradefense.dga.graphx.harness.Harness
 import com.soteradefense.dga.graphx.hbse.HDFSHBSERunner
 import com.soteradefense.dga.graphx.io.formats.EdgeInputFormat
+import com.soteradefense.dga.graphx.kryo.DGAKryoRegistrator
 import com.soteradefense.dga.graphx.lc.HDFSLCRunner
 import com.soteradefense.dga.graphx.louvain.HDFSLouvainRunner
 import com.soteradefense.dga.graphx.parser.CommandLineParser
 import com.soteradefense.dga.graphx.pr.HDFSPRRunner
 import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
 import org.apache.spark.graphx.Graph
+import org.apache.spark.serializer.KryoSerializer
 import org.apache.spark.{SparkConf, SparkContext}
 
 object DGARunner {
@@ -23,8 +25,8 @@ object DGARunner {
       .setAppName(cmdLine.appName)
       .setSparkHome(cmdLine.sparkHome)
       .setJars(cmdLine.jars.split(","))
-    //.set("spark.serializer", classOf[KryoSerializer].getCanonicalName)
-    //.set("spark.kryo.registrator", classOf[DGAKryoRegistrator].getCanonicalName)
+      .set("spark.serializer", classOf[KryoSerializer].getCanonicalName)
+      .set("spark.kryo.registrator", classOf[DGAKryoRegistrator].getCanonicalName)
     conf.setAll(cmdLine.customArguments)
     val sc = new SparkContext(conf)
     val parallelism = Integer.parseInt(cmdLine.customArguments.getOrElse("parallelism", "-1"))

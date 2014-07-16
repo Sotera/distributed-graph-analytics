@@ -31,11 +31,11 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
+@SuppressWarnings("unchecked")
 public class DGATextEdgeValueInputFormatTest extends DGATextEdgeValueInputFormat {
     private RecordReader<LongWritable,Text> rr;
     private ImmutableClassesGiraphConfiguration<Text, Text, Text> conf;
