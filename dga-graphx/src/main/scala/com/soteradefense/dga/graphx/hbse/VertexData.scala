@@ -6,9 +6,11 @@ import com.esotericsoftware.kryo.{Kryo, Serializer}
 import scala.collection.mutable
 
 
-class VertexData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList], private var partialDepMap: mutable.HashMap[Long, PartialDependency], private var approximateBetweenness: Double) extends Serializable {
+class VertexData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList], private var partialDepMap: mutable.HashMap[Long, PartialDependency], private var approximateBetweenness: Double,
+                 var isPivotPoint: Boolean, var wasPivotPoint: Boolean
+                  ) extends Serializable {
 
-  def this() = this(new mutable.HashMap[Long, ShortestPathList], new mutable.HashMap[Long, PartialDependency], 0.0)
+  def this() = this(new mutable.HashMap[Long, ShortestPathList], new mutable.HashMap[Long, PartialDependency], 0.0, false, false)
 
   def addPathData(pathData: PathData): ShortestPathList = {
     var list: ShortestPathList = null
@@ -69,6 +71,8 @@ class VertexDataSerializer extends Serializer[VertexData] {
     })
 
     kryo.writeObject(output, obj.getApproximateBetweenness)
+    kryo.writeObject(output, obj.isPivotPoint)
+    kryo.writeObject(output, obj.wasPivotPoint)
   }
 
   override def read(kryo: Kryo, input: Input, classType: Class[VertexData]): VertexData = {
@@ -86,6 +90,6 @@ class VertexDataSerializer extends Serializer[VertexData] {
       val serializer = new PartialDependencySerializer
       partialDepMap.put(kryo.readObject(input, classOf[Long]), serializer.read(kryo, input, classOf[PartialDependency]))
     }
-    new VertexData(pathDataMap, partialDepMap, kryo.readObject(input, classOf[Double]))
+    new VertexData(pathDataMap, partialDepMap, kryo.readObject(input, classOf[Double]), kryo.readObject(input, classOf[Boolean]), kryo.readObject(input, classOf[Boolean]))
   }
 }

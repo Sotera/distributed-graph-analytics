@@ -16,7 +16,7 @@ class HBSEConf(var betweennessOutputDir: String,
                var initialPivotBatchSize: Int,
                var pivotSelectionRandomSeed: Long,
                var vertexCount: Int,
-               var defaultFileSystem: String) {
+               var defaultFileSystem: String) extends Serializable{
 
   def this() = this("", 1, 0, 1, 10, 5, 5, (new Date).getTime, 10, "")
 

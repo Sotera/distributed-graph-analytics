@@ -10,10 +10,8 @@ import scala.math.Ordering
 import scala.reflect.ClassTag
 
 
-object HBSECore extends Logging {
+object HBSECore extends Logging with Serializable {
 
-  private val pivots: mutable.HashSet[Long] = new mutable.HashSet[Long]
-  private val previousPivots: mutable.HashSet[Long] = new mutable.HashSet[Long]
   private var hbseConf: HBSEConf = new HBSEConf()
 
 
@@ -35,12 +33,11 @@ object HBSECore extends Logging {
     var delta = 0
     var keepRunning = true
     var stabilityCutOffMetCount = 0
-    var hbseGraph: Graph[VertexData, Long] = null
+    var hbseGraph: Graph[VertexData, Long] = createHBSEGraph(graph)
     do {
       stabilityCutOffMetCount = 0
-      hbseGraph = createHBSEGraph(graph)
       logInfo("Selecting Pivots")
-      selectPivots(hbseGraph)
+      hbseGraph = selectPivots(hbseGraph)
       logInfo("Shortest Path Phase")
       hbseGraph = shortestPathRun(hbseGraph)
       logInfo("Ping Predecessors and Find Successors")
@@ -50,11 +47,13 @@ object HBSECore extends Logging {
       runningBetweennessMap = getHighBetweennessSet(hbseGraph, runningBetweennessMap)
       delta = compareHighBetweennessSets(currentBetweennessMap, runningBetweennessMap)
       currentBetweennessMap = runningBetweennessMap
-      previousPivots ++= pivots
-      val shouldKeepRunningTupleResult = shouldKeepRunning(delta, stabilityCutOffMetCount)
+      val numberOfPivotsSelected = hbseGraph.vertices.map(f =>
+        if (f._2.isPivotPoint || f._2.wasPivotPoint) 1 else 0
+      ).reduce((a, b) => a + b)
+      val shouldKeepRunningTupleResult = shouldKeepRunning(delta, stabilityCutOffMetCount,numberOfPivotsSelected)
       stabilityCutOffMetCount = shouldKeepRunningTupleResult._2
       keepRunning = shouldKeepRunningTupleResult._1
-      if (previousPivots.size == hbseGraph.vertices.count()) keepRunning = false
+      if (numberOfPivotsSelected == hbseGraph.vertices.count()) keepRunning = false
     } while (keepRunning)
     // Create an RDD to write the High Betweenness Set.
     val betweennessVertices = sc.parallelize(runningBetweennessMap.toSeq)
@@ -65,7 +64,7 @@ object HBSECore extends Logging {
     (betweennessVertices, Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData()))
   }
 
-  def shouldKeepRunning(delta: Int, stabilityCutOffMetCount: Int) = {
+  def shouldKeepRunning(delta: Int, stabilityCutOffMetCount: Int, numberOfPivotsSelected: Int) = {
     if (delta <= hbseConf.setStability) {
       if ((stabilityCutOffMetCount + 1) >= hbseConf.setStabilityCounter) {
         (false, stabilityCutOffMetCount + 1)
@@ -74,7 +73,7 @@ object HBSECore extends Logging {
         (true, stabilityCutOffMetCount + 1)
       }
     }
-    else if (previousPivots.size >= hbseConf.vertexCount) {
+    else if (numberOfPivotsSelected >= hbseConf.vertexCount) {
       (false, stabilityCutOffMetCount)
     }
     else {
@@ -130,7 +129,7 @@ object HBSECore extends Logging {
           //Stores the Paths that were updated
           val updatedPathMap = new mutable.HashMap[Long, ShortestPathList]
           //Process Incoming Messages
-          if (pivots.contains(vid))
+          if (vdata.isPivotPoint)
             vdata.addPathData(PathData.createShortestPathMessage(vid, vid, 0, 1L))
           if (shortestPathMessages != None) {
             shortestPathMessages.get.foreach(pd => {
@@ -294,18 +293,29 @@ object HBSECore extends Logging {
   }
 
   def selectPivots(hbseGraph: Graph[VertexData, Long]) = {
-    pivots.clear()
-    var i = 0
-    while (i != hbseConf.pivotBatchSize && (previousPivots.size + pivots.size) < hbseGraph.vertices.count()) {
-      val vertex = hbseGraph.pickRandomVertex()
-      if (!previousPivots.contains(vertex) && !pivots.contains(vertex)) {
-        logInfo(s"$vertex was selected as a pivot")
-        pivots += vertex
-        i += 1
+    var pivotGraph = hbseGraph.mapVertices((vid, vdata) => {
+      if (vdata.isPivotPoint) {
+        vdata.isPivotPoint = !vdata.isPivotPoint
+        vdata.wasPivotPoint = !vdata.wasPivotPoint
       }
+      vdata
+    }).cache()
+    var totalNumberOfPivotsUsed = pivotGraph.vertices.map(v => if (v._2.wasPivotPoint || v._2.isPivotPoint) 1 else 0).reduce((a, b) => a + b)
+    var i = 0
+    while (i != hbseConf.pivotBatchSize && totalNumberOfPivotsUsed < hbseGraph.vertices.count()) {
+      val vertex = hbseGraph.pickRandomVertex()
+      pivotGraph = pivotGraph.mapVertices((vid, vdata) => {
+        if (!vdata.wasPivotPoint && !vdata.isPivotPoint) {
+          vdata.isPivotPoint = vid.equals(vertex)
+          logInfo(s"$vertex was selected as a pivot")
+        }
+        vdata
+      })
+      i = pivotGraph.vertices.map(v => if (v._2.isPivotPoint) 1 else 0).reduce((a, b) => a + b)
+      totalNumberOfPivotsUsed = pivotGraph.vertices.map(v => if (v._2.wasPivotPoint || v._2.isPivotPoint) 1 else 0).reduce((a, b) => a + b)
     }
 
-
+    pivotGraph
   }
 
 
@@ -315,8 +325,7 @@ object HBSECore extends Logging {
 
   def sendShortestPathMessage(triplet: EdgeTriplet[VertexData, Long]) = {
     //val destAttr = triplet.otherVertexAttr(triplet.dstId)
-    logInfo(s"PIVOT COUNT IS: ${pivots.size}")
-    if (pivots.contains(triplet.srcId)) {
+    if (triplet.srcAttr.isPivotPoint) {
       // Add a PathData to my node.
       val hashMap = new mutable.HashMap[VertexId, List[PathData]]
       var pathDataBuilder = new ListBuffer[PathData]

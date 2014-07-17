@@ -39,8 +39,8 @@ task distJars(dependsOn: 'distConf', type: Copy) {
 }
 
 task distConf(dependsOn: 'assemble', type: Copy) {
-//    from project.file("src/main/resources/log4j.properties")
-//    into "${buildDir}/dist/conf"
+    from project.file("src/main/resources/log4j.properties")
+    into "${buildDir}/dist/conf"
 }
 
 
