@@ -1,5 +1,8 @@
 package com.soteradefense.dga.graphx.hbse
 
+import java.util.Date
+
+import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{Logging, SparkContext}
@@ -8,13 +11,12 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.math.Ordering
 import scala.reflect.ClassTag
-import scala.util.Random
 
 
 object HBSECore extends Logging with Serializable {
 
   private var hbseConf: HBSEConf = new HBSEConf()
-
+  private var previousPivots = new mutable.HashSet[VertexId]
 
   implicit def orderedBetweennessSet(implicit ord1: Ordering[Long], ord2: Ordering[Double]): Ordering[(Long, Double)] =
     new Ordering[(Long, Double)] {
@@ -38,9 +40,9 @@ object HBSECore extends Logging with Serializable {
     do {
       stabilityCutOffMetCount = 0
       logInfo("Selecting Pivots")
-      hbseGraph = selectPivots(hbseGraph)
+      val pivots = selectPivots(sc, hbseGraph)
       logInfo("Shortest Path Phase")
-      hbseGraph = shortestPathRun(hbseGraph)
+      hbseGraph = shortestPathRun(hbseGraph, pivots)
       logInfo("Ping Predecessors and Find Successors")
       hbseGraph = pingPredecessorsAndFindSuccessors(hbseGraph)
       logInfo("Get High Betweenness List")
@@ -48,9 +50,8 @@ object HBSECore extends Logging with Serializable {
       runningBetweennessMap = getHighBetweennessSet(hbseGraph, runningBetweennessMap)
       delta = compareHighBetweennessSets(currentBetweennessMap, runningBetweennessMap)
       currentBetweennessMap = runningBetweennessMap
-      val numberOfPivotsSelected = hbseGraph.vertices.map(f =>
-        if (f._2.isPivotPoint || f._2.wasPivotPoint) 1 else 0
-      ).reduce((a, b) => a + b)
+      val numberOfPivotsSelected = previousPivots.size + pivots.value.size
+      previousPivots ++= pivots.value
       val shouldKeepRunningTupleResult = shouldKeepRunning(delta, stabilityCutOffMetCount, numberOfPivotsSelected)
       stabilityCutOffMetCount = shouldKeepRunningTupleResult._2
       keepRunning = shouldKeepRunningTupleResult._1
@@ -58,12 +59,11 @@ object HBSECore extends Logging with Serializable {
     } while (keepRunning)
     // Create an RDD to write the High Betweenness Set.
     val betweennessVertices = sc.parallelize(runningBetweennessMap.toSeq)
-    // Save the running set to the respective vertices.
-    //TODO: Could do an inner join?
-    hbseGraph.vertices.foreach(f => {
-      f._2.setApproxBetweenness(runningBetweennessMap.find(p => p._1.equals(f._1)).getOrElse((f._1, f._2.getApproximateBetweenness))._2)
-    })
-    (betweennessVertices, Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData()))
+    val finalGraph = hbseGraph.outerJoinVertices(betweennessVertices)((vid, vdata, betweenness) => {
+      vdata.setApproxBetweenness(betweenness.getOrElse(vdata.getApproximateBetweenness))
+      vdata
+    }).cache()
+    (betweennessVertices, finalGraph)
   }
 
   def shouldKeepRunning(delta: Int, stabilityCutOffMetCount: Int, numberOfPivotsSelected: Int) = {
@@ -84,7 +84,6 @@ object HBSECore extends Logging with Serializable {
   }
 
   def getHighBetweennessSet(graph: Graph[VertexData, Long], runningBetweennessSet: mutable.TreeSet[(Long, Double)]) = {
-    graph.vertices.foreach(f => runningBetweennessSet += ((f._1, f._2.getApproximateBetweenness)))
     runningBetweennessSet ++ graph.vertices.map(f => (f._1, f._2.getApproximateBetweenness)).takeOrdered(hbseConf.betweennessSetMaxSize)(orderedBetweennessSet)
   }
 
@@ -94,27 +93,45 @@ object HBSECore extends Logging with Serializable {
 
   def computeHighBetweenness(graph: Graph[VertexData, Long]) = {
     val hbseGraph = graph.cache()
-    //TODO: Remove Foreach and do something else, just not foreach
-    hbseGraph.vertices.foreach(f => {
-      var approxBetweenness = f._2.getApproximateBetweenness
-      f._2.getPartialDependencyMap.values.foreach(dep => {
-        approxBetweenness += dep.getDependency
-      })
-      f._2.setApproxBetweenness(approxBetweenness)
-      f._2.getPartialDependencyMap.clear()
-      f._2.getPathDataMap.clear()
-    })
-    Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData())
+
+    val betweennessGraph = hbseGraph.mapVertices((vid, vdata) => {
+      if (vdata.getPartialDependencyMap.nonEmpty) {
+        var approxBetweenness = vdata.getApproximateBetweenness
+        approxBetweenness = vdata.getPartialDependencyMap.map(f => f._2.getDependency).reduce((a, b) => a + b)
+        vdata.setApproxBetweenness(approxBetweenness)
+      }
+      vdata.getPartialDependencyMap.clear()
+      vdata.getPathDataMap.clear()
+      vdata
+    }).cache()
+    hbseGraph.unpersistVertices(blocking = false)
+    betweennessGraph
   }
 
-  def shortestPathRun(graph: Graph[VertexData, Long]) = {
+  def shortestPathRun(graph: Graph[VertexData, Long], pivots: Broadcast[mutable.HashSet[VertexId]]) = {
     var shortestPathPhasesCompleted = 0
     val hbseGraph = graph.cache()
     var messageRDD: VertexRDD[List[PathData]] = null
     do {
 
       // Shortest Path Message Sends
-      messageRDD = hbseGraph.mapReduceTriplets(sendShortestPathMessage, mergePathDataMessage)
+      messageRDD = hbseGraph.mapReduceTriplets(triplet =>{
+        //val destAttr = triplet.otherVertexAttr(triplet.dstId)
+        if (pivots.value.contains(triplet.srcId)) {
+          // Add a PathData to my node.
+          val hashMap = new mutable.HashMap[VertexId, List[PathData]]
+          var pathDataBuilder = new ListBuffer[PathData]
+          // Send a Shortest Path Message to my neighbor.
+          pathDataBuilder += PathData.createShortestPathMessage(triplet.srcId, triplet.srcId, triplet.attr, 1)
+          hashMap.put(triplet.dstId, pathDataBuilder.toList)
+          logInfo(s"Sending ShortestPath Message to ${triplet.dstId} from ${triplet.srcId}")
+          // Needs to be a list because all PathData messages need to be sent to the node.
+          hashMap.iterator
+        }
+        else {
+          Iterator.empty
+        }
+      }, mergePathDataMessage)
       var updateCount = 0
 
 
@@ -127,7 +144,7 @@ object HBSECore extends Logging with Serializable {
           //Stores the Paths that were updated
           val updatedPathMap = new mutable.HashMap[Long, ShortestPathList]
           //Process Incoming Messages
-          if (vdata.isPivotPoint)
+          if (pivots.value.contains(vid))
             vdata.addPathData(PathData.createShortestPathMessage(vid, vid, 0, 1L))
           if (shortestPathMessages != None) {
             shortestPathMessages.get.foreach(pd => {
@@ -280,33 +297,17 @@ object HBSECore extends Logging with Serializable {
     messageMap.iterator
   }
 
-  def selectPivots(hbseGraph: Graph[VertexData, Long]) = {
-    var pivotGraph = hbseGraph.mapVertices((vid, vdata) => {
-      if (vdata.isPivotPoint) {
-        vdata.isPivotPoint = !vdata.isPivotPoint
-        vdata.wasPivotPoint = !vdata.wasPivotPoint
-      }
-      vdata
-    }).cache()
-    val vertexCount = pivotGraph.vertices.count()
-    var totalNumberOfPivotsUsed = pivotGraph.vertices.map(v => if (v._2.wasPivotPoint || v._2.isPivotPoint) 1 else 0).reduce((a, b) => a + b)
-    var i = 0
-    val r = new Random(hbseConf.pivotSelectionRandomSeed)
-    while (i != hbseConf.pivotBatchSize && totalNumberOfPivotsUsed < vertexCount) {
-      //val vertex = pivotGraph.pickRandomVertex()
-      val vertex = (r.nextLong() % vertexCount) + 1
-      pivotGraph = pivotGraph.mapVertices((vid, vdata) => {
-        if (!vdata.wasPivotPoint && !vdata.isPivotPoint) {
-          vdata.isPivotPoint = vid.equals(vertex)
-          logInfo(s"$vertex was selected as a pivot")
-        }
-        vdata
-      }).cache()
-      i = pivotGraph.vertices.map(v => if (v._2.isPivotPoint) 1 else 0).reduce((a, b) => a + b)
-      totalNumberOfPivotsUsed = pivotGraph.vertices.map(v => if (v._2.wasPivotPoint || v._2.isPivotPoint) 1 else 0).reduce((a, b) => a + b)
+  def selectPivots(sc: SparkContext, hbseGraph: Graph[VertexData, Long]) = {
+
+    val vertexCount = hbseGraph.vertices.count()
+    var totalNumberOfPivotsUsed = previousPivots.size
+    var pivots = new mutable.HashSet[VertexId]
+    while (pivots.size != hbseConf.pivotBatchSize && totalNumberOfPivotsUsed < vertexCount) {
+      pivots ++= hbseGraph.vertices.takeSample(withReplacement = false, hbseConf.pivotBatchSize, (new Date).getTime).map(f => f._1).toSet.&~(previousPivots)
+      totalNumberOfPivotsUsed = previousPivots.size + pivots.size
     }
     logInfo("Pivot Selection Done")
-    pivotGraph
+    sc.broadcast(pivots)
   }
 
 
