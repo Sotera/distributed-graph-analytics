@@ -8,6 +8,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.math.Ordering
 import scala.reflect.ClassTag
+import scala.util.Random
 
 
 object HBSECore extends Logging with Serializable {
@@ -50,7 +51,7 @@ object HBSECore extends Logging with Serializable {
       val numberOfPivotsSelected = hbseGraph.vertices.map(f =>
         if (f._2.isPivotPoint || f._2.wasPivotPoint) 1 else 0
       ).reduce((a, b) => a + b)
-      val shouldKeepRunningTupleResult = shouldKeepRunning(delta, stabilityCutOffMetCount,numberOfPivotsSelected)
+      val shouldKeepRunningTupleResult = shouldKeepRunning(delta, stabilityCutOffMetCount, numberOfPivotsSelected)
       stabilityCutOffMetCount = shouldKeepRunningTupleResult._2
       keepRunning = shouldKeepRunningTupleResult._1
       if (numberOfPivotsSelected == hbseGraph.vertices.count()) keepRunning = false
@@ -58,6 +59,7 @@ object HBSECore extends Logging with Serializable {
     // Create an RDD to write the High Betweenness Set.
     val betweennessVertices = sc.parallelize(runningBetweennessMap.toSeq)
     // Save the running set to the respective vertices.
+    //TODO: Could do an inner join?
     hbseGraph.vertices.foreach(f => {
       f._2.setApproxBetweenness(runningBetweennessMap.find(p => p._1.equals(f._1)).getOrElse((f._1, f._2.getApproximateBetweenness))._2)
     })
@@ -92,8 +94,7 @@ object HBSECore extends Logging with Serializable {
 
   def computeHighBetweenness(graph: Graph[VertexData, Long]) = {
     val hbseGraph = graph.cache()
-    hbseGraph.vertices.count()
-    hbseGraph.triplets.count()
+    //TODO: Remove Foreach and do something else, just not foreach
     hbseGraph.vertices.foreach(f => {
       var approxBetweenness = f._2.getApproximateBetweenness
       f._2.getPartialDependencyMap.values.foreach(dep => {
@@ -109,14 +110,11 @@ object HBSECore extends Logging with Serializable {
   def shortestPathRun(graph: Graph[VertexData, Long]) = {
     var shortestPathPhasesCompleted = 0
     val hbseGraph = graph.cache()
-    hbseGraph.vertices.count()
-    hbseGraph.triplets.count()
     var messageRDD: VertexRDD[List[PathData]] = null
     do {
 
       // Shortest Path Message Sends
       messageRDD = hbseGraph.mapReduceTriplets(sendShortestPathMessage, mergePathDataMessage)
-      logInfo(s"Message Count is ${messageRDD.count()}")
       var updateCount = 0
 
 
@@ -144,8 +142,6 @@ object HBSECore extends Logging with Serializable {
           }
           updatedPathMap
         }).cache()
-        updatedPaths.vertices.count()
-        updatedPaths.triplets.count()
         // Get the update count based on the size of each hashmap
         updateCount = updatedPaths.vertices.map(verticesWithUpdatedPaths => verticesWithUpdatedPaths._2.size).reduce((a, b) => a + b)
         logInfo(s"Update Count is: $updateCount")
@@ -162,8 +158,6 @@ object HBSECore extends Logging with Serializable {
 
   def pingPredecessorsAndFindSuccessors(graph: Graph[VertexData, Long]) = {
     var hbseGraph = graph.cache()
-    hbseGraph.vertices.count()
-    hbseGraph.triplets.count()
     //Ping Predecessor
     var pingRDD = hbseGraph.mapReduceTriplets(sendPingMessage, mergePathDataMessage).cache()
 
@@ -188,16 +182,12 @@ object HBSECore extends Logging with Serializable {
       logInfo(s"No Successor Count is: ${noSuccessor.size}")
       (noSuccessor, vdata)
     }).cache()
-    mergedGraph.vertices.count()
-    mergedGraph.triplets.count()
     logInfo("Sending Dependency Messages")
     // Find Successors
 
     pingRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, mergePathDataMessage)
     var updateCount = 0
     hbseGraph = mergedGraph.mapVertices((vid, vdata) => vdata._2).cache()
-    hbseGraph.vertices.count()
-    hbseGraph.triplets.count()
     // Pair Dependency Run State
     do {
       val partialDepGraph = hbseGraph.outerJoinVertices(pingRDD.cache())((vid, vdata, predList) => {
@@ -224,8 +214,6 @@ object HBSECore extends Logging with Serializable {
       updateCount = pingRDD.count().toInt
 
     } while (!(updateCount == 0))
-    hbseGraph.vertices.count()
-    hbseGraph.triplets.count()
     Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData())
   }
 
@@ -300,21 +288,24 @@ object HBSECore extends Logging with Serializable {
       }
       vdata
     }).cache()
+    val vertexCount = pivotGraph.vertices.count()
     var totalNumberOfPivotsUsed = pivotGraph.vertices.map(v => if (v._2.wasPivotPoint || v._2.isPivotPoint) 1 else 0).reduce((a, b) => a + b)
     var i = 0
-    while (i != hbseConf.pivotBatchSize && totalNumberOfPivotsUsed < hbseGraph.vertices.count()) {
-      val vertex = hbseGraph.pickRandomVertex()
+    val r = new Random(hbseConf.pivotSelectionRandomSeed)
+    while (i != hbseConf.pivotBatchSize && totalNumberOfPivotsUsed < vertexCount) {
+      //val vertex = pivotGraph.pickRandomVertex()
+      val vertex = (r.nextLong() % vertexCount) + 1
       pivotGraph = pivotGraph.mapVertices((vid, vdata) => {
         if (!vdata.wasPivotPoint && !vdata.isPivotPoint) {
           vdata.isPivotPoint = vid.equals(vertex)
           logInfo(s"$vertex was selected as a pivot")
         }
         vdata
-      })
+      }).cache()
       i = pivotGraph.vertices.map(v => if (v._2.isPivotPoint) 1 else 0).reduce((a, b) => a + b)
       totalNumberOfPivotsUsed = pivotGraph.vertices.map(v => if (v._2.wasPivotPoint || v._2.isPivotPoint) 1 else 0).reduce((a, b) => a + b)
     }
-
+    logInfo("Pivot Selection Done")
     pivotGraph
   }
 

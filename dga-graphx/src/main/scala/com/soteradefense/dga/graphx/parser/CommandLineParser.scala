@@ -14,6 +14,7 @@ class CommandLineParser {
       opt[String]('s', "sparkHome") action { (x, c) => c.copy(sparkHome = x)} text "SPARK_HOME Required to run on a cluster"
       opt[String]('n', "jobName") action { (x, c) => c.copy(appName = x)} text "Job Name"
       opt[String]('j', "jars") action { (x, c) => c.copy(jars = x)} text "Comma Separated List of jars"
+      opt[Boolean]('k', "kryo") action { (x, c) => c.copy(kryo = x)} text "Use the Kryo Serializer"
       help("help") text "prints this usage text"
       opt[(String, String)]("ca") unbounded() optional() action { case ((k, v), c) => c.copy(customArguments = c.customArguments += k -> v)} keyValueName("<argumentstring>",
         "<argumentvalue>") text "Custom Properties that apply to the job."

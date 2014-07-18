@@ -31,7 +31,7 @@ class HBSEConf(var betweennessOutputDir: String,
     this.initialPivotBatchSize = sparkConf.getInt(HBSEConfigurationConstants.PIVOT_BATCH_SIZE_INITIAL, 5)
     this.pivotSelectionRandomSeed = sparkConf.getLong(HBSEConfigurationConstants.PIVOT_BATCH_RANDOM_SEED, (new Date).getTime)
     this.vertexCount = sparkConf.getInt(HBSEConfigurationConstants.VERTEX_COUNT, 10)
-    this.defaultFileSystem = sparkConf.get(HBSEConfigurationConstants.FS_DEFAULT_FS, sparkConf.get(HBSEConfigurationConstants.FS_DEFAULT_NAME))
+    this.defaultFileSystem = sparkConf.get(HBSEConfigurationConstants.FS_DEFAULT_FS, sparkConf.get(HBSEConfigurationConstants.FS_DEFAULT_NAME, ""))
   }
 
 
