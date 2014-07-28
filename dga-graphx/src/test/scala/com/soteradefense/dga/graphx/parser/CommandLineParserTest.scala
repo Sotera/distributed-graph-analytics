@@ -40,7 +40,7 @@ class CommandLineParserTest extends TestCase {
     }
     catch {
       case illegal: IllegalArgumentException => assert(assertion = true)
-      case _ => fail()
+      case _: Throwable => fail()
     }
   }
 
