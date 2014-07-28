@@ -2,6 +2,7 @@ package com.soteradefense.dga;
 
 
 import com.soteradefense.dga.hbse.HBSEComputation;
+import com.soteradefense.dga.hbse.HBSEConfigurationConstants;
 import com.soteradefense.dga.hbse.HBSEMasterCompute;
 import com.soteradefense.dga.io.formats.DGAEdgeTDTOutputFormat;
 import com.soteradefense.dga.io.formats.DGAEdgeTTTOutputFormat;
@@ -88,11 +89,11 @@ public class DGARunner {
                 requiredConf.setDGAGiraphProperty("-mc", HBSEMasterCompute.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
                 DGAConfiguration minimalDefaults = new DGAConfiguration();
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE, "10");
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.BETWEENNESS_OUTPUT_DIR, outputPath);
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.PIVOT_BATCH_SIZE, "10");
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.PIVOT_BATCH_SIZE_INITIAL, "10");
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.VERTEX_COUNT, "5");
+                minimalDefaults.setCustomProperty(HBSEConfigurationConstants.BETWEENNESS_SET_MAX_SIZE, "10");
+                minimalDefaults.setCustomProperty(HBSEConfigurationConstants.BETWEENNESS_OUTPUT_DIR, outputPath);
+                minimalDefaults.setCustomProperty(HBSEConfigurationConstants.PIVOT_BATCH_SIZE, "10");
+                minimalDefaults.setCustomProperty(HBSEConfigurationConstants.PIVOT_BATCH_SIZE_INITIAL, "10");
+                minimalDefaults.setCustomProperty(HBSEConfigurationConstants.VERTEX_COUNT, "5");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
 
                 finalConf.setLibDir(libDir);

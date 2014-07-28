@@ -51,7 +51,6 @@ import java.util.Map.Entry;
 public class HBSEComputation extends AbstractComputation<Text, VertexData, Text, PathData, PathData> {
 
     private static final Logger logger = LoggerFactory.getLogger(HBSEComputation.class);
-    public static final double PERCENTAGE_OF_PIVOTS_TO_POSSIBLY_TAKE = .5;
 
     @Override
     public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, VertexData, Text> workerClientRequestProcessor, GraphTaskManager<Text, VertexData, Text> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
@@ -271,7 +270,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
     public HighBetweennessList getNewHighBetweennessList(String id, double value) {
         int size;
         try {
-            size = Integer.parseInt(getConf().get(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE));
+            size = Integer.parseInt(getConf().get(HBSEConfigurationConstants.BETWEENNESS_SET_MAX_SIZE));
         } catch (NumberFormatException e) {
             logger.error("betweenness.set.maxSize must be set to a valid int.");
             throw e;
@@ -286,7 +285,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
      * @return True if it is a pivot point.
      */
     private boolean isPossiblePivotPoint(String id) {
-        Random random = getRandomWithSeed(HBSEMasterCompute.PIVOT_BATCH_RANDOM_SEED);
+        Random random = getRandomWithSeed(HBSEConfigurationConstants.PIVOT_BATCH_RANDOM_SEED);
         double percentageCutoff = (double) ((IntWritable) getAggregatedValue(HBSEMasterCompute.PIVOT_COUNT)).get() / getTotalNumVertices();
         double randomNumber = random.nextDouble();
         boolean isPivot = randomNumber < percentageCutoff;
