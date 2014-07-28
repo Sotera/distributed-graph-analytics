@@ -316,24 +316,6 @@ object HBSECore extends Logging with Serializable {
     graph.mapVertices((vid, vd) => new VertexData()).mapEdges(e => if (e.attr == 0) 1L else e.attr.toString.toLong)
   }
 
-  def sendShortestPathMessage(triplet: EdgeTriplet[VertexData, Long]) = {
-    //val destAttr = triplet.otherVertexAttr(triplet.dstId)
-    if (triplet.srcAttr.isPivotPoint) {
-      // Add a PathData to my node.
-      val hashMap = new mutable.HashMap[VertexId, List[PathData]]
-      var pathDataBuilder = new ListBuffer[PathData]
-      // Send a Shortest Path Message to my neighbor.
-      pathDataBuilder += PathData.createShortestPathMessage(triplet.srcId, triplet.srcId, triplet.attr, 1)
-      hashMap.put(triplet.dstId, pathDataBuilder.toList)
-      logInfo(s"Sending ShortestPath Message to ${triplet.dstId} from ${triplet.srcId}")
-      // Needs to be a list because all PathData messages need to be sent to the node.
-      hashMap.iterator
-    }
-    else {
-      Iterator.empty
-    }
-  }
-
   def sendShortestPathRunMessage(triplet: EdgeTriplet[(mutable.HashMap[Long, ShortestPathList]), Long]) = {
     var builder = new ListBuffer[PathData]
     val updatedPathMap = triplet.srcAttr
