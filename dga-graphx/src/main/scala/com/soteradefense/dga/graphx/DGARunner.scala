@@ -42,8 +42,8 @@ object DGARunner {
       runner = new HDFSHBSERunner(cmdLine.output, cmdLine.edgeDelimiter)
     }
     else if (analytic.equals("louvain")) {
-      val minProgress = Integer.parseInt(cmdLine.customArguments.getOrElse("minProgress", "2000"))
-      val progressCounter = Integer.parseInt(cmdLine.customArguments.getOrElse("progressCounter", "1"))
+      val minProgress = cmdLine.customArguments.getOrElse("minProgress", "2000").toInt
+      val progressCounter = cmdLine.customArguments.getOrElse("progressCounter", "1").toInt
       runner = new HDFSLouvainRunner(minProgress, progressCounter, cmdLine.output)
     }
     else if (analytic.equals("lc")) {

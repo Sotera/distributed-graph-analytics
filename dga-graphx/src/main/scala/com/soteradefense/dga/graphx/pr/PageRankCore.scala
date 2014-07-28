@@ -15,8 +15,10 @@ object PageRankCore extends Logging {
   }
 
   def pr[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED], delta: Double): (Graph[Double, Long]) = {
+    logInfo("Starting the PageRank Algorithm")
     val numberOfVertices = graph.vertices.count()
     val initialVertexValue = 1.0 / numberOfVertices
+    logInfo("Creating the PageRank Graph")
     val prGraph: Graph[(Double, Double), Long] = graph
       .outerJoinVertices(graph.outDegrees) {
       (vid, vdata, deg) => deg.getOrElse(0).toLong
@@ -41,10 +43,12 @@ object PageRankCore extends Logging {
         Iterator((edge.dstId, edge.srcAttr._1 / edge.attr))
       }
       else {
+        logInfo(s"Delta met, not sending message to ${edge.dstId}")
         Iterator.empty
       }
     }
 
+    logInfo("Starting Pregel Operation")
     Pregel(prGraph, initialVertexValue, activeDirection = EdgeDirection.Out)(vertexProgram, sendMessage, messageCombiner).mapVertices((vid, attr) => attr._1)
   }
 
