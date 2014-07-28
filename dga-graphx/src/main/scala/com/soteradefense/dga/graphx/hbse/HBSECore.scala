@@ -84,7 +84,9 @@ object HBSECore extends Logging with Serializable {
   }
 
   def getHighBetweennessSet(graph: Graph[VertexData, Long], runningBetweennessSet: mutable.TreeSet[(Long, Double)]) = {
-    runningBetweennessSet ++ graph.vertices.map(f => (f._1, f._2.getApproximateBetweenness)).takeOrdered(hbseConf.betweennessSetMaxSize)(orderedBetweennessSet)
+    val mergedSet = (runningBetweennessSet ++ graph.vertices.map(f => (f._1, f._2.getApproximateBetweenness)).takeOrdered(hbseConf.betweennessSetMaxSize)(orderedBetweennessSet))
+      .groupBy(_._1).map(kv => (kv._1, kv._2.map(_._2).sum))
+    new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet) ++ mergedSet.toSet
   }
 
   def compareHighBetweennessSets(x: mutable.TreeSet[(Long, Double)], y: mutable.TreeSet[(Long, Double)]) = {
@@ -115,7 +117,7 @@ object HBSECore extends Logging with Serializable {
     do {
 
       // Shortest Path Message Sends
-      messageRDD = hbseGraph.mapReduceTriplets(triplet =>{
+      messageRDD = hbseGraph.mapReduceTriplets(triplet => {
         //val destAttr = triplet.otherVertexAttr(triplet.dstId)
         if (pivots.value.contains(triplet.srcId)) {
           // Add a PathData to my node.
