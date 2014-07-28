@@ -228,7 +228,7 @@ object LouvainCore {
     val sigma_tot = if (isCurrentCommunity) BigDecimal(testSigmaTot) - k_i else BigDecimal(testSigmaTot)
 
     var deltaQ = BigDecimal(0.0)
-    if (!(isCurrentCommunity && sigma_tot.equals(0.0))) {
+    if (!(isCurrentCommunity && sigma_tot.equals(BigDecimal.valueOf(0.0)))) {
       deltaQ = k_i_in - (k_i * sigma_tot / M)
       //println(s"      $deltaQ = $k_i_in - ( $k_i * $sigma_tot / $M")
     }
