@@ -5,6 +5,7 @@ import java.util.Date
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.broadcast._
 import org.apache.spark.{Logging, SparkContext}
 
 import scala.collection.mutable
@@ -31,6 +32,7 @@ object HBSECore extends Logging with Serializable {
 
   def hbse[VD: ClassTag, ED: ClassTag](sc: SparkContext, graph: Graph[VD, ED]): (RDD[(Long, Double)], Graph[VertexData, Long]) = {
     hbseConf = new HBSEConf(sc.getConf)
+    previousPivots = new mutable.HashSet[VertexId]
     var currentBetweennessMap = new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
     var runningBetweennessMap = new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
     var delta = 0
@@ -171,7 +173,6 @@ object HBSECore extends Logging with Serializable {
       // Increase the Number of Completed Phases
       shortestPathPhasesCompleted += 1
     } while (!(shortestPathPhasesCompleted == hbseConf.shortestPathPhases))
-
     hbseGraph
     //Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData())
   }
@@ -342,7 +343,6 @@ object HBSECore extends Logging with Serializable {
   def sendShortestPathRunMessage(triplet: EdgeTriplet[(mutable.HashMap[Long, ShortestPathList]), Long]) = {
     var builder = new ListBuffer[PathData]
     val updatedPathMap = triplet.srcAttr
-    //TODO: Make sure it sends to all edges.
     for ((source, value) <- updatedPathMap) {
       val numPaths = value.getShortestPathCount
       val newDistance = value.getDistance + triplet.attr
