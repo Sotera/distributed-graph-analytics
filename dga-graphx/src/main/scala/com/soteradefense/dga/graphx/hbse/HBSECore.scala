@@ -172,7 +172,8 @@ object HBSECore extends Logging with Serializable {
       shortestPathPhasesCompleted += 1
     } while (!(shortestPathPhasesCompleted == hbseConf.shortestPathPhases))
 
-    Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData())
+    hbseGraph
+    //Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData())
   }
 
   def pingPredecessorsAndFindSuccessors(graph: Graph[VertexData, Long]) = {
@@ -233,7 +234,8 @@ object HBSECore extends Logging with Serializable {
       updateCount = pingRDD.count().toInt
 
     } while (!(updateCount == 0))
-    Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData())
+    hbseGraph
+    //Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData())
   }
 
   def sendPairDependencyRunMessage(triplets: EdgeTriplet[(List[(Boolean, PathData, ShortestPathList)]), Long]) = {
