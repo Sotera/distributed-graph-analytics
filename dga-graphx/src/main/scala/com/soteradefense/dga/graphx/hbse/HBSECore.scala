@@ -2,10 +2,9 @@ package com.soteradefense.dga.graphx.hbse
 
 import java.util.Date
 
-import org.apache.spark.broadcast.Broadcast
+import org.apache.spark.broadcast._
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.broadcast._
 import org.apache.spark.{Logging, SparkContext}
 
 import scala.collection.mutable
@@ -120,7 +119,6 @@ object HBSECore extends Logging with Serializable {
 
       // Shortest Path Message Sends
       messageRDD = hbseGraph.mapReduceTriplets(triplet => {
-        //val destAttr = triplet.otherVertexAttr(triplet.dstId)
         if (pivots.value.contains(triplet.srcId)) {
           // Add a PathData to my node.
           val hashMap = new mutable.HashMap[VertexId, List[PathData]]
@@ -174,7 +172,6 @@ object HBSECore extends Logging with Serializable {
       shortestPathPhasesCompleted += 1
     } while (!(shortestPathPhasesCompleted == hbseConf.shortestPathPhases))
     hbseGraph
-    //Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData())
   }
 
   def pingPredecessorsAndFindSuccessors(graph: Graph[VertexData, Long]) = {
@@ -238,7 +235,6 @@ object HBSECore extends Logging with Serializable {
 
     } while (!(updateCount == 0))
     hbseGraph
-    //Graph(hbseGraph.vertices, hbseGraph.edges, new VertexData())
   }
 
   def sendPairDependencyRunMessage(triplets: EdgeTriplet[(List[(Boolean, PathData, ShortestPathList)]), Long]) = {
@@ -274,13 +270,11 @@ object HBSECore extends Logging with Serializable {
           if (!messageMap.contains(triplet.srcId))
             messageMap.put(triplet.srcId, new ListBuffer[PathData].toList)
           logInfo(s"Sending Dependency Message to: ${triplet.srcId}")
-          //val dependencyMessage = PathData.createDependencyMessage(triplet.srcId, dep, numPaths)
           val dependencyMessage = PathData.createDependencyMessage(noSuccessorSrc, dep, numPaths)
           val updatedList = messageMap.get(triplet.srcId).get :+ dependencyMessage
           messageMap.put(triplet.srcId, updatedList)
         }
       })
-      //noSuccessorsList.clear()
     }
     messageMap.iterator
   }

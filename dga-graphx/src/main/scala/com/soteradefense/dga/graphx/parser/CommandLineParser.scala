@@ -7,8 +7,8 @@ class CommandLineParser {
   def parseCommandLine(args: Array[String]): Config = {
     val parser = new scopt.OptionParser[Config](this.getClass.toString) {
       head("dga-graphx", "0.1")
-      opt[String]('i', "inputPath") action { (x, c) => c.copy(input = x)} text "Input path in HDFS"
-      opt[String]('o', "outputPath") action { (x, c) => c.copy(output = x)} text "Output path in HDFS"
+      opt[String]('i', "inputPath") required() action { (x, c) => c.copy(input = x)} text "Input path in HDFS"
+      opt[String]('o', "outputPath") required() action { (x, c) => c.copy(output = x)} text "Output path in HDFS"
       opt[String]('d', "delimiter") action { (x, c: Config) => c.copy(edgeDelimiter = x)} text "Input Delimiter"
       opt[String]('m', "master") action { (x, c) => c.copy(master = x)} text "Spark Master, local[N] or spark://host:port default=local"
       opt[String]('s', "sparkHome") action { (x, c) => c.copy(sparkHome = x)} text "SPARK_HOME Required to run on a cluster"
@@ -25,7 +25,9 @@ class CommandLineParser {
     parser.parse(args, Config()) map {
       config =>
         cmdLine = config
-    } getOrElse sys.exit(1)
+    } getOrElse {
+      throw new IllegalArgumentException("You need to specify the required arguments!")
+    }
     cmdLine
   }
 }
