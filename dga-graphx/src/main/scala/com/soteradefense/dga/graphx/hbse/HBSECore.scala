@@ -140,7 +140,6 @@ object HBSECore extends Logging with Serializable {
       // Shortest Path Run
       do {
         messageRDD.cache()
-        messageRDD.count()
         // Join the HBSEGraph with the VertexRDD to Process the Messages
         val updatedPaths = hbseGraph.outerJoinVertices(messageRDD)((vid, vdata, shortestPathMessages) => {
           //Stores the Paths that were updated
@@ -165,9 +164,10 @@ object HBSECore extends Logging with Serializable {
         updateCount = updatedPaths.vertices.map(verticesWithUpdatedPaths => verticesWithUpdatedPaths._2.size).reduce((a, b) => a + b)
         logInfo(s"Update Count is: $updateCount")
         //Forward the updated paths to the next edge
+        messageRDD.unpersist(blocking = false)
         messageRDD = updatedPaths.mapReduceTriplets(sendShortestPathRunMessage, mergePathDataMessage)
       } while (!(updateCount == 0))
-
+      messageRDD.unpersist(blocking = false)
       // Increase the Number of Completed Phases
       shortestPathPhasesCompleted += 1
     } while (!(shortestPathPhasesCompleted == hbseConf.shortestPathPhases))
@@ -204,7 +204,7 @@ object HBSECore extends Logging with Serializable {
     }).cache()
     logInfo("Sending Dependency Messages")
     // Find Successors
-
+    pingRDD.unpersist(blocking = false)
     pingRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, mergePathDataMessage)
     var updateCount = 0
     hbseGraph = mergedGraph.mapVertices((vid, vdata) => vdata._2).cache()
@@ -229,6 +229,8 @@ object HBSECore extends Logging with Serializable {
         }
         newBuf.toList
       }).cache()
+
+      pingRDD.unpersist(blocking = false)
       pingRDD = partialDepGraph.mapReduceTriplets(sendPairDependencyRunMessage, mergePathDataMessage)
 
       updateCount = pingRDD.count().toInt
