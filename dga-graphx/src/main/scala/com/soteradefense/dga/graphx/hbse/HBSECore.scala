@@ -29,14 +29,15 @@ object HBSECore extends Logging with Serializable {
       }
     }
 
+
   def hbse[VD: ClassTag, ED: ClassTag](sc: SparkContext, graph: Graph[VD, ED]): (RDD[(Long, Double)], Graph[VertexData, Long]) = {
     hbseConf = new HBSEConf(sc.getConf)
     previousPivots = new mutable.HashSet[VertexId]
     var currentBetweennessMap: Set[(Long, Double)] = new immutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
     var runningBetweennessMap: Set[(Long, Double)] = new immutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
-    var delta = 0
-    var keepRunning = true
-    var stabilityCutOffMetCount = 0
+    var delta: Int = 0
+    var keepRunning: Boolean = true
+    var stabilityCutOffMetCount: Int = 0
     var hbseGraph: Graph[VertexData, Long] = createHBSEGraph(graph)
     do {
       stabilityCutOffMetCount = 0
@@ -53,7 +54,7 @@ object HBSECore extends Logging with Serializable {
       currentBetweennessMap = runningBetweennessMap
       val numberOfPivotsSelected = previousPivots.size + pivots.value.size
       previousPivots ++= pivots.value
-      val shouldKeepRunningResult = shouldKeepRunning(delta, stabilityCutOffMetCount, numberOfPivotsSelected, hbseGraph.vertices.count())
+      val shouldKeepRunningResult: (Boolean, Int) = shouldKeepRunning(delta, stabilityCutOffMetCount, numberOfPivotsSelected, hbseGraph.vertices.count())
       keepRunning = shouldKeepRunningResult._1
       stabilityCutOffMetCount = shouldKeepRunningResult._2
 
@@ -122,7 +123,6 @@ object HBSECore extends Logging with Serializable {
       val validEdges = hbseGraph.edges.filter(epred => pivots.value.contains(epred.srcId))
       val newGraph = Graph.fromEdges(validEdges, None)
       messageRDD = newGraph.mapReduceTriplets(triplet => {
-        //        if (pivots.value.contains(triplet.srcId)) {
         // Add a PathData to my node.
         val hashMap = new mutable.HashMap[VertexId, List[PathData]]
         var pathDataBuilder = new ListBuffer[PathData]
@@ -132,28 +132,7 @@ object HBSECore extends Logging with Serializable {
         logInfo(s"Sending ShortestPath Message to ${triplet.dstId} from ${triplet.srcId}")
         // Needs to be a list because all PathData messages need to be sent to the node.
         hashMap.iterator
-        //        }
-        //        else {
-        //          Iterator.empty
-        //        }
       }, mergePathDataMessage).cache()
-
-      //      messageRDD = hbseGraph.mapReduceTriplets(triplet => {
-      //        if (pivots.value.contains(triplet.srcId)) {
-      //          // Add a PathData to my node.
-      //          val hashMap = new mutable.HashMap[VertexId, List[PathData]]
-      //          var pathDataBuilder = new ListBuffer[PathData]
-      //          // Send a Shortest Path Message to my neighbor.
-      //          pathDataBuilder += PathData.createShortestPathMessage(triplet.srcId, triplet.srcId, triplet.attr, 1)
-      //          hashMap.put(triplet.dstId, pathDataBuilder.toList)
-      //          logInfo(s"Sending ShortestPath Message to ${triplet.dstId} from ${triplet.srcId}")
-      //          // Needs to be a list because all PathData messages need to be sent to the node.
-      //          hashMap.iterator
-      //        }
-      //        else {
-      //          Iterator.empty
-      //        }
-      //      }, mergePathDataMessage).cache()
 
       val activeMessages = messageRDD.count()
 
@@ -187,7 +166,6 @@ object HBSECore extends Logging with Serializable {
         }).cache()
 
         //Needed to Persist the update count for some reason
-        //updatedPaths.triplets.count()
         // Get the update count based on the size of each hashmap
         logInfo(s"Update Count is: $updateCount")
         //Forward the updated paths to the next edge
@@ -274,18 +252,12 @@ object HBSECore extends Logging with Serializable {
       pingRDD = partialDepGraph.mapReduceTriplets(triplets => {
         val messageMap = new mutable.HashMap[Long, List[PathData]]
         triplets.dstAttr.filter(f => f._3.getPredecessorPathCountMap.contains(triplets.srcId) && f._1).foreach(item => {
-          //val successorsHitZero = item._1
           val messageToForward = item._2
-          //val spl = item._3
-          //          if (successorsHitZero) {
-          //            if (spl.getPredecessorPathCountMap.contains(triplets.srcId)) {
           updateCount += 1
           if (!messageMap.contains(triplets.srcId))
-            messageMap.put(triplets.srcId, new ListBuffer[PathData].toList)
+            messageMap.put(triplets.srcId, List.empty[PathData])
           val updatedList = messageMap.get(triplets.srcId).get :+ messageToForward
           messageMap.put(triplets.srcId, updatedList)
-          //            }
-          //          }
         })
         messageMap.iterator
       }, mergePathDataMessage).cache()
@@ -314,14 +286,12 @@ object HBSECore extends Logging with Serializable {
         val spl = vertexData.getPathDataMap.get(noSuccessorSrc).get
         val numPaths = spl.getShortestPathCount
         val dep = 0.0
-        //        if (spl.getPredecessorPathCountMap.contains(triplet.srcId)) {
         if (!messageMap.contains(triplet.srcId))
-          messageMap.put(triplet.srcId, new ListBuffer[PathData].toList)
+          messageMap.put(triplet.srcId, List.empty[PathData])
         logInfo(s"Sending Dependency Message to: ${triplet.srcId}")
         val dependencyMessage = PathData.createDependencyMessage(noSuccessorSrc, dep, numPaths)
         val updatedList = messageMap.get(triplet.srcId).get :+ dependencyMessage
         messageMap.put(triplet.srcId, updatedList)
-        //        }
       })
     }
     messageMap.iterator
@@ -332,16 +302,14 @@ object HBSECore extends Logging with Serializable {
     logInfo(s"About to Ping ${triplet.srcId} Predecessors")
     for ((source, shortestPathList) <- triplet.dstAttr.getPathDataMap.filter(f => f._2.getDistance > 0 && f._2.getPredecessorPathCountMap.contains(triplet.srcId))) {
       val distance = shortestPathList.getDistance
-      //      if (distance > 0 && shortestPathList.getPredecessorPathCountMap.contains(triplet.srcId)) {
       // Only ping this one if a message came through the node.
       // Only ping the edge you're on.
       if (!messageMap.contains(triplet.srcId))
-        messageMap.put(triplet.srcId, new ListBuffer[PathData].toList)
+        messageMap.put(triplet.srcId, List.empty[PathData])
       logInfo(s"Pinging: ${triplet.srcId}")
       val pingMessage = PathData.createPingMessage(source)
       val updatedList = messageMap.get(triplet.srcId).get :+ pingMessage
       messageMap.put(triplet.srcId, updatedList)
-      //      }
     }
     messageMap.iterator
   }
@@ -380,8 +348,7 @@ object HBSECore extends Logging with Serializable {
     var buffer = new ListBuffer[PathData]
     buffer ++= listA
     buffer ++= listB
-    val listC = buffer.toList
-    listC
+    buffer.toList
   }
 
 }
