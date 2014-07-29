@@ -214,12 +214,20 @@ object HBSECore extends Logging with Serializable {
       (noSuccessor, vdata)
     }).cache()
 
+    mergedGraph.vertices.count()
+    mergedGraph.triplets.count()
+
     logInfo("Sending Dependency Messages")
     // Find Successors
-    pingRDD.unpersist(blocking = false)
+    var prevMessages = pingRDD
     pingRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, mergePathDataMessage).cache()
+    pingRDD.count()
     var updateCount: Accumulator[Int] = null
+
     hbseGraph = mergedGraph.mapVertices((vid, vdata) => vdata._2).cache()
+
+
+    prevMessages.unpersist(blocking = false)
     // Pair Dependency Run State
     do {
       updateCount = sc.accumulator(0)(SparkContext.IntAccumulatorParam)
@@ -241,7 +249,7 @@ object HBSECore extends Logging with Serializable {
         newBuf.toList
       }).cache()
 
-      pingRDD.unpersist(blocking = false)
+      prevMessages = pingRDD
       pingRDD = partialDepGraph.mapReduceTriplets(triplets => {
         val messageMap = new mutable.HashMap[Long, List[PathData]]
         triplets.dstAttr.foreach(item => {
@@ -262,29 +270,16 @@ object HBSECore extends Logging with Serializable {
       }, mergePathDataMessage).cache()
 
       pingRDD.count()
+
+      prevMessages.unpersist(blocking = false)
     } while (!(updateCount.value == 0))
+
+    mergedGraph.unpersistVertices(blocking = false)
+    mergedGraph.edges.unpersist(blocking = false)
+
     hbseGraph
   }
 
-  //TODO: May not be needed
-  def sendPairDependencyRunMessage(triplets: EdgeTriplet[(List[(Boolean, PathData, ShortestPathList)]), Long]) = {
-    val messageMap = new mutable.HashMap[Long, List[PathData]]
-    triplets.dstAttr.foreach(item => {
-      val successorsHitZero = item._1
-      val messageToForward = item._2
-      val spl = item._3
-      if (successorsHitZero) {
-        if (spl.getPredecessorPathCountMap.contains(triplets.srcId)) {
-          if (!messageMap.contains(triplets.srcId))
-            messageMap.put(triplets.srcId, new ListBuffer[PathData].toList)
-          val updatedList = messageMap.get(triplets.srcId).get :+ messageToForward
-          messageMap.put(triplets.srcId, updatedList)
-        }
-      }
-    })
-
-    messageMap.iterator
-  }
 
   def sendDependencyMessage(triplet: EdgeTriplet[(mutable.HashSet[Long], VertexData), Long]) = {
     val messageMap = new mutable.HashMap[Long, List[PathData]]
