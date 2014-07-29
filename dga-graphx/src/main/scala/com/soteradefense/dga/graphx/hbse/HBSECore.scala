@@ -134,6 +134,8 @@ object HBSECore extends Logging with Serializable {
         }
       }, mergePathDataMessage).cache()
 
+      messageRDD.count()
+
       var updateCount: Accumulator[Int] = null
 
       // Shortest Path Run
@@ -168,13 +170,20 @@ object HBSECore extends Logging with Serializable {
         //updateCount = updatedPaths.vertices.map(verticesWithUpdatedPaths => verticesWithUpdatedPaths._2.size).reduce((a, b) => a + b)
         logInfo(s"Update Count is: $updateCount")
         //Forward the updated paths to the next edge
-        messageRDD.unpersist(blocking = false)
+        val prevMessages = messageRDD
         messageRDD = updatedPaths.mapReduceTriplets(sendShortestPathRunMessage, mergePathDataMessage).cache()
+        messageRDD.count()
+
+        updatedPaths.unpersistVertices(blocking = false)
+        updatedPaths.edges.unpersist(blocking = false)
+        prevMessages.unpersist(blocking = false)
+
+
       } while (!(updateCount.value == 0))
-      messageRDD.unpersist(blocking = false)
       // Increase the Number of Completed Phases
       shortestPathPhasesCompleted += 1
     } while (!(shortestPathPhasesCompleted == hbseConf.shortestPathPhases))
+
     hbseGraph
   }
 
