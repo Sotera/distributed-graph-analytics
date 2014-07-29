@@ -5,10 +5,10 @@ import java.util.Date
 import org.apache.spark.broadcast._
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{Logging, SparkContext}
+import org.apache.spark.{Accumulator, Logging, SparkContext}
 
-import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.collection.{immutable, mutable}
 import scala.math.Ordering
 import scala.reflect.ClassTag
 
@@ -32,8 +32,8 @@ object HBSECore extends Logging with Serializable {
   def hbse[VD: ClassTag, ED: ClassTag](sc: SparkContext, graph: Graph[VD, ED]): (RDD[(Long, Double)], Graph[VertexData, Long]) = {
     hbseConf = new HBSEConf(sc.getConf)
     previousPivots = new mutable.HashSet[VertexId]
-    var currentBetweennessMap = new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
-    var runningBetweennessMap = new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
+    var currentBetweennessMap: Set[(Long, Double)] = new immutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
+    var runningBetweennessMap: Set[(Long, Double)] = new immutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
     var delta = 0
     var keepRunning = true
     var stabilityCutOffMetCount = 0
@@ -43,9 +43,9 @@ object HBSECore extends Logging with Serializable {
       logInfo("Selecting Pivots")
       val pivots = selectPivots(sc, hbseGraph)
       logInfo("Shortest Path Phase")
-      hbseGraph = shortestPathRun(hbseGraph, pivots)
+      hbseGraph = shortestPathRun(hbseGraph, pivots, sc)
       logInfo("Ping Predecessors and Find Successors")
-      hbseGraph = pingPredecessorsAndFindSuccessors(hbseGraph)
+      hbseGraph = pingPredecessorsAndFindSuccessors(hbseGraph, sc)
       logInfo("Get High Betweenness List")
       hbseGraph = computeHighBetweenness(hbseGraph)
       runningBetweennessMap = getHighBetweennessSet(hbseGraph, runningBetweennessMap)
@@ -84,13 +84,12 @@ object HBSECore extends Logging with Serializable {
     }
   }
 
-  def getHighBetweennessSet(graph: Graph[VertexData, Long], runningBetweennessSet: mutable.TreeSet[(Long, Double)]) = {
-    val mergedSet = (runningBetweennessSet ++ graph.vertices.map(f => (f._1, f._2.getApproximateBetweenness)).takeOrdered(hbseConf.betweennessSetMaxSize)(orderedBetweennessSet))
+  def getHighBetweennessSet(graph: Graph[VertexData, Long], runningBetweennessSet: Set[(Long, Double)]) = {
+    new immutable.TreeSet[(Long, Double)]()(orderedBetweennessSet) ++ (runningBetweennessSet ++ graph.vertices.map(f => (f._1, f._2.getApproximateBetweenness)).takeOrdered(hbseConf.betweennessSetMaxSize)(orderedBetweennessSet))
       .groupBy(_._1).map(kv => (kv._1, kv._2.map(_._2).sum))
-    new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet) ++ mergedSet.toSet
   }
 
-  def compareHighBetweennessSets(x: mutable.TreeSet[(Long, Double)], y: mutable.TreeSet[(Long, Double)]) = {
+  def compareHighBetweennessSets(x: Set[(Long, Double)], y: Set[(Long, Double)]) = {
     y.map(f => f._1).diff(x.map(g => g._1)).size
   }
 
@@ -111,7 +110,7 @@ object HBSECore extends Logging with Serializable {
     betweennessGraph
   }
 
-  def shortestPathRun(graph: Graph[VertexData, Long], pivots: Broadcast[mutable.HashSet[VertexId]]) = {
+  def shortestPathRun(graph: Graph[VertexData, Long], pivots: Broadcast[mutable.HashSet[VertexId]], sc: SparkContext) = {
     var shortestPathPhasesCompleted = 0
     val hbseGraph = graph.cache()
     var messageRDD: VertexRDD[List[PathData]] = null
@@ -133,19 +132,19 @@ object HBSECore extends Logging with Serializable {
         else {
           Iterator.empty
         }
-      }, mergePathDataMessage)
-      var updateCount = 0
+      }, mergePathDataMessage).cache()
 
+      var updateCount: Accumulator[Int] = null
 
       // Shortest Path Run
       do {
-        messageRDD.cache()
+        updateCount = sc.accumulator(0)(SparkContext.IntAccumulatorParam)
         // Join the HBSEGraph with the VertexRDD to Process the Messages
         val updatedPaths = hbseGraph.outerJoinVertices(messageRDD)((vid, vdata, shortestPathMessages) => {
           //Stores the Paths that were updated
           val updatedPathMap = new mutable.HashMap[Long, ShortestPathList]
           //Process Incoming Messages
-          if (pivots.value.contains(vid))
+          if (pivots.value.contains(vid) && !vdata.getPathDataMap.contains(vid))
             vdata.addPathData(PathData.createShortestPathMessage(vid, vid, 0, 1L))
           if (shortestPathMessages != None) {
             shortestPathMessages.get.foreach(pd => {
@@ -155,18 +154,23 @@ object HBSECore extends Logging with Serializable {
                 //If it updated, add it to the updatedPathMap
                 logInfo(s"Path Updated ${pd.getMessageSource} for Vertex: $vid")
                 updatedPathMap.put(pd.getMessageSource, updatedPath)
+                updateCount += 1
               }
             })
           }
           updatedPathMap
         }).cache()
+
+        //Needed to Persist the update count for some reason
+        //        updatedPaths.vertices.count()
+        updatedPaths.triplets.count()
         // Get the update count based on the size of each hashmap
-        updateCount = updatedPaths.vertices.map(verticesWithUpdatedPaths => verticesWithUpdatedPaths._2.size).reduce((a, b) => a + b)
+        //updateCount = updatedPaths.vertices.map(verticesWithUpdatedPaths => verticesWithUpdatedPaths._2.size).reduce((a, b) => a + b)
         logInfo(s"Update Count is: $updateCount")
         //Forward the updated paths to the next edge
         messageRDD.unpersist(blocking = false)
-        messageRDD = updatedPaths.mapReduceTriplets(sendShortestPathRunMessage, mergePathDataMessage)
-      } while (!(updateCount == 0))
+        messageRDD = updatedPaths.mapReduceTriplets(sendShortestPathRunMessage, mergePathDataMessage).cache()
+      } while (!(updateCount.value == 0))
       messageRDD.unpersist(blocking = false)
       // Increase the Number of Completed Phases
       shortestPathPhasesCompleted += 1
@@ -174,7 +178,7 @@ object HBSECore extends Logging with Serializable {
     hbseGraph
   }
 
-  def pingPredecessorsAndFindSuccessors(graph: Graph[VertexData, Long]) = {
+  def pingPredecessorsAndFindSuccessors(graph: Graph[VertexData, Long], sc: SparkContext) = {
     var hbseGraph = graph.cache()
     //Ping Predecessor
     var pingRDD = hbseGraph.mapReduceTriplets(sendPingMessage, mergePathDataMessage).cache()
@@ -200,43 +204,60 @@ object HBSECore extends Logging with Serializable {
       logInfo(s"No Successor Count is: ${noSuccessor.size}")
       (noSuccessor, vdata)
     }).cache()
+
     logInfo("Sending Dependency Messages")
     // Find Successors
     pingRDD.unpersist(blocking = false)
-    pingRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, mergePathDataMessage)
-    var updateCount = 0
+    pingRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, mergePathDataMessage).cache()
+    var updateCount: Accumulator[Int] = null
     hbseGraph = mergedGraph.mapVertices((vid, vdata) => vdata._2).cache()
     // Pair Dependency Run State
     do {
-      val partialDepGraph = hbseGraph.outerJoinVertices(pingRDD.cache())((vid, vdata, predList) => {
+      updateCount = sc.accumulator(0)(SparkContext.IntAccumulatorParam)
+      val partialDepGraph = hbseGraph.outerJoinVertices(pingRDD)((vid, vdata, predList) => {
         var buffer = new ListBuffer[(Long, ShortestPathList, PartialDependency, Long)]
         var newBuf = new ListBuffer[(Boolean, PathData, ShortestPathList)]
         if (predList != None) {
-          predList.get.foreach(pd => {
-            if (pd.getMessageSource != vid) {
-              val successorDep = pd.getDependency
-              val successorNumberOfPaths = pd.getNumberOfShortestPaths
-              val numPaths = vdata.getPathDataMap.get(pd.getMessageSource).get.getShortestPathCount
-              val partialDep = (numPaths.toDouble / successorNumberOfPaths.toDouble) * (1 + successorDep)
-              val partialSum = vdata.addPartialDependency(pd.getMessageSource, partialDep, -1)
-              val depMessage = PathData.createDependencyMessage(pd.getMessageSource, partialSum.getDependency, numPaths)
-              val listItem = (partialSum.getSuccessors == 0, depMessage, vdata.getPathDataMap.get(pd.getMessageSource).get)
-              newBuf += listItem
-            }
+          predList.get.filter(f => f.getMessageSource != vid).foreach(pd => {
+            val successorDep = pd.getDependency
+            val successorNumberOfPaths = pd.getNumberOfShortestPaths
+            val numPaths = vdata.getPathDataMap.get(pd.getMessageSource).get.getShortestPathCount
+            val partialDep = (numPaths.toDouble / successorNumberOfPaths.toDouble) * (1 + successorDep)
+            val partialSum = vdata.addPartialDependency(pd.getMessageSource, partialDep, -1)
+            val depMessage = PathData.createDependencyMessage(pd.getMessageSource, partialSum.getDependency, numPaths)
+            val listItem = (partialSum.getSuccessors == 0, depMessage, vdata.getPathDataMap.get(pd.getMessageSource).get)
+            newBuf += listItem
           })
         }
         newBuf.toList
       }).cache()
 
       pingRDD.unpersist(blocking = false)
-      pingRDD = partialDepGraph.mapReduceTriplets(sendPairDependencyRunMessage, mergePathDataMessage)
+      pingRDD = partialDepGraph.mapReduceTriplets(triplets => {
+        val messageMap = new mutable.HashMap[Long, List[PathData]]
+        triplets.dstAttr.foreach(item => {
+          val successorsHitZero = item._1
+          val messageToForward = item._2
+          val spl = item._3
+          if (successorsHitZero) {
+            if (spl.getPredecessorPathCountMap.contains(triplets.srcId)) {
+              updateCount += 1
+              if (!messageMap.contains(triplets.srcId))
+                messageMap.put(triplets.srcId, new ListBuffer[PathData].toList)
+              val updatedList = messageMap.get(triplets.srcId).get :+ messageToForward
+              messageMap.put(triplets.srcId, updatedList)
+            }
+          }
+        })
+        messageMap.iterator
+      }, mergePathDataMessage).cache()
 
-      updateCount = pingRDD.count().toInt
-
-    } while (!(updateCount == 0))
+      pingRDD.count()
+    } while (!(updateCount.value == 0))
     hbseGraph
   }
 
+  //TODO: May not be needed
   def sendPairDependencyRunMessage(triplets: EdgeTriplet[(List[(Boolean, PathData, ShortestPathList)]), Long]) = {
     val messageMap = new mutable.HashMap[Long, List[PathData]]
     triplets.dstAttr.foreach(item => {
@@ -244,7 +265,7 @@ object HBSECore extends Logging with Serializable {
       val messageToForward = item._2
       val spl = item._3
       if (successorsHitZero) {
-        if (spl.getPredecessorPathCountMap.keySet.contains(triplets.srcId)) {
+        if (spl.getPredecessorPathCountMap.contains(triplets.srcId)) {
           if (!messageMap.contains(triplets.srcId))
             messageMap.put(triplets.srcId, new ListBuffer[PathData].toList)
           val updatedList = messageMap.get(triplets.srcId).get :+ messageToForward
@@ -265,8 +286,7 @@ object HBSECore extends Logging with Serializable {
         val spl = vertexData.getPathDataMap.get(noSuccessorSrc).get
         val numPaths = spl.getShortestPathCount
         val dep = 0.0
-        if (spl.getPredecessorPathCountMap.keySet.contains(triplet.srcId)) {
-
+        if (spl.getPredecessorPathCountMap.contains(triplet.srcId)) {
           if (!messageMap.contains(triplet.srcId))
             messageMap.put(triplet.srcId, new ListBuffer[PathData].toList)
           logInfo(s"Sending Dependency Message to: ${triplet.srcId}")
@@ -284,7 +304,7 @@ object HBSECore extends Logging with Serializable {
     logInfo(s"About to Ping ${triplet.srcId} Predecessors")
     for ((source, shortestPathList) <- triplet.dstAttr.getPathDataMap) {
       val distance = shortestPathList.getDistance
-      if (distance > 0 && shortestPathList.getPredecessorPathCountMap.keySet.contains(triplet.srcId)) {
+      if (distance > 0 && shortestPathList.getPredecessorPathCountMap.contains(triplet.srcId)) {
         // Only ping this one if a message came through the node.
         // Only ping the edge you're on.
         if (!messageMap.contains(triplet.srcId))
