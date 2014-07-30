@@ -29,7 +29,7 @@ public class LouvainTests {
     }
 
     @Test
-    public void testComputeOutput() throws Exception {
+    public void testUndirectedCase() throws Exception {
         GiraphConfiguration conf = getConf();
         TestGraph<Text, LouvainNodeState, LongWritable> input = getGraph(conf);
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
