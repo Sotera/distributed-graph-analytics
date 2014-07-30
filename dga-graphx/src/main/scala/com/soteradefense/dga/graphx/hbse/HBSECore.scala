@@ -345,10 +345,7 @@ object HBSECore extends Logging with Serializable {
   }
 
   def mergePathDataMessage(listA: List[PathData], listB: List[PathData]) = {
-    var buffer = new ListBuffer[PathData]
-    buffer ++= listA
-    buffer ++= listB
-    buffer.toList
+    listA ++ listB
   }
 
 }
