@@ -107,6 +107,10 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
             }
             aggregate(TOTAL_EDGE_WEIGHT_AGG, new LongWritable(vertexValue.getNodeWeight() + vertexValue.getInternalWeight()));
         }
+        else if(vertexValue.getCommunity().equals("")){
+            vertexValue.setCommunity(vertex.getId().toString());
+            vertexValue.setNodeWeight(0L);
+        }
 
         if (currentSuperstep == 0 && vertex.getNumEdges() == 0) {
             // nodes that have no edges send themselves a message on the step 0
