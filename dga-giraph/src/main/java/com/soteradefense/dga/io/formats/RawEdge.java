@@ -26,14 +26,22 @@ public class RawEdge {
 
     private final String delimiter;
     private final String defaultEdgeValue;
+    private final boolean ignoreThird;
 
     private String sourceId;
     private String targetId;
     private String edgeValue;
 
+    public RawEdge(final String delimiter, final String defaultEdgeValue, final boolean ignoreThird) {
+        this.delimiter = delimiter;
+        this.defaultEdgeValue = defaultEdgeValue;
+        this.ignoreThird = ignoreThird;
+    }
+
     public RawEdge(final String delimiter, final String defaultEdgeValue) {
         this.delimiter = delimiter;
         this.defaultEdgeValue = defaultEdgeValue;
+        this.ignoreThird = false;
     }
 
     public void fromText(final Text line) throws IOException {
@@ -44,7 +52,7 @@ public class RawEdge {
         }
         this.sourceId = tokenizer.nextToken();
         this.targetId = tokenizer.nextToken();
-        this.edgeValue = tokenizer.hasMoreTokens() ? tokenizer.nextToken() : defaultEdgeValue;
+        this.edgeValue = tokenizer.hasMoreTokens() && !this.ignoreThird ? tokenizer.nextToken() : defaultEdgeValue;
     }
 
     public String getSourceId() {

@@ -102,6 +102,20 @@ public class DGATextEdgeValueInputFormatTest extends DGATextEdgeValueInputFormat
     }
 
     @Test
+    public void testInputParserIgnoreWeight() throws IOException, InterruptedException {
+        String input = "1,2,10";
+        conf.set(IO_IGNORE_THIRD, "true");
+        when(rr.getCurrentValue()).thenReturn(new Text(input));
+        EdgeReader ter = createEdgeReader(rr);
+        ter.setConf(conf);
+        ter.initialize(null, tac);
+        assertEquals(ter.getCurrentSourceId(), new Text("1"));
+        assertEquals(ter.getCurrentEdge().getTargetVertexId(), new Text("2"));
+        assertEquals(ter.getCurrentEdge().getValue(), new Text(""));
+
+    }
+
+    @Test
     public void testInputParserWithCustomWeightAndOverriddenSeparator() throws IOException, InterruptedException {
         String input = "1\t2\t10";
         when(rr.getCurrentValue()).thenReturn(new Text(input));
