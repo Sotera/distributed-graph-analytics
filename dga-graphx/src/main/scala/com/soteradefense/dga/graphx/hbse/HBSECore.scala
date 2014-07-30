@@ -132,7 +132,7 @@ object HBSECore extends Logging with Serializable {
         Iterator((triplet.dstId, singleMessageMap))
       }, mergeMapMessage).cache()
 
-      val activeMessages = messageRDD.count()
+      messageRDD.count()
 
       newGraph.unpersistVertices(blocking = false)
       newGraph.edges.unpersist(blocking = false)
@@ -164,7 +164,7 @@ object HBSECore extends Logging with Serializable {
         }).cache()
 
         //Needed to Persist the update count for some reason
-        // Get the update count based on the size of each hashmap
+        //Get the update count based on the size of each hashmap
         logInfo(s"Update Count is: $updateCount")
         //Forward the updated paths to the next edge
         val prevMessages = messageRDD
