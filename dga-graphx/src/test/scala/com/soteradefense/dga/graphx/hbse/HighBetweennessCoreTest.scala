@@ -28,7 +28,12 @@ class HighBetweennessCoreTest extends TestCase {
     val (betweennessSet, resultGraph) = HBSECore.hbse(sc, graph)
     assert(betweennessSet.filter(_._2 > 0.0).count() == 2)
     assert(betweennessSet.filter(_._2 == 0.0).count() == 3)
-
+    val hbseSet = betweennessSet.collect()
+    assert(hbseSet.find(_._1 == 2).get._2 == 1.0)
+    assert(hbseSet.find(_._1 == 1).get._2 == 2.0)
+    assert(hbseSet.find(_._1 == 5).get._2 == 0.0)
+    assert(hbseSet.find(_._1 == 4).get._2 == 0.0)
+    assert(hbseSet.find(_._1 == 3).get._2 == 0.0)
   }
 
   @Test
@@ -41,7 +46,13 @@ class HighBetweennessCoreTest extends TestCase {
     })
     val graph = Graph.fromEdges(edgeRDD, None)
     val (betweennessSet, resultGraph) = HBSECore.hbse(sc, graph)
-    assert(betweennessSet.filter(_._2 == 0.0).count() == 6)
+    val hbseSet = betweennessSet.collect()
+    assert(hbseSet.find(_._1 == 1).get._2 == 0.0)
+    assert(hbseSet.find(_._1 == 6).get._2 == 0.0)
+    assert(hbseSet.find(_._1 == 5).get._2 == 0.0)
+    assert(hbseSet.find(_._1 == 4).get._2 == 0.0)
+    assert(hbseSet.find(_._1 == 3).get._2 == 0.0)
+    assert(hbseSet.find(_._1 == 2).get._2 == 0.0)
   }
 
   @Test
@@ -54,8 +65,14 @@ class HighBetweennessCoreTest extends TestCase {
     })
     val graph = Graph.fromEdges(edgeRDD, None)
     val (betweennessSet, resultGraph) = HBSECore.hbse(sc, graph)
-    assert(betweennessSet.filter(_._2 == 0.0).count() == 6)
-    assert(betweennessSet.filter(_._2 > 0.0).count() == 1)
+    val hbseSet = betweennessSet.collect()
+    assert(hbseSet.find(_._1 == 1).get._2 == 5.0)
+    assert(hbseSet.find(_._1 == 7).get._2 == 0.0)
+    assert(hbseSet.find(_._1 == 6).get._2 == 0.0)
+    assert(hbseSet.find(_._1 == 5).get._2 == 0.0)
+    assert(hbseSet.find(_._1 == 4).get._2 == 0.0)
+    assert(hbseSet.find(_._1 == 3).get._2 == 0.0)
+    assert(hbseSet.find(_._1 == 2).get._2 == 0.0)
   }
 
   @Test
