@@ -125,15 +125,10 @@ object HBSECore extends Logging with Serializable {
       messageRDD = newGraph.mapReduceTriplets(triplet => {
         // Add a PathData to my node.
         val singleMessageMap = new mutable.HashMap[VertexId, PathData]
-        //val hashMap = new mutable.HashMap[VertexId, List[PathData]]
-        //var pathDataBuilder = new ListBuffer[PathData]
         // Send a Shortest Path Message to my neighbor.
         singleMessageMap.put(triplet.srcId, PathData.createShortestPathMessage(triplet.srcId, triplet.srcId, triplet.attr, 1))
-        //pathDataBuilder += PathData.createShortestPathMessage(triplet.srcId, triplet.srcId, triplet.attr, 1)
-        //hashMap.put(triplet.dstId, pathDataBuilder.toList)
         logInfo(s"Sending ShortestPath Message to ${triplet.dstId} from ${triplet.srcId}")
         // Needs to be a list because all PathData messages need to be sent to the node.
-        //hashMap.iterator
         Iterator((triplet.dstId, singleMessageMap))
       }, mergeMapMessage).cache()
 
@@ -192,7 +187,7 @@ object HBSECore extends Logging with Serializable {
   def pingPredecessorsAndFindSuccessors(graph: Graph[VertexData, Long], sc: SparkContext) = {
     var hbseGraph = graph.cache()
     //Ping Predecessor
-    val pingRDD = hbseGraph.mapReduceTriplets(sendPingMessage, mergeLongMessage).cache()
+    val pingRDD = hbseGraph.mapReduceTriplets(sendPingMessage, merge[Long]).cache()
 
     logInfo("Processing Nodes with No Successors")
     val mergedGraph = hbseGraph.outerJoinVertices(pingRDD)((vid, vdata, msgs) => {
@@ -218,7 +213,7 @@ object HBSECore extends Logging with Serializable {
 
     logInfo("Sending Dependency Messages")
     // Find Successors
-    var msgRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, mergeDependencyMessage).cache()
+    var msgRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, merge[(Long,Double,Long)]).cache()
 
     //Collects the values
     msgRDD.count()
@@ -255,7 +250,7 @@ object HBSECore extends Logging with Serializable {
         triplets.dstAttr.filter(f => f._3.getPredecessorPathCountMap.contains(triplets.srcId) && f._1).foreach(item => buffer += item._2)
         updateCount += buffer.size
         Iterator((triplets.srcId, buffer.toList))
-      }, mergeDependencyMessage).cache()
+      }, merge[(Long,Double,Long)]).cache()
 
       //Collects the values
       msgRDD.count()
@@ -323,15 +318,7 @@ object HBSECore extends Logging with Serializable {
     Iterator((triplet.dstId, singleMap))
   }
 
-  def mergePathDataMessage(listA: List[PathData], listB: List[PathData]) = {
-    listA ++ listB
-  }
-
-  def mergeDependencyMessage(listA: List[(Long, Double, Long)], listB: List[(Long, Double, Long)]) = {
-    listA ++ listB
-  }
-
-  def mergeLongMessage(_a: List[Long], _b: List[Long]) = {
+  def merge[T: ClassTag](_a: List[T], _b: List[T]) = {
     _a ++ _b
   }
 
