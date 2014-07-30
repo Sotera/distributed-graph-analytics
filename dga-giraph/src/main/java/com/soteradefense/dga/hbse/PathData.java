@@ -23,6 +23,7 @@ import org.apache.hadoop.io.Writable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.math.BigInteger;
 
 
 /**
@@ -37,7 +38,7 @@ public class PathData implements Writable {
     /**
      * The Distance of the path.
      */
-    private long distance;
+    private BigInteger distance;
 
     /**
      * The source node of the path.
@@ -57,7 +58,7 @@ public class PathData implements Writable {
     /**
      * The number of shortest paths from source to the predecessor.
      */
-    private long numPaths;
+    private BigInteger numPaths;
 
     /**
      * The Default Constructor for PathData:
@@ -70,11 +71,11 @@ public class PathData implements Writable {
      * </ul>
      */
     public PathData() {
-        distance = Long.MAX_VALUE;
+        distance = BigInteger.valueOf(Long.MAX_VALUE);
         source = "-1";
         from = "-1";
         dependency = -1;
-        numPaths = -1;
+        numPaths = BigInteger.valueOf(-1);
     }
 
     /**
@@ -86,7 +87,7 @@ public class PathData implements Writable {
      * @param numPaths The number of paths from source to the predecessor.
      * @return a New PathData Object
      */
-    public static PathData getShortestPathMessage(String source, String from, long distance, long numPaths) {
+    public static PathData getShortestPathMessage(String source, String from, BigInteger distance, BigInteger numPaths) {
         PathData data = new PathData();
         data.setSource(source);
         data.setFrom(from);
@@ -115,7 +116,7 @@ public class PathData implements Writable {
      * @param numPaths   The number of shortest paths.
      * @return A new PathData for a Dependency Message.
      */
-    public static PathData getDependencyMessage(String source, double dependency, long numPaths) {
+    public static PathData getDependencyMessage(String source, double dependency, BigInteger numPaths) {
         PathData data = new PathData();
         data.setSource(source);
         data.setDependency(dependency);
@@ -127,8 +128,9 @@ public class PathData implements Writable {
     public void write(DataOutput out) throws IOException {
         Text.writeString(out, source);
         Text.writeString(out, from);
-        out.writeLong(distance);
-        out.writeLong(numPaths);
+        Text.writeString(out, distance.toString());
+        Text.writeString(out, numPaths.toString());
+
         out.writeDouble(dependency);
     }
 
@@ -137,8 +139,11 @@ public class PathData implements Writable {
 
         source = Text.readString(in);
         from = Text.readString(in);
-        distance = in.readLong();
-        numPaths = in.readLong();
+
+        distance = new BigInteger(Text.readString(in));
+        numPaths = new BigInteger(Text.readString(in));
+
+
         dependency = in.readDouble();
     }
 
@@ -147,7 +152,7 @@ public class PathData implements Writable {
      *
      * @return The distance value.
      */
-    public long getDistance() {
+    public BigInteger getDistance() {
         return distance;
     }
 
@@ -156,7 +161,7 @@ public class PathData implements Writable {
      *
      * @param distance Distance value to set it to.
      */
-    public void setDistance(long distance) {
+    public void setDistance(BigInteger distance) {
         this.distance = distance;
     }
 
@@ -219,7 +224,7 @@ public class PathData implements Writable {
      *
      * @return The value in numPaths.
      */
-    public long getNumPaths() {
+    public BigInteger getNumPaths() {
         return numPaths;
     }
 
@@ -228,7 +233,7 @@ public class PathData implements Writable {
      *
      * @param numPaths The value to set numPaths to.
      */
-    public void setNumPaths(long numPaths) {
+    public void setNumPaths(BigInteger numPaths) {
         this.numPaths = numPaths;
     }
 
