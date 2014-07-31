@@ -1,4 +1,4 @@
-package com.soteradefense.dga.louvain;
+package com.soteradefense.dga.louvain.giraph;
 
 import com.soteradefense.dga.louvain.giraph.LouvainComputation;
 import com.soteradefense.dga.louvain.giraph.LouvainMasterCompute;

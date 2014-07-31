@@ -21,17 +21,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 
 
 /**
  * Map reduce job to compress a graph in such a way that each community is represented by a single node.
- * 
+ * <p/>
  * input format:  see LouvainVertexOutputFormat
  * output format  see LouvainVertexInputFormat
  * *** the input to this job is output of the BSP computation, the output of this job is the input to the next stage of BSP.
- *
  */
 public class CommunityCompression extends Configured implements Tool {
 
@@ -76,7 +74,7 @@ public class CommunityCompression extends Configured implements Tool {
         return job.waitForCompletion(false) ? 0 : 1;
     }
 
-	public static class Map extends Mapper<LongWritable, Text, Text, LouvainVertexWritable> {
+    public static class Map extends Mapper<LongWritable, Text, Text, LouvainVertexWritable> {
 
         @Override
         public void setup(Context context) throws IOException, InterruptedException {
@@ -84,24 +82,23 @@ public class CommunityCompression extends Configured implements Tool {
             DGALoggingUtil.setDGALogLevel(context.getConfiguration());
         }
 
-		@Override
-		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+        @Override
+        public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 
-			String[] tokens = value.toString().trim().split("\t");
-			if (3 > tokens.length){
-				throw new IllegalArgumentException("Expected 4 cols: got "+tokens.length+"  from line: "+tokens.toString());
-			}
+            String[] tokens = value.toString().trim().split("\t");
+            if (3 > tokens.length) {
+                throw new IllegalArgumentException("Expected 4 cols: got " + tokens.length + "  from line: " + tokens.toString());
+            }
 
-			Text outKey = new Text(tokens[1]); // group by community
-			String edgeListStr = (tokens.length == 3) ? "" : tokens[3];
-			LouvainVertexWritable outValue = LouvainVertexWritable.fromTokens(tokens[2], edgeListStr);
-			context.write(outKey, outValue);
-		}
-	}
+            Text outKey = new Text(tokens[1]); // group by community
+            String edgeListStr = (tokens.length == 3) ? "" : tokens[3];
+            LouvainVertexWritable outValue = LouvainVertexWritable.fromTokens(tokens[2], edgeListStr);
+            context.write(outKey, outValue);
+        }
+    }
 
 
-
-	public static class Reduce extends Reducer<Text, LouvainVertexWritable, Text, Text> {
+    public static class Reduce extends Reducer<Text, LouvainVertexWritable, Text, Text> {
 
         @Override
         public void setup(Context context) throws IOException, InterruptedException {
@@ -113,20 +110,18 @@ public class CommunityCompression extends Configured implements Tool {
         public void reduce(Text key, Iterable<LouvainVertexWritable> values, Context context) throws IOException, InterruptedException {
             String communityId = key.toString();
             long weight = 0;
-            HashMap<String,Long> edgeMap = new HashMap<String,Long>();
+            HashMap<String, Long> edgeMap = new HashMap<String, Long>();
             for (LouvainVertexWritable vertex : values) {
                 weight += vertex.getWeight();
-                for (Entry<String, Long> entry : vertex.getEdges().entrySet()){
+                for (Entry<String, Long> entry : vertex.getEdges().entrySet()) {
                     String entryKey = entry.getKey();
 
-                    if (entryKey.equals(communityId)){
+                    if (entryKey.equals(communityId)) {
                         weight += entry.getValue();
-                    }
-                    else if (edgeMap.containsKey(entryKey)){
+                    } else if (edgeMap.containsKey(entryKey)) {
                         long w = edgeMap.get(entryKey) + entry.getValue();
                         edgeMap.put(entryKey, w);
-                    }
-                    else{
+                    } else {
                         edgeMap.put(entry.getKey(), entry.getValue());
                     }
                 }
@@ -134,7 +129,7 @@ public class CommunityCompression extends Configured implements Tool {
 
             StringBuilder b = new StringBuilder();
             b.append(weight).append("\t");
-            for (Entry<String, Long> entry : edgeMap.entrySet()){
+            for (Entry<String, Long> entry : edgeMap.entrySet()) {
                 b.append(entry.getKey()).append(":").append(entry.getValue()).append(",");
             }
             b.setLength(b.length() - 1);
@@ -143,5 +138,5 @@ public class CommunityCompression extends Configured implements Tool {
 
         }
     }
-	
+
 }
