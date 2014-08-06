@@ -15,10 +15,9 @@ class HBSEConf(var betweennessOutputDir: String,
                var pivotBatchSize: Int,
                var initialPivotBatchSize: Int,
                var pivotSelectionRandomSeed: Long,
-               var vertexCount: Int,
-               var defaultFileSystem: String) extends Serializable{
+               var vertexCount: Int) extends Serializable{
 
-  def this() = this("", 1, 0, 1, 10, 5, 5, (new Date).getTime, 10, "")
+  def this() = this("", 1, 0, 1, 10, 5, 5, (new Date).getTime, 10)
 
   def this(sparkConf: SparkConf) = {
     this()
@@ -31,7 +30,6 @@ class HBSEConf(var betweennessOutputDir: String,
     this.initialPivotBatchSize = sparkConf.getInt(HBSEConfigurationConstants.PIVOT_BATCH_SIZE_INITIAL, 5)
     this.pivotSelectionRandomSeed = sparkConf.getLong(HBSEConfigurationConstants.PIVOT_BATCH_RANDOM_SEED, (new Date).getTime)
     this.vertexCount = sparkConf.getInt(HBSEConfigurationConstants.VERTEX_COUNT, 10)
-    this.defaultFileSystem = sparkConf.get(HBSEConfigurationConstants.FS_DEFAULT_FS, sparkConf.get(HBSEConfigurationConstants.FS_DEFAULT_NAME, ""))
   }
 
 
@@ -49,12 +47,11 @@ class HBSEConfSerializer extends Serializer[HBSEConf] {
     kryo.writeObject(output, obj.initialPivotBatchSize)
     kryo.writeObject(output, obj.pivotSelectionRandomSeed)
     kryo.writeObject(output, obj.vertexCount)
-    kryo.writeObject(output, obj.defaultFileSystem)
   }
 
   override def read(kryo: Kryo, input: Input, classType: Class[HBSEConf]): HBSEConf = {
     new HBSEConf(kryo.readObject(input, classOf[String]),
       kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]),
-      kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Long]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[String]))
+      kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Long]), kryo.readObject(input, classOf[Int]))
   }
 }

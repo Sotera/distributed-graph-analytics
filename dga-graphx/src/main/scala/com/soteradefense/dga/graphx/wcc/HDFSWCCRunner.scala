@@ -1,24 +1,17 @@
 package com.soteradefense.dga.graphx.wcc
 
 import com.esotericsoftware.kryo.Serializer
-import com.soteradefense.dga.graphx.harness.Harness
 import com.twitter.chill._
-import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Graph
 
 import scala.reflect.ClassTag
 
-case class HDFSWCCRunner(var output_dir: String, var delimiter: String) extends Harness with Serializable{
-  def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]) = {
-    save(WeaklyConnectionComponentsCore.wcc(graph))
-  }
-  def runGraphXImplementation[VD: ClassTag](graph: Graph[VD, Long]) = {
-    save(WeaklyConnectionComponentsCore.wccGraphX(graph))
-  }
+class HDFSWCCRunner(var output_dir: String, var delimiter: String) extends AbstractWCCRunner {
 
-  def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Unit = {
+  def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]) = {
     graph.triplets.map(t => s"${t.srcId}$delimiter${t.dstId}$delimiter${t.srcAttr}").saveAsTextFile(output_dir)
   }
+
 }
 
 class HDFSWCCRunnerSerializer extends Serializer[HDFSWCCRunner] {

@@ -1,18 +1,13 @@
 package com.soteradefense.dga.graphx.lc
 
 import com.esotericsoftware.kryo.Serializer
-import com.soteradefense.dga.graphx.harness.Harness
 import com.twitter.chill._
-import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Graph
 
 import scala.reflect.ClassTag
 
 
-class HDFSLCRunner(var output_dir: String, var delimiter: String) extends Harness with Serializable {
-  override def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): Unit = {
-    save(LeafCompressionCore.lc(graph))
-  }
+class HDFSLCRunner(var output_dir: String, var delimiter: String) extends AbstractLCRunner{
 
   override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Unit = {
     graph.triplets.map(t => s"${t.srcId}$delimiter${t.dstId}").saveAsTextFile(output_dir)
