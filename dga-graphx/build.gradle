@@ -17,7 +17,6 @@ repositories {
 
 dependencies {
     compile project(':dga-core')
-    compile 'org.scala-lang:scala-library:2.10.3'
     compile group: 'org.apache.spark', name: 'spark-core_2.10', version: '1.0.1'
     compile group: 'org.apache.spark', name: 'spark-graphx_2.10', version: '1.0.1'
     compile group: 'com.github.scopt', name: 'scopt_2.10', version: '3.2.0'

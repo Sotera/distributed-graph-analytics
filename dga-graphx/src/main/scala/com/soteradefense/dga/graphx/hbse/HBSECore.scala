@@ -7,8 +7,8 @@ import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{Accumulator, Logging, SparkContext}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.collection.{immutable, mutable}
 import scala.math.Ordering
 import scala.reflect.ClassTag
 
@@ -16,7 +16,7 @@ import scala.reflect.ClassTag
 object HBSECore extends Logging with Serializable {
 
   private var hbseConf: HBSEConf = new HBSEConf()
-  private var previousPivots = new mutable.HashSet[VertexId]
+  private var previousPivots: mutable.Set[VertexId] = new mutable.HashSet[VertexId]
 
   implicit def orderedBetweennessSet(implicit ord1: Ordering[Long], ord2: Ordering[Double]): Ordering[(Long, Double)] =
     new Ordering[(Long, Double)] {
@@ -33,8 +33,8 @@ object HBSECore extends Logging with Serializable {
   def hbse[VD: ClassTag, ED: ClassTag](sc: SparkContext, graph: Graph[VD, ED]): (RDD[(Long, Double)], Graph[VertexData, Long]) = {
     hbseConf = new HBSEConf(sc.getConf)
     previousPivots = new mutable.HashSet[VertexId]
-    var currentBetweennessMap: Set[(Long, Double)] = new immutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
-    var runningBetweennessMap: Set[(Long, Double)] = new immutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
+    var currentBetweennessMap: mutable.Set[(Long, Double)] = new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
+    var runningBetweennessMap: mutable.Set[(Long, Double)] = new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
     var delta: Int = 0
     var keepRunning: Boolean = true
     var stabilityCutOffMetCount: Int = 0
@@ -42,7 +42,7 @@ object HBSECore extends Logging with Serializable {
     do {
       stabilityCutOffMetCount = 0
       logInfo("Selecting Pivots")
-      val pivots = selectPivots(sc, hbseGraph)
+      val pivots: Broadcast[mutable.Set[VertexId]] = selectPivots(sc, hbseGraph)
       logInfo("Shortest Path Phase")
       hbseGraph = shortestPathRun(hbseGraph, pivots, sc)
       logInfo("Ping Predecessors and Find Successors")
@@ -88,12 +88,12 @@ object HBSECore extends Logging with Serializable {
     }
   }
 
-  def getHighBetweennessSet(graph: Graph[VertexData, Long], runningBetweennessSet: Set[(Long, Double)]) = {
-    new immutable.TreeSet[(Long, Double)]()(orderedBetweennessSet) ++ (runningBetweennessSet ++ graph.vertices.map(f => (f._1, f._2.getApproximateBetweenness)).takeOrdered(hbseConf.betweennessSetMaxSize)(orderedBetweennessSet))
+  def getHighBetweennessSet(graph: Graph[VertexData, Long], runningBetweennessSet: mutable.Set[(Long, Double)]) = {
+    new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet) ++ (runningBetweennessSet ++ graph.vertices.map(f => (f._1, f._2.getApproximateBetweenness)).takeOrdered(hbseConf.betweennessSetMaxSize)(orderedBetweennessSet))
       .groupBy(_._1).map(kv => (kv._1, kv._2.map(_._2).sum))
   }
 
-  def compareHighBetweennessSets(x: Set[(Long, Double)], y: Set[(Long, Double)]) = {
+  def compareHighBetweennessSets(x: mutable.Set[(Long, Double)], y: mutable.Set[(Long, Double)]) = {
     y.map(f => f._1).diff(x.map(g => g._1)).size
   }
 
@@ -115,7 +115,7 @@ object HBSECore extends Logging with Serializable {
     betweennessGraph
   }
 
-  def shortestPathRun(graph: Graph[VertexData, Long], pivots: Broadcast[mutable.HashSet[VertexId]], sc: SparkContext) = {
+  def shortestPathRun(graph: Graph[VertexData, Long], pivots: Broadcast[mutable.Set[VertexId]], sc: SparkContext) = {
     var shortestPathPhasesCompleted = 0
     val hbseGraph = graph.cache()
     var messageRDD: VertexRDD[mutable.Map[Long, PathData]] = null
@@ -213,13 +213,12 @@ object HBSECore extends Logging with Serializable {
 
     logInfo("Sending Dependency Messages")
     // Find Successors
-    var msgRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, merge[(Long,Double,Long)]).cache()
+    var msgRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, merge[(Long, Double, Long)]).cache()
 
     //Collects the values
     msgRDD.count()
 
     var updateCount: Accumulator[Int] = null
-    val oldGraph = hbseGraph
     hbseGraph = mergedGraph.mapVertices((vid, vdata) => vdata._2).cache()
 
 
@@ -250,7 +249,7 @@ object HBSECore extends Logging with Serializable {
         triplets.dstAttr.filter(f => f._3.getPredecessorPathCountMap.contains(triplets.srcId) && f._1).foreach(item => buffer += item._2)
         updateCount += buffer.size
         Iterator((triplets.srcId, buffer.toList))
-      }, merge[(Long,Double,Long)]).cache()
+      }, merge[(Long, Double, Long)]).cache()
 
       //Collects the values
       msgRDD.count()
@@ -285,7 +284,6 @@ object HBSECore extends Logging with Serializable {
   }
 
   def sendPingMessage(triplet: EdgeTriplet[VertexData, Long]) = {
-    val messageMap = new mutable.HashMap[Long, List[Long]]
     val buffer = new ListBuffer[Long]
     logInfo(s"About to Ping ${triplet.srcId} Predecessors")
     triplet.dstAttr.getPathDataMap.filter(f => f._2.getDistance > 0 && f._2.getPredecessorPathCountMap.contains(triplet.srcId)).foreach(f => buffer += f._1)
@@ -296,7 +294,7 @@ object HBSECore extends Logging with Serializable {
 
     val vertexCount = hbseGraph.vertices.count()
     var totalNumberOfPivotsUsed = previousPivots.size
-    var pivots = new mutable.HashSet[VertexId]
+    var pivots: mutable.Set[VertexId] = new mutable.HashSet[VertexId]
     while (pivots.size != hbseConf.pivotBatchSize && totalNumberOfPivotsUsed < vertexCount) {
       pivots ++= hbseGraph.vertices.takeSample(withReplacement = false, hbseConf.pivotBatchSize, (new Date).getTime).map(f => f._1).toSet.&~(previousPivots)
       totalNumberOfPivotsUsed = previousPivots.size + pivots.size
