@@ -14,12 +14,8 @@ sourceSets {
 }
 
 configurations {
-    hadoopProvided {
-        transitive = true
-    }
-    compile {
-        extendsFrom hadoopProvided
-    }
+    hadoopProvided.transitive = true
+    compile.extendsFrom hadoopProvided
 }
 
 dependencies {
@@ -28,27 +24,28 @@ dependencies {
         exclude module: 'zookeeper'
     }
     hadoopProvided group: 'org.apache.hadoop', name: 'hadoop-client', version: cdh_version
+    testCompile 'org.apache.giraph:giraph-core:1.1.0-SNAPSHOT'
     testCompile "org.mockito:mockito-core:1.9.5"
     testCompile 'junit:junit:4.11'
     testCompile 'commons-httpclient:commons-httpclient:3.0.1'
     testCompile 'org.powermock:powermock-module-junit4:1.5.5'
     testCompile 'org.powermock:powermock-api-mockito:1.5.5'
-    testCompile group:'org.apache.mrunit', name:'mrunit', version:'1.1.0', classifier:'hadoop2'
+    testCompile group: 'org.apache.mrunit', name: 'mrunit', version: '1.1.0', classifier: 'hadoop2'
 }
 
 task distJars(dependsOn: 'distConf', type: Copy) {
-        from configurations.runtime - configurations.hadoopProvided
-        from jar
-        include "**/*.jar"
-        into "${buildDir}/dist/lib"
+    from configurations.runtime - configurations.hadoopProvided
+    from jar
+    include "**/*.jar"
+    into "${buildDir}/dist/lib"
 }
 
 task distConf(dependsOn: 'assemble', type: Copy) {
-        from project.file("src/main/resources/dga-config.xml")
-        into "${buildDir}/dist/conf"
+    from project.file("src/main/resources/dga-config.xml")
+    into "${buildDir}/dist/conf"
 }
 
 task dist(dependsOn: 'distJars', type: Copy) {
-        from project.file("src/main/resources/dga-giraph")
-	into "${buildDir}/dist/bin"
+    from project.file("src/main/resources/dga-giraph")
+    into "${buildDir}/dist/bin"
 }

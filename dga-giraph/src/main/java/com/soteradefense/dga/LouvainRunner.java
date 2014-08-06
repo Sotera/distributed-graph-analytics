@@ -1,8 +1,5 @@
 package com.soteradefense.dga;
 
-import java.io.IOException;
-import java.util.Map;
-
 import com.soteradefense.dga.io.formats.DGALongEdgeValueInputFormat;
 import com.soteradefense.dga.io.formats.LouvainVertexInputFormat;
 import com.soteradefense.dga.io.formats.LouvainVertexOutputFormat;
@@ -10,6 +7,7 @@ import com.soteradefense.dga.louvain.giraph.LouvainComputation;
 import com.soteradefense.dga.louvain.giraph.LouvainMasterCompute;
 import com.soteradefense.dga.louvain.giraph.LouvainVertexWritable;
 import com.soteradefense.dga.louvain.mapreduce.CommunityCompression;
+import com.soteradefense.dga.louvain.mapreduce.LouvainTableSynthesizer;
 import org.apache.giraph.GiraphRunner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -23,6 +21,9 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Map;
 
 public class LouvainRunner {
 
@@ -55,7 +56,7 @@ public class LouvainRunner {
         int status = 0;
         Path output = new Path(outputPath);
         FileSystem fs = FileSystem.get(configuration);
-
+        String basePath = outputPath;
         if (fs.exists(output)) {
             throw new IOException("Output path " + outputPath + " already exists.  Aborting.");
         }
@@ -63,11 +64,11 @@ public class LouvainRunner {
         int iteration = 0;
         outputPath = outputPath.endsWith("/") ? outputPath : outputPath + "/";
         String interimInputPath = inputPath;
-        while ( !isComplete(outputPath) ) {
+        while (!isComplete(outputPath)) {
             String interimOutputPath = outputPath + "giraph_" + String.valueOf(iteration);
             DGAConfiguration confForStep = DGAConfiguration.coalesce(minimalDefaultConfiguration, partiallyCoalescedConfiguration, requiredConfiguration);
             confForStep.setDGAGiraphProperty("-op", interimOutputPath);
-            String [] dgaArguments;
+            String[] dgaArguments;
             if (iteration == 0) {
                 confForStep.setDGAGiraphProperty("-eif", DGALongEdgeValueInputFormat.class.getCanonicalName());
                 confForStep.setDGAGiraphProperty("-eip", interimInputPath);
@@ -100,7 +101,10 @@ public class LouvainRunner {
             iteration++;
 
         }
-        return 0;
+        requiredConfiguration.setSystemProperty("mapred.reduce.slowstart.completed.maps", "1.0");
+        minimalDefaultConfiguration.setSystemProperty("mapred.task.timeout", "7200000");
+        DGAConfiguration confForFinalStep = DGAConfiguration.coalesce(minimalDefaultConfiguration, partiallyCoalescedConfiguration, requiredConfiguration);
+        return ToolRunner.run(new LouvainTableSynthesizer(basePath, confForFinalStep), confForFinalStep.buildLibJarsFromLibPath());
     }
 
     private int runMapreduceJob(String inputPath, String outputPath, DGAConfiguration conf) throws Exception {

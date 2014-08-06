@@ -34,7 +34,7 @@ public class DGARunnerTests {
                 "-D", "giraph.useSuperstepCounters=false", "-D", "giraph.zkList=localhost:2181", "com.soteradefense.dga.wcc.WeaklyConnectedComponentComputation", "-eip", "/input/", "-op", "/output/", "-eof",
                 "com.soteradefense.dga.io.formats.DGAEdgeTTTOutputFormat", "-eif", "com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat", "-w", "1", "-ca", "write.vertex.value=true", "-ca", "mapred.task.timeout=600000"};
         PowerMockito.mockStatic(ToolRunner.class);
-        String[] args = {"wcc", "/input/", "/output/"};
+        String[] args = {"libs/","wcc", "/input/", "/output/"};
         GiraphRunner runner = mock(GiraphRunner.class);
         DGAConfiguration conf = new DGAConfiguration();
         whenNew(GiraphRunner.class).withNoArguments().thenReturn(runner);
@@ -57,7 +57,7 @@ public class DGARunnerTests {
     public void testHBSEDefaults() throws Exception {
         String[] expected = {"-D", "giraph.useSuperstepCounters=false", "-D", "giraph.zkList=localhost:2181", "com.soteradefense.dga.hbse.HBSEComputation", "-eip", "/input/", "-op", "/output/", "-vof", "com.soteradefense.dga.io.formats.HBSEOutputFormat", "-eif", "com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat", "-mc", "com.soteradefense.dga.hbse.HBSEMasterCompute", "-w", "1", "-ca", "betweenness.output.dir=/output/", "-ca", "pivot.batch.size=10", "-ca", "betweenness.set.maxSize=10", "-ca", "pivot.batch.size.initial=10", "-ca", "mapred.task.timeout=600000", "-ca", "vertex.count=5"};
         PowerMockito.mockStatic(ToolRunner.class);
-        String[] args = {"hbse", "/input/", "/output/"};
+        String[] args = {"libs/","hbse", "/input/", "/output/"};
         GiraphRunner runner = mock(GiraphRunner.class);
         DGAConfiguration conf = new DGAConfiguration();
         whenNew(GiraphRunner.class).withNoArguments().thenReturn(runner);
@@ -80,7 +80,7 @@ public class DGARunnerTests {
     public void testLCDefaults() throws Exception {
         String[] expected = {"-D", "giraph.useSuperstepCounters=false", "-D", "giraph.zkList=localhost:2181", "com.soteradefense.dga.lc.LeafCompressionComputation", "-eip", "/input/", "-op", "/output/", "-eof", "com.soteradefense.dga.io.formats.DGAEdgeTTTOutputFormat", "-eif", "com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat", "-esd", "/output/", "-w", "1", "-ca", "mapred.task.timeout=600000"};
         PowerMockito.mockStatic(ToolRunner.class);
-        String[] args = {"lc", "/input/", "/output/"};
+        String[] args = {"libs/","lc", "/input/", "/output/"};
         GiraphRunner runner = mock(GiraphRunner.class);
         DGAConfiguration conf = new DGAConfiguration();
         whenNew(GiraphRunner.class).withNoArguments().thenReturn(runner);
@@ -103,7 +103,7 @@ public class DGARunnerTests {
     public void testPRDefaults() throws Exception {
         String[] expected = {"-D", "giraph.useSuperstepCounters=false", "-D", "giraph.zkList=localhost:2181", "com.soteradefense.dga.pr.PageRankComputation", "-eip", "/input/", "-op", "/output/", "-eof", "com.soteradefense.dga.io.formats.DGAEdgeTDTOutputFormat", "-eif", "com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat", "-mc", "com.soteradefense.dga.pr.PageRankMasterCompute", "-w", "1", "-ca", "write.vertex.value=true", "-ca", "mapred.task.timeout=600000"};
         PowerMockito.mockStatic(ToolRunner.class);
-        String[] args = {"pr", "/input/", "/output/"};
+        String[] args = {"libs/","pr", "/input/", "/output/"};
         GiraphRunner runner = mock(GiraphRunner.class);
         DGAConfiguration conf = new DGAConfiguration();
         whenNew(GiraphRunner.class).withNoArguments().thenReturn(runner);
@@ -131,7 +131,7 @@ public class DGARunnerTests {
         GiraphRunner runner = mock(GiraphRunner.class);
         Configuration hadoopConf = mock(Configuration.class);
         FileSystem fs = mock(FileSystem.class);
-        String[] args = {"louvain", "/input/", "/output/"};
+        String[] args = {"libs/","louvain", "/input/", "/output/"};
         DGAConfiguration conf = new DGAConfiguration();
         whenNew(GiraphRunner.class).withNoArguments().thenReturn(runner);
         whenNew(DGAConfiguration.class).withNoArguments().thenReturn(conf);
