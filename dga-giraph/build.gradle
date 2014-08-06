@@ -33,6 +33,7 @@ dependencies {
     testCompile 'commons-httpclient:commons-httpclient:3.0.1'
     testCompile 'org.powermock:powermock-module-junit4:1.5.5'
     testCompile 'org.powermock:powermock-api-mockito:1.5.5'
+    testCompile group:'org.apache.mrunit', name:'mrunit', version:'1.1.0', classifier:'hadoop2'
 }
 
 task distJars(dependsOn: 'distConf', type: Copy) {
