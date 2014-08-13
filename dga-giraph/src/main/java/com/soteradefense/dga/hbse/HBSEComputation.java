@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -84,7 +85,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         switch (state) {
             case PIVOT_SELECTION:
                 logger.debug("Started the Pivot Selection Process.");
-                if (!vertexValue.getWasPivotPoint() && isPossiblePivotPoint(id) ) {
+                if (!vertexValue.getWasPivotPoint() && isPossiblePivotPoint(id)) {
                     aggregate(HBSEMasterCompute.PIVOT_AGG, new PivotList(id));
                 }
                 break;
@@ -95,9 +96,9 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                     vertexValue.setWasPivotPoint(true);
                     logger.debug("Superstep: " + step + " Start new shortest path computation. Source = " + id);
                     for (Edge<Text, Text> edge : vertex.getEdges()) {
-                        sendMessage(edge.getTargetVertexId(), PathData.getShortestPathMessage(id, id, getEdgeValue(edge.getValue().toString()), 1));
+                        sendMessage(edge.getTargetVertexId(), PathData.getShortestPathMessage(id, id, getEdgeValue(edge.getValue().toString()), BigInteger.valueOf(1)));
                     }
-                    vertexValue.addPathData(PathData.getShortestPathMessage(id, id, 0, 1L));
+                    vertexValue.addPathData(PathData.getShortestPathMessage(id, id, BigInteger.valueOf(0), BigInteger.valueOf(1L)));
                     this.aggregate(HBSEMasterCompute.UPDATE_COUNT_AGG, new IntWritable(1));
                 }
                 break;
@@ -117,10 +118,10 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                 for (Entry<String, ShortestPathList> entry : updatedPathMap.entrySet()) {
                     ShortestPathList spl = entry.getValue();
                     String src = entry.getKey();
-                    long numPaths = spl.getShortestPathCount();
+                    BigInteger numPaths = spl.getShortestPathCount();
                     updateCount++;
                     for (Edge<Text, Text> edge : vertex.getEdges()) {
-                        long newDistance = spl.getDistance() + getEdgeValue(edge.getValue().toString());
+                        BigInteger newDistance = spl.getDistance().add(getEdgeValue(edge.getValue().toString()));
                         this.sendMessage(edge.getTargetVertexId(), PathData.getShortestPathMessage(src, id, newDistance, numPaths));
                     }
                 }
@@ -133,8 +134,8 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                 // for each shortest path send a message with that source.
                 for (Entry<String, ShortestPathList> entry : vertexValue.getPathDataMap().entrySet()) {
                     String source = entry.getKey();
-                    long distance = entry.getValue().getDistance();
-                    if (distance > 0) { // exclude this vertex
+                    BigInteger distance = entry.getValue().getDistance();
+                    if (distance.compareTo(BigInteger.ZERO) > 0) { // exclude this vertex
                         for (String pred : entry.getValue().getPredecessorPathCountMap().keySet()) {
                             this.sendMessage(new Text(pred), PathData.getPingMessage(source));
                             builder.append("(").append(pred).append(",").append(source).append("),");
@@ -172,7 +173,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                 if (noSuccessor.size() > 0) {
                     for (String src : noSuccessor) {
                         ShortestPathList spl = vertexValue.getPathDataMap().get(src);
-                        long numPaths = spl.getShortestPathCount();
+                        BigInteger numPaths = spl.getShortestPathCount();
                         double dep = 0;
                         for (String predecessor : spl.getPredecessorPathCountMap().keySet()) {
                             this.sendMessage(new Text(predecessor), PathData.getDependencyMessage(src, dep, numPaths));
@@ -194,9 +195,9 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                     }
 
                     double successorDep = message.getDependency();
-                    long successorNumPaths = message.getNumPaths();
-                    long numPaths = vertexValue.getPathDataMap().get(src).getShortestPathCount();
-                    double partialDep = ((double) numPaths / successorNumPaths) * (1 + successorDep);
+                    BigInteger successorNumPaths = message.getNumPaths();
+                    BigInteger numPaths = vertexValue.getPathDataMap().get(src).getShortestPathCount();
+                    double partialDep = (numPaths.doubleValue() / successorNumPaths.doubleValue()) * (1 + successorDep);
                     logger.debug("ID: " + id + " Step: " + step + " message {src:" + src + " successorPaths:" + successorNumPaths + " successorDep:" + successorDep + "} calculated {paths:" + numPaths + ", dep:" + partialDep + "}");
 
                     // accumulate the dependency and subtract one successor
@@ -238,14 +239,14 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
      * @param s Edge value as a string
      * @return long edge value
      */
-    private long getEdgeValue(String s) {
+    private BigInteger getEdgeValue(String s) {
         long edgeValue;
         try {
             edgeValue = Long.parseLong(s);
         } catch (NumberFormatException ex) {
             edgeValue = 1;
         }
-        return edgeValue;
+        return BigInteger.valueOf(edgeValue);
     }
 
     /**

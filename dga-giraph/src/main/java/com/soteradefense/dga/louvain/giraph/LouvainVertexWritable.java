@@ -44,6 +44,21 @@ public class LouvainVertexWritable implements Writable {
         this(0, new HashMap<String, Long>());
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        boolean equal = false;
+        if (obj instanceof LouvainVertexWritable) {
+            LouvainVertexWritable lObj = (LouvainVertexWritable) obj;
+            if (equal = this.weight == lObj.weight)
+                if (equal = edges.size() == lObj.edges.size()) {
+                    for (String key : edges.keySet())
+                        if (!(equal = edges.get(key).equals(lObj.edges.get(key))))
+                            break;
+                }
+        }
+        return equal;
+    }
+
     public LouvainVertexWritable(long weight, Map<String, Long> edges) {
         this.weight = weight;
         this.edges = edges;
@@ -102,5 +117,6 @@ public class LouvainVertexWritable implements Writable {
         }
         return vertex;
     }
+
 
 }

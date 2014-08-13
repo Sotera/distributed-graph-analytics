@@ -18,8 +18,6 @@
 package com.soteradefense.dga.io.formats;
 
 import com.soteradefense.dga.DGALoggingUtil;
-import org.apache.giraph.io.EdgeReader;
-import org.apache.giraph.io.ReverseEdgeDuplicator;
 import org.apache.giraph.io.formats.TextEdgeInputFormat;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
@@ -30,7 +28,7 @@ import java.io.IOException;
 
 /**
  * Abstract class that simplifies the setup of our EdgeInputFormat subclasses.
- *
+ * <p/>
  * All DGA analytics require data to be specified in roughly the same way, while some algorithms may require a 3rd column
  * with a weight and others may not care.  The only duty of this class is to set up the edge reverse duplicator, and extract
  * defaults or overrides from the GiraphConfiguration
@@ -60,13 +58,24 @@ public abstract class DGAAbstractEdgeInputFormat<E extends Writable> extends Tex
     public static final String IO_EDGE_REVERSE_DUPLICATOR = "io.edge.reverse.duplicator";
 
     /**
+     * Configuration Identifier for ignoring anything past the second column.
+     */
+    public static final String IO_IGNORE_THIRD = "simple.edge.column.ignore";
+
+    /**
      * Default Value for the reverse edge duplicator.
      */
     public static final String IO_EDGE_REVERSE_DUPLICATOR_DEFAULT = "false";
 
     /**
+     * Default Value for ignoring the third column.
+     */
+    public static final String IGNORE_THIRD_DEFAULT = "false";
+
+    /**
      * Simple implementation that offloads work of parsing to the RawEdge class and the work of casting our edgeValue as
      * a Writable class of choice to the implementing subclasses.
+     *
      * @param <E> Writable class to be stated in the implementing class.
      */
     public abstract class DGAAbstractEdgeReader<E extends Writable> extends TextEdgeReaderFromEachLineProcessed<RawEdge> {
@@ -75,17 +84,20 @@ public abstract class DGAAbstractEdgeInputFormat<E extends Writable> extends Tex
 
         private String defaultEdgeValue;
 
+        private boolean ignoreThirdColumn;
+
         @Override
         public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
             super.initialize(inputSplit, context);
             delimiter = getContext().getConfiguration().get(LINE_TOKENIZE_VALUE, LINE_TOKENIZE_VALUE_DEFAULT);
             defaultEdgeValue = getContext().getConfiguration().get(EDGE_VALUE, getDefaultEdgeValue());
+            ignoreThirdColumn = Boolean.parseBoolean(getContext().getConfiguration().get(IO_IGNORE_THIRD, IGNORE_THIRD_DEFAULT));
             DGALoggingUtil.setDGALogLevel(getContext().getConfiguration());
         }
 
         @Override
         protected RawEdge preprocessLine(Text line) throws IOException {
-            RawEdge edge = new RawEdge(delimiter, getDefaultEdgeValue());
+            RawEdge edge = new RawEdge(delimiter, getDefaultEdgeValue(), ignoreThirdColumn);
             edge.fromText(line);
             validateEdgeValue(edge);
             return edge;
