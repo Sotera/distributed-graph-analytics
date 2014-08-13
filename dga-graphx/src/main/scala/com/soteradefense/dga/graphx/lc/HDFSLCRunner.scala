@@ -7,9 +7,11 @@ import org.apache.spark.graphx.Graph
 import scala.reflect.ClassTag
 
 
-class HDFSLCRunner(var output_dir: String, var delimiter: String) extends AbstractLCRunner{
+class HDFSLCRunner(var output_dir: String, var delimiter: String) extends AbstractLCRunner {
 
-  override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Unit = {
+  override type S = Unit
+
+  override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): S = {
     graph.triplets.map(t => s"${t.srcId}$delimiter${t.dstId}").saveAsTextFile(output_dir)
   }
 }

@@ -26,7 +26,8 @@ class LeafCompressionCoreTest extends TestCase {
       new Edge(tokens(0).toLong, tokens(1).toLong)
     })
     val graph = Graph.fromEdges(edgeRDD, None)
-    val result = LeafCompressionCore.lc(graph)
+    val runner = new LCTestRunner
+    val result = runner.run(sc,graph)
     assert(result.vertices.count() == 0)
   }
 
@@ -39,7 +40,8 @@ class LeafCompressionCoreTest extends TestCase {
       new Edge(tokens(0).toLong, tokens(1).toLong)
     })
     val graph = Graph.fromEdges(edgeRDD, None)
-    val result = LeafCompressionCore.lc(graph)
+    val runner = new LCTestRunner
+    val result = runner.run(sc,graph)
     assert(result.vertices.count() == 3)
   }
 

@@ -12,12 +12,15 @@ class HDFSHBSERunner(var output_dir: String, var delimiter: String) extends Abst
 
   final val highBetweennessDirectory = "highBetweennessSetData"
 
-  def save[ED: ClassTag](betweennessSet: RDD[(Long, Double)], graph: Graph[VertexData, ED]): Unit = {
+  type H = Unit
+  type S = Unit
+
+  def save[ED: ClassTag](betweennessSet: RDD[(Long, Double)], graph: Graph[VertexData, ED]): H = {
     save(graph)
     betweennessSet.map(f => s"${f._1}$delimiter${f._2}").saveAsTextFile(s"$output_dir$highBetweennessDirectory")
   }
 
-  override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Unit = {
+  override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): S = {
     graph.vertices.map(m => s"${m._1}$delimiter${m._2.asInstanceOf[VertexData].getApproximateBetweenness}").saveAsTextFile(output_dir)
   }
 

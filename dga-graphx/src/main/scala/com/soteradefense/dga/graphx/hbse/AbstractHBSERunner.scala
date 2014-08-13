@@ -9,10 +9,13 @@ import scala.reflect.ClassTag
 
 abstract class AbstractHBSERunner extends Harness with Serializable {
 
-  def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): Unit = {
+  type H
+  override type R = H
+
+  def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): R = {
     val hbseOutput = HBSECore.hbse(sc, graph)
     save(hbseOutput._1, hbseOutput._2)
   }
 
-  def save[ED: ClassTag](betweennessSet: RDD[(Long, Double)], graph: Graph[VertexData, ED])
+  def save[ED: ClassTag](betweennessSet: RDD[(Long, Double)], graph: Graph[VertexData, ED]): H
 }

@@ -13,7 +13,6 @@ class HighBetweennessListComparator extends Ordering[(Long, Double)] {
 
 }
 
-//TODO: Implement Serializer
 class HighBetweennessList(private var maxSize: Int, var betweennessQueue: mutable.PriorityQueue[(Long, Double)]) extends Serializable {
 
   def this(maxSize: Int) = this(maxSize, mutable.PriorityQueue[(Long, Double)]()(new HighBetweennessListComparator))

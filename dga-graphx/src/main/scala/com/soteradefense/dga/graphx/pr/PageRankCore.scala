@@ -32,7 +32,7 @@ object PageRankCore extends Logging {
       val rank = ((1.0 - dampingFactor) / numberOfVertices) + (dampingFactor * sumOfMessages)
       var deltaVal = 0.0
       val rankDifference = rank - previousPR
-      deltaVal = if (previousPR != 0.0) Math.abs(rankDifference) / previousPR else Math.abs(rankDifference)
+      deltaVal = Math.abs(rankDifference) / previousPR
       (rank, deltaVal)
     }
 
@@ -43,7 +43,6 @@ object PageRankCore extends Logging {
         Iterator((edge.dstId, edge.srcAttr._1 / edge.attr))
       }
       else {
-        logInfo(s"Delta met, not sending message to ${edge.dstId}")
         Iterator.empty
       }
     }

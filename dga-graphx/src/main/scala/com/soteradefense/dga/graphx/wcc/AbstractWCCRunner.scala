@@ -8,11 +8,13 @@ import scala.reflect.ClassTag
 
 abstract class AbstractWCCRunner extends Harness with Serializable {
 
-  def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]) = {
+  override type R = S
+
+  def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): R = {
     save(WeaklyConnectionComponentsCore.wcc(graph))
   }
 
-  def runGraphXImplementation[VD: ClassTag](graph: Graph[VD, Long]) = {
+  def runGraphXImplementation[VD: ClassTag](graph: Graph[VD, Long]): S = {
     save(WeaklyConnectionComponentsCore.wccGraphX(graph))
   }
 }

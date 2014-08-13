@@ -26,8 +26,9 @@ class LouvainCoreTest extends TestCase {
     })
     val graph = Graph.fromEdges(edgeRDD, None)
     val louvainGraph = LouvainCore.createLouvainGraph(graph)
-    val result = LouvainCore.louvain(sc, louvainGraph)
-    assert(result._2.vertices.map(m => m._2.community == 1).reduce((a, b) => a == b))
+    val runner = new LouvainTestRunner(2000, 1)
+    val result = runner.run(sc, louvainGraph)
+    assert(result.vertices.map(m => m._2.community == 1).reduce((a, b) => a == b))
   }
 
   @Test
@@ -40,11 +41,12 @@ class LouvainCoreTest extends TestCase {
     })
     val graph = Graph.fromEdges(edgeRDD, None)
     val louvainGraph = LouvainCore.createLouvainGraph(graph)
-    val result = LouvainCore.louvain(sc, louvainGraph)
-    assert(result._2.vertices.filter(f => f._2.community == 1).count() == 2)
-    assert(result._2.vertices.filter(f => f._2.community == 4).count() == 2)
-    assert(result._2.vertices.filter(f => f._2.community == 5).count() == 2)
-    assert(result._2.vertices.filter(f => f._2.community == 10).count() == 7)
+    val runner = new LouvainTestRunner(2000, 1)
+    val result = runner.run(sc, louvainGraph)
+    assert(result.vertices.filter(f => f._2.community == 1).count() == 2)
+    assert(result.vertices.filter(f => f._2.community == 4).count() == 2)
+    assert(result.vertices.filter(f => f._2.community == 5).count() == 2)
+    assert(result.vertices.filter(f => f._2.community == 10).count() == 7)
   }
 
   @After

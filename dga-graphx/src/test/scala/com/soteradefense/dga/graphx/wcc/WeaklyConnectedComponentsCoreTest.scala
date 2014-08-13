@@ -25,7 +25,8 @@ class WeaklyConnectedComponentsCoreTest extends TestCase {
       new Edge(tokens(0).toLong, tokens(1).toLong)
     })
     val graph = Graph.fromEdges(edgeRDD, None)
-    val result = WeaklyConnectionComponentsCore.wcc(graph)
+    val runner = new WCCTestRunner
+    val result = runner.run(sc, graph)
     val vertexId: VertexId = 6
     assert(result.vertices.map(f => f._2).reduce((a, b) => if (a.equals(b)) a else -1).equals(vertexId))
   }
@@ -41,7 +42,8 @@ class WeaklyConnectedComponentsCoreTest extends TestCase {
       new Edge(tokens(0).toLong, tokens(1).toLong)
     })
     val graph = Graph.fromEdges(edgeRDD, None)
-    val result = WeaklyConnectionComponentsCore.wcc(graph)
+    val runner = new WCCTestRunner
+    val result = runner.run(sc, graph)
     val nineComponent: VertexId = 9
     val sixComponent: VertexId = 6
 
@@ -65,7 +67,8 @@ class WeaklyConnectedComponentsCoreTest extends TestCase {
       new Edge(tokens(0).toLong, tokens(1).toLong)
     })
     val graph = Graph.fromEdges(edgeRDD, None)
-    val result = WeaklyConnectionComponentsCore.wcc(graph)
+    val runner = new WCCTestRunner
+    val result = runner.run(sc, graph)
     val sixComponent: VertexId = 6
     val nineComponent: VertexId = 9
     val fourteenComponent: VertexId = 14

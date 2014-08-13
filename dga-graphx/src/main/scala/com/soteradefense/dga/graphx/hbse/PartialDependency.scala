@@ -3,7 +3,6 @@ package com.soteradefense.dga.graphx.hbse
 import com.esotericsoftware.kryo.io.{Input, Output}
 import com.esotericsoftware.kryo.{Kryo, Serializer}
 
-//TODO: Write Serializer
 class PartialDependency(private var successors: Int, private var dependency: Double) extends Serializable {
 
   def this() = this(0, 0.0)

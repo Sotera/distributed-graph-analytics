@@ -10,7 +10,7 @@ abstract class AbstractLouvainRunner(var minProgress: Int, var progressCounter: 
 
   var qValues = Array[(Int, Double)]()
 
-  override def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]) = {
+  override def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): R = {
 
     var louvainGraph = LouvainCore.createLouvainGraph(graph)
 
@@ -50,7 +50,7 @@ abstract class AbstractLouvainRunner(var minProgress: Int, var progressCounter: 
    */
   def saveLevel(sc: SparkContext, level: Int, q: Double, graph: Graph[VertexState, Long])
 
-  def finalSave(sc: SparkContext, level: Int, q: Double, graph: Graph[VertexState, Long])
+  def finalSave(sc: SparkContext, level: Int, q: Double, graph: Graph[VertexState, Long]): R
 
-  override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED])
+  override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): S
 }

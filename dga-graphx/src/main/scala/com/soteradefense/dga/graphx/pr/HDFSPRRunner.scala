@@ -9,6 +9,8 @@ import scala.reflect.ClassTag
 
 class HDFSPRRunner(var output_dir: String, var delimiter: String, delta: Double) extends AbstractPRRunner(delta) {
 
+  override type S = Unit
+
   override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]) = {
     graph.vertices.map(f => s"${f._1}${delimiter}${f._2}").saveAsTextFile(output_dir)
   }

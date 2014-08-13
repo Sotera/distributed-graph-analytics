@@ -8,7 +8,9 @@ import scala.reflect.ClassTag
 
 abstract class AbstractLCRunner extends Harness with Serializable {
 
-  override def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): Unit = {
+  override type R = S
+
+  override def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): R = {
     save(LeafCompressionCore.lc(graph))
   }
 

@@ -18,7 +18,8 @@ class HDFSLouvainRunner(minProgress: Int, progressCounter: Int, var outputdir: S
 
   var vertexSavePath: String = outputdir
   var edgeSavePath: String = outputdir
-
+  override type R = Unit
+  override type S = Unit
   /**
    * Save the graph at the given level of compression with community labels
    * level 0 = no compression
@@ -45,7 +46,7 @@ class HDFSLouvainRunner(minProgress: Int, progressCounter: Int, var outputdir: S
 
   }
 
-  override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Unit = {
+  override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): S = {
     graph.vertices.saveAsTextFile(vertexSavePath)
     graph.edges.saveAsTextFile(edgeSavePath)
   }

@@ -7,22 +7,21 @@ import com.esotericsoftware.kryo.{Kryo, Serializer}
 import com.soteradefense.dga.hbse.HBSEConfigurationConstants
 import org.apache.spark.SparkConf
 
-class HBSEConf(var betweennessOutputDir: String,
-               var shortestPathPhases: Int,
-               var setStability: Int,
-               var setStabilityCounter: Int,
-               var betweennessSetMaxSize: Int,
-               var pivotBatchSize: Int,
-               var initialPivotBatchSize: Int,
-               var pivotSelectionRandomSeed: Long,
-               var vertexCount: Int) extends Serializable{
+class HBSEConf(
+                var shortestPathPhases: Int,
+                var setStability: Int,
+                var setStabilityCounter: Int,
+                var betweennessSetMaxSize: Int,
+                var pivotBatchSize: Int,
+                var initialPivotBatchSize: Int,
+                var pivotSelectionRandomSeed: Long,
+                var vertexCount: Int) extends Serializable {
 
-  def this() = this("", 1, 0, 1, 10, 5, 5, (new Date).getTime, 10)
+  def this() = this(1, 0, 1, 10, 5, 5, (new Date).getTime, 10)
 
   def this(sparkConf: SparkConf) = {
     this()
-    this.betweennessOutputDir = sparkConf.get(HBSEConfigurationConstants.BETWEENNESS_OUTPUT_DIR, "")
-    this.shortestPathPhases = sparkConf.getInt(HBSEConfigurationConstants.BETWEENNESS_SHORTEST_PATH_PHASES, 5)
+    this.shortestPathPhases = sparkConf.getInt(HBSEConfigurationConstants.BETWEENNESS_SHORTEST_PATH_PHASES, 1)
     this.setStability = sparkConf.getInt(HBSEConfigurationConstants.BETWEENNESS_SET_STABILITY, 0)
     this.setStabilityCounter = sparkConf.getInt(HBSEConfigurationConstants.BETWEENNESS_SET_STABILITY_COUNTER, 5)
     this.betweennessSetMaxSize = sparkConf.getInt(HBSEConfigurationConstants.BETWEENNESS_SET_MAX_SIZE, 10)
@@ -38,7 +37,6 @@ class HBSEConf(var betweennessOutputDir: String,
 
 class HBSEConfSerializer extends Serializer[HBSEConf] {
   override def write(kryo: Kryo, output: Output, obj: HBSEConf): Unit = {
-    kryo.writeObject(output, obj.betweennessOutputDir)
     kryo.writeObject(output, obj.shortestPathPhases)
     kryo.writeObject(output, obj.setStability)
     kryo.writeObject(output, obj.setStabilityCounter)
@@ -50,8 +48,7 @@ class HBSEConfSerializer extends Serializer[HBSEConf] {
   }
 
   override def read(kryo: Kryo, input: Input, classType: Class[HBSEConf]): HBSEConf = {
-    new HBSEConf(kryo.readObject(input, classOf[String]),
-      kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]),
+    new HBSEConf(kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]),
       kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Long]), kryo.readObject(input, classOf[Int]))
   }
 }

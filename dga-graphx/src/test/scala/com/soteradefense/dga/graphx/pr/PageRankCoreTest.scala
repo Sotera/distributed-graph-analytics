@@ -25,7 +25,8 @@ class PageRankCoreTest extends TestCase {
       new Edge(tokens(0).toLong, tokens(1).toLong)
     })
     val graph = Graph.fromEdges(edgeRDD, None)
-    val result = PageRankCore.pr(graph, 0.0001)
+    val runner = new PRTestRunner(0.0001)
+    val result = runner.run(sc, graph)
     val one: VertexId = 1
     val two: VertexId = 2
     val three: VertexId = 3
@@ -45,13 +46,15 @@ class PageRankCoreTest extends TestCase {
       new Edge(tokens(0).toLong, tokens(1).toLong)
     })
     val graph = Graph.fromEdges(edgeRDD, None)
-    val result = PageRankCore.pr(graph, 0.0001)
+    val runner = new PRTestRunner(0.0001)
+    val result = runner.run(sc, graph)
     val one: VertexId = 1
     val highest = result.vertices.max()(new Ordering[(Long, Double)]() {
       override def compare(x: (Long, Double), y: (Long, Double)): Int = {
         x._2.compareTo(y._2)
       }
     })
+    assert(highest._1 == one)
   }
 
   @After

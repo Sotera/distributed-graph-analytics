@@ -8,7 +8,9 @@ import scala.reflect.ClassTag
 
 class HDFSWCCRunner(var output_dir: String, var delimiter: String) extends AbstractWCCRunner {
 
-  def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]) = {
+  override type S = Unit
+
+  def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): S = {
     graph.triplets.map(t => s"${t.srcId}$delimiter${t.dstId}$delimiter${t.srcAttr}").saveAsTextFile(output_dir)
   }
 
