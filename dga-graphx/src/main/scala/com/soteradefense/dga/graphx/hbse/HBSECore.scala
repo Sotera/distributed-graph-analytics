@@ -1,3 +1,20 @@
+/*
+ *
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
 package com.soteradefense.dga.graphx.hbse
 
 import java.util.Date
@@ -310,7 +327,7 @@ object HBSECore extends Logging with Serializable {
   def sendPingMessage(triplet: EdgeTriplet[VertexData, Long]) = {
     var buffer = new ListBuffer[Long]
     logInfo(s"About to Ping ${triplet.srcId} Predecessors")
-    def op(buf: ListBuffer[Long], item: (Long, ShortestPathList)) = {
+    def buildPingMessages(buf: ListBuffer[Long], item: (Long, ShortestPathList)) = {
       val shortestPathList = item._2
       val pingVertexId = item._1
       if (shortestPathList.getDistance > 0 && shortestPathList.getPredecessorPathCountMap.contains(triplet.srcId)) {
@@ -318,15 +335,22 @@ object HBSECore extends Logging with Serializable {
       }
       buf
     }
-    buffer = triplet.dstAttr.getPathDataMap.foldLeft(buffer)(op)
+    buffer = triplet.dstAttr.getPathDataMap.foldLeft(buffer)(buildPingMessages)
     Iterator((triplet.srcId, buffer.toList))
   }
 
   def selectPivots(sc: SparkContext, hbseGraph: Graph[VertexData, Long], vertexCount: Long) = {
     var totalNumberOfPivotsUsed = previousPivots.size
     var pivots: mutable.Set[VertexId] = new mutable.HashSet[VertexId]
+    def buildSetOfPivots(runningSet: mutable.HashSet[VertexId], item: (VertexId, VertexData)) = {
+      val vertexId = item._1
+      if(!previousPivots.contains(vertexId)){
+        runningSet.add(vertexId)
+      }
+      runningSet
+    }
     while (pivots.size != hbseConf.pivotBatchSize && totalNumberOfPivotsUsed < vertexCount) {
-      pivots ++= hbseGraph.vertices.takeSample(withReplacement = false, hbseConf.pivotBatchSize, (new Date).getTime).map(f => f._1).toSet.&~(previousPivots)
+      pivots ++= hbseGraph.vertices.takeSample(withReplacement = false, hbseConf.pivotBatchSize, (new Date).getTime).foldLeft(new mutable.HashSet[VertexId])(buildSetOfPivots)
       totalNumberOfPivotsUsed = previousPivots.size + pivots.size
     }
     logInfo("Pivot Selection Done")
@@ -341,14 +365,14 @@ object HBSECore extends Logging with Serializable {
   def sendShortestPathRunMessage(triplet: EdgeTriplet[(mutable.HashMap[Long, ShortestPathList]), Long]) = {
     val singleMap = new mutable.HashMap[VertexId, PathData]
     val updatedPathMap = triplet.srcAttr
-    def op(map: mutable.HashMap[VertexId, PathData], item: (Long, ShortestPathList)) = {
+    def buildShortestPathMessage(map: mutable.HashMap[VertexId, PathData], item: (Long, ShortestPathList)) = {
       val messageSource = item._1
       val shortestPathList = item._2
       map.put(messageSource, PathData.createShortestPathMessage(messageSource, triplet.srcId, shortestPathList.getDistance + triplet.attr, shortestPathList.getShortestPathCount))
       map
     }
     logInfo(s"Sending ShortestPath Update Message to ${triplet.dstId} from ${triplet.srcId}")
-    Iterator((triplet.dstId, updatedPathMap.foldLeft(singleMap)(op)))
+    Iterator((triplet.dstId, updatedPathMap.foldLeft(singleMap)(buildShortestPathMessage)))
   }
 
   def merge[T: ClassTag](leftList: List[T], rightList: List[T]) = {
@@ -356,7 +380,7 @@ object HBSECore extends Logging with Serializable {
   }
 
   def mergeMapMessage(leftMessageMap: mutable.Map[Long, PathData], rightMessageMap: mutable.Map[Long, PathData]) = {
-    def op(mergedMessageMap: mutable.Map[Long, PathData], item: (Long, PathData)) = {
+    def mergeMapMessages(mergedMessageMap: mutable.Map[Long, PathData], item: (Long, PathData)) = {
       val key = item._1
       val value = item._2
       if (mergedMessageMap.contains(key)) {
@@ -370,6 +394,6 @@ object HBSECore extends Logging with Serializable {
       }
       mergedMessageMap
     }
-    leftMessageMap.foldLeft(rightMessageMap)(op)
+    leftMessageMap.foldLeft(rightMessageMap)(mergeMapMessages)
   }
 }
