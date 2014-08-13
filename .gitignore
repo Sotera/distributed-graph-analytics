@@ -10,7 +10,6 @@ build
 out
 target/*
 gradle/
-gradlew*
 .gradle/
 example.log*
 _site/
