@@ -19,6 +19,7 @@ package com.soteradefense.dga.graphx.louvain
 
 import com.esotericsoftware.kryo.io.{Input, Output}
 import com.esotericsoftware.kryo.{Kryo, Serializer}
+import com.esotericsoftware.kryo.serializers.DefaultArraySerializers.ObjectArraySerializer
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx._
 
@@ -74,10 +75,14 @@ class HDFSLouvainRunnerSerializer extends Serializer[HDFSLouvainRunner] {
     kryo.writeObject(output, obj.minProgress)
     kryo.writeObject(output, obj.progressCounter)
     kryo.writeObject(output, obj.outputdir)
-    //TODO: Maybe need to serialize qValues
+    val objectArraySerializer = new ObjectArraySerializer
+    objectArraySerializer.write(kryo, output, obj.qValues.asInstanceOf[Array[Object]])
   }
 
   override def read(kryo: Kryo, input: Input, classType: Class[HDFSLouvainRunner]): HDFSLouvainRunner = {
-    new HDFSLouvainRunner(kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[String]))
+    val runner = new HDFSLouvainRunner(kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[String]))
+    val objectArraySerializer = new ObjectArraySerializer
+    runner.qValues = objectArraySerializer.read(kryo, input, classOf[Array[Object]]).asInstanceOf[Array[(Int, Double)]]
+    runner
   }
 }

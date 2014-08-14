@@ -37,7 +37,6 @@ class DGAKryoRegistrator extends GraphKryoRegistrator {
     kryo.register(classOf[HDFSWCCRunner], new HDFSWCCRunnerSerializer)
 
     //HBSE
-    kryo.register(classOf[HighBetweennessList], new HighBetweennessListSerializer)
     kryo.register(classOf[PartialDependency], new PartialDependencySerializer)
     kryo.register(classOf[PathData], new PathDataSerializer)
     kryo.register(classOf[VertexData], new VertexDataSerializer)

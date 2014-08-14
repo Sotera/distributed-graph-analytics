@@ -48,7 +48,6 @@ class CommandLineParserTest extends TestCase {
   }
 
 
-  //TODO: Needs to be done a better way
   @Test
   def testCommandLineWithNoIO() {
     try {

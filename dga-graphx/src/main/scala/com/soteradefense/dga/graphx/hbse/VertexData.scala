@@ -25,7 +25,10 @@ import scala.collection.mutable
 
 class VertexData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList], private var partialDepMap: mutable.HashMap[Long, PartialDependency], private var approximateBetweenness: Double) extends Serializable {
 
-  def this() = this(new mutable.HashMap[Long, ShortestPathList], new mutable.HashMap[Long, PartialDependency], 0.0)
+  def this(betweenness: Double) = this(new mutable.HashMap[Long, ShortestPathList], new mutable.HashMap[Long, PartialDependency], betweenness)
+
+  def this() = this(0.0)
+
 
   def addPathData(pathData: PathData): ShortestPathList = {
     var list: ShortestPathList = null
@@ -92,7 +95,7 @@ class VertexDataSerializer extends Serializer[VertexData] {
     i = 0
     val partialDepSize = kryo.readObject(input, classOf[Int])
     val partialDepMap = new mutable.HashMap[Long, PartialDependency]
-    for (i <- 0 to (pdSize - 1)) {
+    for (i <- 0 to (partialDepSize - 1)) {
       val serializer = new PartialDependencySerializer
       partialDepMap.put(kryo.readObject(input, classOf[Long]), serializer.read(kryo, input, classOf[PartialDependency]))
     }

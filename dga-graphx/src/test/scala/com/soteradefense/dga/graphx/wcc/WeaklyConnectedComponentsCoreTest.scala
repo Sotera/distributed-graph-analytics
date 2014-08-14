@@ -67,10 +67,10 @@ class WeaklyConnectedComponentsCoreTest extends TestCase {
 
     val components = result.vertices.groupBy(_._2).map(f => f)
     val nine = components.filter(f => f._1.equals(nineComponent)).first()
-    assert(nine._2.count(_ => true).equals(3))
+    assert(nine._2.size.equals(3))
 
     val six = components.filter(f => f._1.equals(sixComponent)).first()
-    assert(six._2.count(_ => true).equals(6))
+    assert(six._2.size.equals(6))
   }
 
   @Test
@@ -93,13 +93,13 @@ class WeaklyConnectedComponentsCoreTest extends TestCase {
 
     val components = result.vertices.groupBy(_._2).map(f => f)
     val six = components.filter(f => f._1.equals(sixComponent)).first()
-    assert(six._2.count(_ => true).equals(6))
+    assert(six._2.size.equals(6))
 
     val nine = components.filter(f => f._1.equals(nineComponent)).first()
-    assert(nine._2.count(_ => true).equals(3))
+    assert(nine._2.size.equals(3))
 
     val fourteen = components.filter(f => f._1.equals(fourteenComponent)).first()
-    assert(fourteen._2.count(_ => true).equals(5))
+    assert(fourteen._2.size.equals(5))
   }
 
   @After

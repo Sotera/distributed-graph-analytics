@@ -30,7 +30,7 @@ class HighBetweennessCoreTest extends TestCase {
 
   @Before
   override def setUp() {
-    val conf = new SparkConf().setMaster("local").setAppName(this.getName).set("fs.default.name", "")
+    val conf = new SparkConf().setMaster("local").setAppName(this.getName)
     sc = new SparkContext(conf)
   }
 

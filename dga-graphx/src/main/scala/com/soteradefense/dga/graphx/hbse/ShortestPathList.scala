@@ -44,25 +44,16 @@ class ShortestPathList(private var distance: Long, private var predecessorPathCo
 
   def getDistance = this.distance
 
-  def getShortestPathCount = {
-    var paths: Long = 0L
-    for (dist: Long <- this.predecessorPathCountMap.values)
-      paths += dist
-    paths
-  }
+  def getShortestPathCount = this.predecessorPathCountMap.foldLeft(0L)((total: Long, mapItem: (Long, Long)) => total + mapItem._2)
+
 
   def update(pathData: PathData): Boolean = {
     var updated: Boolean = false
     if (this.distance == pathData.getDistance) {
-      if (!this.predecessorPathCountMap.contains(pathData.getPivotSource)) {
+      val oldNumberOfShortestPaths = this.predecessorPathCountMap.getOrElse(pathData.getPivotSource, Long.MinValue)
+      updated = oldNumberOfShortestPaths != pathData.getNumberOfShortestPaths
+      if (updated) {
         this.predecessorPathCountMap.put(pathData.getPivotSource, pathData.getNumberOfShortestPaths)
-        updated = true
-      } else {
-        val oldNumShortestPaths = this.predecessorPathCountMap.get(pathData.getPivotSource).get
-        updated = oldNumShortestPaths != pathData.getNumberOfShortestPaths
-        if (updated) {
-          this.predecessorPathCountMap.put(pathData.getPivotSource, pathData.getNumberOfShortestPaths)
-        }
       }
     } else if (pathData.getDistance < this.distance) {
       this.distance = pathData.getDistance
@@ -89,10 +80,10 @@ class ShortestPathListSerializer extends Serializer[ShortestPathList] {
 
   override def read(kryo: Kryo, input: Input, classType: Class[ShortestPathList]): ShortestPathList = {
     val distance = kryo.readObject(input, classOf[Long])
-    val pathCountMapsize = kryo.readObject(input, classOf[Int])
+    val pathCountMapSize = kryo.readObject(input, classOf[Int])
     val map = new mutable.HashMap[Long, Long]
     var i = 0
-    for (i <- 0 to pathCountMapsize) {
+    for (i <- 0 to pathCountMapSize) {
       map.put(kryo.readObject(input, classOf[Long]), kryo.readObject(input, classOf[Long]))
     }
 

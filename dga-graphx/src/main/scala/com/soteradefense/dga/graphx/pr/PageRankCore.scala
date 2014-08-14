@@ -31,16 +31,16 @@ object PageRankCore extends Logging {
     graph.pageRank(delta)
   }
 
-  def pr[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED], delta: Double): (Graph[Double, Long]) = {
+  def pr[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED], delta: Double): (Graph[Double, Int]) = {
     logInfo("Starting the PageRank Algorithm")
     val numberOfVertices = graph.vertices.count()
     val initialVertexValue = 1.0 / numberOfVertices
     logInfo("Creating the PageRank Graph")
-    val prGraph: Graph[(Double, Double), Long] = graph
+    val prGraph: Graph[(Double, Double), Int] = graph
       .outerJoinVertices(graph.outDegrees) {
-      (vid, vdata, deg) => deg.getOrElse(0).toLong
+      (vid, vdata, deg) => deg.getOrElse(0)
     }
-      .mapTriplets(e => e.srcAttr)
+      .mapTriplets(e => 1 / e.srcAttr)
       .mapVertices((vid, vd) => (0.0, 0.0))
       .cache()
 
@@ -48,16 +48,16 @@ object PageRankCore extends Logging {
       val (previousPR, previousDelta) = attr
       val rank = ((1.0 - dampingFactor) / numberOfVertices) + (dampingFactor * sumOfMessages)
       var deltaVal = 0.0
-      val rankDifference = rank - previousPR
-      deltaVal = Math.abs(rankDifference) / previousPR
+      val rankDifference = Math.abs(rank - previousPR)
+      deltaVal = rankDifference / previousPR
       (rank, deltaVal)
     }
 
     def messageCombiner(a: Double, b: Double): Double = a + b
 
-    def sendMessage(edge: EdgeTriplet[(Double, Double), Long]) = {
-      if (edge.srcAttr._2 > delta) {
-        Iterator((edge.dstId, edge.srcAttr._1 / edge.attr))
+    def sendMessage(edge: EdgeTriplet[(Double, Double), Int]) = {
+      if (delta < edge.srcAttr._2) {
+        Iterator((edge.dstId, edge.srcAttr._1 * edge.attr))
       }
       else {
         Iterator.empty

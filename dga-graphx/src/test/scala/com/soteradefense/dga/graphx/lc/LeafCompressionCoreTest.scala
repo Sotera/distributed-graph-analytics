@@ -45,7 +45,7 @@ class LeafCompressionCoreTest extends TestCase {
     })
     val graph = Graph.fromEdges(edgeRDD, None)
     val runner = new LCTestRunner
-    val result = runner.run(sc,graph)
+    val result = runner.run(sc, graph)
     assert(result.vertices.count() == 0)
   }
 
@@ -59,8 +59,55 @@ class LeafCompressionCoreTest extends TestCase {
     })
     val graph = Graph.fromEdges(edgeRDD, None)
     val runner = new LCTestRunner
-    val result = runner.run(sc,graph)
-    assert(result.vertices.count() == 3)
+    val result = runner.run(sc, graph)
+    val resultingVertices = result.vertices.map(f => f._1).collect()
+    assert(resultingVertices.size == 3)
+    assert(resultingVertices.contains(1))
+    assert(resultingVertices.contains(3))
+    assert(resultingVertices.contains(2))
+  }
+
+  @Test
+  def testLeafCompressionOnALargerGraph() {
+    val data = Array("1,2",
+      "1,3",
+      "1,4",
+      "1,5",
+      "1,6",
+      "2,3",
+      "2,4",
+      "2,5",
+      "3,4",
+      "3,5",
+      "4,5",
+      "6,1",
+      "6,7",
+      "6,8",
+      "6,9",
+      "7,8",
+      "7,9",
+      "8,9",
+      "9,8",
+      "9,7",
+      "5,2",
+      "5,4",
+      "4,2")
+    val rdd = sc.parallelize(data.toSeq)
+    val edgeRDD: RDD[Edge[Long]] = rdd.map(f => {
+      val tokens = f.split(",")
+      new Edge(tokens(0).toLong, tokens(1).toLong)
+    })
+    val graph = Graph.fromEdges(edgeRDD, None)
+    val runner = new LCTestRunner
+    val result = runner.run(sc, graph)
+    val resultingVertices = result.vertices.map(f => f._1).collect()
+    assert(resultingVertices.size == 5)
+    assert(resultingVertices.contains(1))
+    assert(resultingVertices.contains(2))
+    assert(resultingVertices.contains(3))
+    assert(resultingVertices.contains(4))
+    assert(resultingVertices.contains(5))
+
   }
 
   @After
