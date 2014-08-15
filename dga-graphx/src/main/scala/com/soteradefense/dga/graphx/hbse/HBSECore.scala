@@ -38,14 +38,16 @@ object HBSECore extends Logging with Serializable {
   implicit def orderedBetweennessSet(implicit ord1: Ordering[Long], ord2: Ordering[Double]): Ordering[(Long, Double)] =
     new Ordering[(Long, Double)] {
       def compare(x: (Long, Double), y: (Long, Double)): Int = {
+        val (vertexIdX, betweennessX) = x
+        val (vertexIdY, betweennessY) = y
         // _2 is the betweenness value
         // _1 is the vertex id
         // This is for the ordered set of betweenness values.
         // If their values are equal, compare their Ids to make sure they are not the same node.
-        if (x._2.equals(y._2)) {
-          x._1.compareTo(y._1)
+        if (betweennessX.equals(betweennessY)) {
+          vertexIdX.compareTo(vertexIdY)
         } else {
-          y._2.compareTo(x._2)
+          -betweennessX.compareTo(betweennessY)
         }
       }
     }
@@ -56,15 +58,15 @@ object HBSECore extends Logging with Serializable {
     previousPivots = new mutable.HashSet[VertexId]
     var previousBetweennessSet: mutable.Set[(Long, Double)] = new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
     var newlyComputedBetweennessSet: mutable.Set[(Long, Double)] = new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
-    var delta: Int = 0
+    var setDifferenceCount: Int = 0
     var keepRunning: Boolean = true
-    var stabilityCutOffMetCount: Int = 0
+    var betweennessSetStabilityCutOff: Int = 0
     // Create an HBSE Graph
     var hbseGraph: Graph[VertexData, Long] = createHBSEGraph(graph).cache()
     // Calculate this once, so we don't have to do it every run.
     val totalNumberOfVertices = hbseGraph.vertices.count()
     do {
-      stabilityCutOffMetCount = 0
+      betweennessSetStabilityCutOff = 0
       logInfo("Selecting Pivots")
       // Select the nodes that will send the initial messages.
       val pivots: Broadcast[mutable.Set[VertexId]] = selectPivots(sc, hbseGraph, totalNumberOfVertices)
@@ -75,16 +77,16 @@ object HBSECore extends Logging with Serializable {
       logInfo("Get High Betweenness List")
       hbseGraph = computeHighBetweenness(hbseGraph)
       newlyComputedBetweennessSet = getHighBetweennessSet(hbseGraph)
-      delta = compareHighBetweennessSets(previousBetweennessSet, newlyComputedBetweennessSet)
+      setDifferenceCount = compareHighBetweennessSets(previousBetweennessSet, newlyComputedBetweennessSet)
       // Close the running betweenness map and set it equal to the current set.
       previousBetweennessSet.clear()
       previousBetweennessSet = newlyComputedBetweennessSet.clone()
       // Decided if the algorithm needs to run another pass.
       val numberOfPivotsSelected = previousPivots.size + pivots.value.size
       previousPivots ++= pivots.value
-      val shouldKeepRunningResult: (Boolean, Int) = shouldKeepRunning(delta, stabilityCutOffMetCount, numberOfPivotsSelected, totalNumberOfVertices)
+      val shouldKeepRunningResult: (Boolean, Int) = shouldKeepRunning(setDifferenceCount, betweennessSetStabilityCutOff, numberOfPivotsSelected, totalNumberOfVertices)
       keepRunning = shouldKeepRunningResult._1
-      stabilityCutOffMetCount = shouldKeepRunningResult._2
+      betweennessSetStabilityCutOff = shouldKeepRunningResult._2
 
     } while (keepRunning)
     // Create an RDD to write the High Betweenness Set.
@@ -198,8 +200,7 @@ object HBSECore extends Logging with Serializable {
           val singleMap: mutable.Map[Long, PathData] = new mutable.HashMap[Long, PathData]
           val updatedPathMap = graphData.getPathDataMap
           def buildShortestPathMessage(map: mutable.Map[Long, PathData], item: (Long, ShortestPathList)) = {
-            val messageSource = item._1
-            val shortestPathList = item._2
+            val (messageSource,shortestPathList) = item
             map.put(messageSource, PathData.createShortestPathMessage(messageSource, triplet.srcId, shortestPathList.getDistance + triplet.attr, shortestPathList.getShortestPathCount))
             map
           }
@@ -318,7 +319,7 @@ object HBSECore extends Logging with Serializable {
       (graphData, newBuf.toList)
     }
 
-    def sendMsg(triplet: EdgeTriplet[(VertexData, List[(Long, Double, Long)]), Long]) = {
+    def sendDependencyCalculationMessages(triplet: EdgeTriplet[(VertexData, List[(Long, Double, Long)]), Long]) = {
       var buffer = new ListBuffer[(Long, Double, Long)]
       val (graphData, forwardMessages) = triplet.dstAttr
       def dependencyMessageAccumulation(buf: ListBuffer[(Long, Double, Long)], item: (Long, Double, Long)) = {
@@ -340,7 +341,7 @@ object HBSECore extends Logging with Serializable {
       }
     }
     val initialValue: List[(Long, Double, Long)] = null
-    runGraph = Pregel(runGraph, initialValue, activeDirection = EdgeDirection.In)(vProg, sendMsg, merge[(Long, Double, Long)]).cache()
+    runGraph = Pregel(runGraph, initialValue, activeDirection = EdgeDirection.In)(vProg, sendDependencyCalculationMessages, merge[(Long, Double, Long)]).cache()
 
     val oldGraph = hbseGraph
     hbseGraph = runGraph.mapVertices((vertexId, vertexData) => {
@@ -403,11 +404,11 @@ object HBSECore extends Logging with Serializable {
     def buildSetOfPivots(runningSet: mutable.HashSet[VertexId], item: (VertexId, VertexData)) = {
       val vertexId = item._1
       if (!previousPivots.contains(vertexId)) {
-        runningSet.add(vertexId)
+        runningSet += vertexId
       }
       runningSet
     }
-    while (pivots.size != hbseConf.pivotBatchSize && totalNumberOfPivotsUsed < vertexCount) {
+    while (pivots.size < hbseConf.pivotBatchSize && totalNumberOfPivotsUsed < vertexCount) {
       pivots ++= hbseGraph.vertices.takeSample(withReplacement = false, hbseConf.pivotBatchSize, (new Date).getTime).foldLeft(new mutable.HashSet[VertexId])(buildSetOfPivots)
       totalNumberOfPivotsUsed = previousPivots.size + pivots.size
     }
