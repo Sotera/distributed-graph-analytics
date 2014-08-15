@@ -22,7 +22,7 @@ import java.util.Date
 import org.apache.spark.broadcast._
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{Accumulator, Logging, SparkContext}
+import org.apache.spark.{Logging, SparkContext}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -158,90 +158,83 @@ object HBSECore extends Logging with Serializable {
     var shortestPathPhasesCompleted = 0
     // Initialize the Pivots with a pathdata containing their own vertex
     var hbseGraph = graph.mapVertices((vertexId, vertexData) => {
-      if (pivots.value.contains(vertexId))
+      if (pivots.value.contains(vertexId)) {
         vertexData.addPathData(PathData.createShortestPathMessage(vertexId, vertexId, 0, 1L))
-      vertexData
+        (vertexData, -1)
+      }
+      else {
+        (vertexData, 0)
+      }
     }).cache()
 
-    var messageRDD: VertexRDD[mutable.Map[Long, PathData]] = null
     do {
       // Create a small graph of the pivots and their edges to send the initial messages.
-      val validEdges = hbseGraph.edges.filter(edgePredicate => pivots.value.contains(edgePredicate.srcId))
-      val pivotGraph = Graph.fromEdges(validEdges, None)
-      messageRDD = pivotGraph.mapReduceTriplets(triplet => {
-        // Add a PathData to my node.
-        val singleMessageMap = new mutable.HashMap[VertexId, PathData]
-        // Send a Shortest Path Message to my neighbor.
-        singleMessageMap.put(triplet.srcId, PathData.createShortestPathMessage(triplet.srcId, triplet.srcId, triplet.attr, 1))
-        logInfo(s"Sending ShortestPath Message to ${triplet.dstId} from ${triplet.srcId}")
-        // Needs to be a list because all PathData messages need to be sent to the node from every possible pivot.
-        Iterator((triplet.dstId, singleMessageMap))
-      }, mergeMapMessage).cache()
 
-      // Persist the messages in memory
-      messageRDD.count()
+      def accumulatePathData(vertexId: VertexId, vertexStorage: (VertexData, Int), messages: mutable.Map[Long, PathData]) = {
+        //Stores the Paths that were updated
+        //Process Incoming Messages
+        val (graphData, updateCount) = vertexStorage
+        def pathUpdateAccumulation(updateCount: Int, item: (Long, PathData)) = {
+          //Add the PathData to the current vertex
+          val pathData = item._2
+          val updatedPath = graphData.addPathData(pathData)
+          if (updatedPath != null)
+            updateCount + 1
+          else
+            updateCount
 
-      // Unpersist the pivot graph, because it is no longer needed
-      pivotGraph.unpersistVertices(blocking = false)
-      pivotGraph.edges.unpersist(blocking = false)
-
-      var updateCount: Accumulator[Int] = null
-
-      // Shortest Path Run
-      do {
-        // Used for accumulating the number of shortest path updates
-        updateCount = sc.accumulator(0)(SparkContext.IntAccumulatorParam)
-        // Join the HBSEGraph with the VertexRDD to Process the Messages
-        val updatedPaths = hbseGraph.outerJoinVertices(messageRDD)((vertexId, vertexData, shortestPathMessages) => {
-          //Stores the Paths that were updated
-          val fullUpdatedPathMap = new mutable.HashMap[Long, ShortestPathList]
-          //Process Incoming Messages
-
-          def pathUpdateAccumulation(updatedPathMap: mutable.HashMap[Long, ShortestPathList], item: (Long, PathData)) = {
-            //Add the PathData to the current vertex
-            val pathData = item._2
-            val updatedPath = vertexData.addPathData(pathData)
-            if (updatedPath != null) {
-              //If it updated, add it to the updatedPathMap
-              logInfo(s"Path Updated ${pathData.getMessageSource} for Vertex: $vertexId")
-              updatedPathMap.put(pathData.getMessageSource, updatedPath)
-              updateCount += 1
-            }
-            updatedPathMap
+        }
+        // Process each message one at a time.  Add any updates to the updated path map.
+        if (messages.nonEmpty) {
+          (graphData, messages.foldLeft(0)(pathUpdateAccumulation))
+        }
+        else {
+          vertexStorage
+        }
+      }
+      def sendShortestPathMessage(triplet: EdgeTriplet[(VertexData, Int), Long]) = {
+        val (graphData, updateCount) = triplet.srcAttr
+        if (updateCount > 0) {
+          val singleMap: mutable.Map[Long, PathData] = new mutable.HashMap[Long, PathData]
+          val updatedPathMap = graphData.getPathDataMap
+          def buildShortestPathMessage(map: mutable.Map[Long, PathData], item: (Long, ShortestPathList)) = {
+            val messageSource = item._1
+            val shortestPathList = item._2
+            map.put(messageSource, PathData.createShortestPathMessage(messageSource, triplet.srcId, shortestPathList.getDistance + triplet.attr, shortestPathList.getShortestPathCount))
+            map
           }
-          // Process each message one at a time.  Add any updates to the updated path map.
-          (shortestPathMessages.getOrElse(Map.empty).foldLeft(fullUpdatedPathMap)(pathUpdateAccumulation), vertexData)
-        }).cache()
+          logInfo(s"Sending ShortestPath Update Message to ${triplet.dstId} from ${triplet.srcId}")
+          Iterator((triplet.dstId, updatedPathMap.foldLeft(singleMap)(buildShortestPathMessage)))
+        }
+        else if (updateCount == -1) {
+          val singleMessageMap = new mutable.HashMap[VertexId, PathData]
+          // Send a Shortest Path Message to my neighbor.
+          singleMessageMap.put(triplet.srcId, PathData.createShortestPathMessage(triplet.srcId, triplet.srcId, triplet.attr, 1))
+          logInfo(s"Sending ShortestPath Message to ${triplet.dstId} from ${triplet.srcId}")
+          // Needs to be a list because all PathData messages need to be sent to the node from every possible pivot.
+          Iterator((triplet.dstId, singleMessageMap))
+        }
+        else {
+          Iterator.empty
+        }
+      }
+      val prevG = hbseGraph
+      hbseGraph = Pregel(hbseGraph, mutable.Map.empty[Long, PathData], activeDirection = EdgeDirection.Out)(accumulatePathData, sendShortestPathMessage, mergeMapMessage).cache()
 
-        //Needed to Persist the update count for some reason
-        //Get the update count based on the size of each hashmap
-        logInfo(s"Update Count is: $updateCount")
-        //Forward the updated paths to the next edge
-        val prevMessages = messageRDD
-        // Send all of these updates to your successors.
-        messageRDD = updatedPaths.mapReduceTriplets(sendShortestPathRunMessage, mergeMapMessage).cache()
-
-        // Persist the messages in memory
-        messageRDD.count()
-
-        // Update the hbseGraph state with each nodes new data.
-        val prevG = hbseGraph
-        hbseGraph = updatedPaths.mapVertices((vertexId, vertexData) => vertexData._2).cache()
-
-        // Unpersist the old graphs and messages.
-        updatedPaths.unpersistVertices(blocking = false)
-        updatedPaths.edges.unpersist(blocking = false)
-        prevG.unpersistVertices(blocking = false)
-        prevG.edges.unpersist(blocking = false)
-        prevMessages.unpersist(blocking = false)
+      prevG.unpersistVertices(blocking = false)
+      prevG.edges.unpersist(blocking = false)
 
 
-      } while (!(updateCount.value == 0))
+
       // Increase the Number of Completed Phases
       shortestPathPhasesCompleted += 1
     } while (!(shortestPathPhasesCompleted == hbseConf.shortestPathPhases))
 
-    hbseGraph
+    hbseGraph.mapVertices((vertexId, vertexData) => {
+      val (graphData, updateCount) = vertexData
+      graphData
+    }
+    ).cache()
   }
 
   def pingPredecessorsAndFindSuccessors(graph: Graph[VertexData, Long], sc: SparkContext) = {
@@ -272,99 +265,100 @@ object HBSECore extends Logging with Serializable {
 
     logInfo("Sending Dependency Messages")
     // Send a message to your predecessor that n number of nodes are dependent on you.
-    var msgRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, merge[(Long, Double, Long)]).cache()
-    // Persist the messages in memory
-    msgRDD.count()
+    val msgRDD = mergedGraph.mapReduceTriplets(sendDependencyMessage, merge[(Long, Double, Long)]).cache()
+
     // Rebuild the hbseGraph with the updated state of the vertex values
-    var prevG = hbseGraph
-    hbseGraph = mergedGraph.mapVertices((vertexId, vertexData) => {
+    var runGraph = mergedGraph.outerJoinVertices(msgRDD)((vertexId, vertexData, msgs) => {
       val originalVertexData = vertexData._2
-      originalVertexData
+      (originalVertexData, msgs.getOrElse(List.empty[(Long, Double, Long)]))
+    }).cache()
+
+    runGraph.vertices.count()
+
+
+    // Pair Dependency Run State
+    def vProg(vertexId: VertexId, vertexData: (VertexData, List[(Long, Double, Long)]), predecessorList: List[(Long, Double, Long)]) = {
+      var newBuf: ListBuffer[(Long, Double, Long)] = new ListBuffer[(Long, Double, Long)]
+      val (graphData, oldMessages) = vertexData
+      def partialDependencyCalculation(accumulatedDependencies: ListBuffer[(Long, Double, Long)], partialDependency: (Long, Double, Long)) = {
+        val messageSource = partialDependency._1
+        if (messageSource != vertexId) {
+          try {
+            // Calculates your dependency
+            val successorDep = partialDependency._2
+            val successorNumberOfPaths = partialDependency._3
+            val numPaths = graphData.getPathDataMap.get(messageSource).get.getShortestPathCount
+            val partialDep = (numPaths.toDouble / successorNumberOfPaths.toDouble) * (1 + successorDep)
+            val partialSum = graphData.addPartialDependency(messageSource, partialDep, -1)
+            // If you're done processing all of your predecessors, then you can add a forwarded message to your predecessors.
+            if (partialSum.getSuccessors == 0) {
+              val listItem = Tuple3(messageSource, partialSum.getDependency, numPaths)
+              accumulatedDependencies += listItem
+            }
+          }
+          catch {
+            case nse: NoSuchElementException => {
+              logInfo(s"$messageSource was not found in $vertexId map")
+              for ((k, v) <- graphData.getPathDataMap) {
+                logInfo(s"$k is in $vertexId map")
+              }
+            }
+            case e: Exception => throw e
+          }
+        }
+        accumulatedDependencies
+      }
+      // Process all incoming messages until your number of successors reaches zero, then forward your dependency back to your predecessor
+      if (predecessorList != null)
+        newBuf = predecessorList.foldLeft(newBuf)(partialDependencyCalculation)
+
+      else
+        newBuf = oldMessages.foldLeft(newBuf)(partialDependencyCalculation)
+
+      (graphData, newBuf.toList)
+    }
+
+    def sendMsg(triplet: EdgeTriplet[(VertexData, List[(Long, Double, Long)]), Long]) = {
+      var buffer = new ListBuffer[(Long, Double, Long)]
+      val (graphData, forwardMessages) = triplet.dstAttr
+      def dependencyMessageAccumulation(buf: ListBuffer[(Long, Double, Long)], item: (Long, Double, Long)) = {
+        val messageSource = item._1
+        val shortestPathList = graphData.getPathDataMap.get(messageSource).get
+        if (shortestPathList.getPredecessorPathCountMap.contains(triplet.srcId)) {
+          val dependencyMessage = item
+          buf += dependencyMessage
+        }
+        buf
+      }
+      // Sends your dependency to your predecessors who send you messages
+      buffer = forwardMessages.foldLeft(buffer)(dependencyMessageAccumulation)
+      if (buffer.size > 0) {
+        Iterator((triplet.srcId, buffer.toList))
+      }
+      else {
+        Iterator.empty
+      }
+    }
+    val initialValue: List[(Long, Double, Long)] = null
+    runGraph = Pregel(runGraph, initialValue, activeDirection = EdgeDirection.In)(vProg, sendMsg, merge[(Long, Double, Long)]).cache()
+
+    val oldGraph = hbseGraph
+    hbseGraph = runGraph.mapVertices((vertexId, vertexData) => {
+      val (graphData, listOfMessages) = vertexData
+      graphData
     }).cache()
     hbseGraph.vertices.count()
 
     // Unpersist the previous and merged graph because they are no longer needed.
     mergedGraph.unpersistVertices(blocking = false)
     mergedGraph.edges.unpersist(blocking = false)
-    prevG.unpersistVertices(blocking = false)
-    prevG.edges.unpersist(blocking = false)
-
-    var updateCount: Accumulator[Int] = null
-
+    oldGraph.unpersistVertices(blocking = false)
+    oldGraph.edges.unpersist(blocking = false)
+    msgRDD.unpersist(blocking = false)
     pingRDD.unpersist(blocking = false)
-    // Pair Dependency Run State
-    do {
-      updateCount = sc.accumulator(0)(SparkContext.IntAccumulatorParam)
-      val partialDepGraph = hbseGraph.outerJoinVertices(msgRDD)((vertexId, vertexData, predecessorList) => {
-        var newBuf: ListBuffer[(Long, Double, Long)] = new ListBuffer[(Long, Double, Long)]
-        def partialDependencyCalculation(accumulatedDependencies: ListBuffer[(Long, Double, Long)], partialDependency: (Long, Double, Long)) = {
-          val messageSource = partialDependency._1
-          if (messageSource != vertexId) {
-            try {
-              // Calculates your dependency
-              val successorDep = partialDependency._2
-              val successorNumberOfPaths = partialDependency._3
-              val numPaths = vertexData.getPathDataMap.get(messageSource).get.getShortestPathCount
-              val partialDep = (numPaths.toDouble / successorNumberOfPaths.toDouble) * (1 + successorDep)
-              val partialSum = vertexData.addPartialDependency(messageSource, partialDep, -1)
-              // If you're dont processing all of your predecessors, then you can add a forwarded message to your predecessors.
-              if (partialSum.getSuccessors == 0) {
-                val listItem = Tuple3(messageSource, partialSum.getDependency, numPaths)
-                accumulatedDependencies += listItem
-              }
-            }
-            catch {
-              case nse: NoSuchElementException => {
-                logError(s"$messageSource was not found in $vertexId map")
-                for ((k, v) <- vertexData.getPathDataMap) {
-                  logError(s"$k is in $vertexId map")
-                }
-              }
-              case e: Exception => throw e
-            }
-          }
-          accumulatedDependencies
-        }
-        // Process all incoming messages until your number of successors reaches zero, then forward your dependency back to your predecessor
-        newBuf = predecessorList.getOrElse(List.empty).foldLeft(newBuf)(partialDependencyCalculation)
-        (newBuf.toList, vertexData)
-      }).cache()
+    runGraph.unpersistVertices(blocking = false)
+    runGraph.edges.unpersist(blocking = false)
 
-      // Nodes who have received messages may start their dependency accumulation chain
-      val prevMessages = msgRDD
-      msgRDD = partialDepGraph.mapReduceTriplets(triplets => {
-        var buffer = new ListBuffer[(Long, Double, Long)]
-        val vertexData = triplets.dstAttr._2
-        def dependencyMessageAccumulation(buf: ListBuffer[(Long, Double, Long)], item: (Long, Double, Long)) = {
-          val messageSource = item._1
-          val shortestPathList = vertexData.getPathDataMap.get(messageSource).get
-          if (shortestPathList.getPredecessorPathCountMap.contains(triplets.srcId)) {
-            val dependencyMessage = item
-            buf += dependencyMessage
-          }
-          buf
-        }
-        // Sends your dependency to your predecessors who send you messages
-        buffer = triplets.dstAttr._1.foldLeft(buffer)(dependencyMessageAccumulation)
-        updateCount += buffer.size
-        Iterator((triplets.srcId, buffer.toList))
-      }, merge[(Long, Double, Long)]).cache()
-
-      // Update the state of the hbseGraph
-      prevG = hbseGraph
-      hbseGraph = partialDepGraph.mapVertices((vid, vertexData) => vertexData._2).cache()
-      // Persist them in memory
-      msgRDD.count()
-      hbseGraph.vertices.count()
-
-      // Unpersist last run
-      partialDepGraph.unpersistVertices(blocking = false)
-      partialDepGraph.edges.unpersist(blocking = false)
-      prevG.unpersistVertices(blocking = false)
-      prevG.edges.unpersist(blocking = false)
-      prevMessages.unpersist(blocking = false)
-
-    } while (!(updateCount.value == 0))
     hbseGraph
   }
 
@@ -424,19 +418,6 @@ object HBSECore extends Logging with Serializable {
 
   def createHBSEGraph[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Graph[VertexData, Long] = {
     graph.mapVertices((vid, vd) => new VertexData()).mapEdges(e => if (e.attr == 0) 1L else e.attr.toString.toLong)
-  }
-
-  def sendShortestPathRunMessage(triplet: EdgeTriplet[(mutable.HashMap[Long, ShortestPathList], VertexData), Long]) = {
-    val singleMap = new mutable.HashMap[VertexId, PathData]
-    val updatedPathMap = triplet.srcAttr._1
-    def buildShortestPathMessage(map: mutable.HashMap[VertexId, PathData], item: (Long, ShortestPathList)) = {
-      val messageSource = item._1
-      val shortestPathList = item._2
-      map.put(messageSource, PathData.createShortestPathMessage(messageSource, triplet.srcId, shortestPathList.getDistance + triplet.attr, shortestPathList.getShortestPathCount))
-      map
-    }
-    logInfo(s"Sending ShortestPath Update Message to ${triplet.dstId} from ${triplet.srcId}")
-    Iterator((triplet.dstId, updatedPathMap.foldLeft(singleMap)(buildShortestPathMessage)))
   }
 
   def merge[T: ClassTag](leftList: List[T], rightList: List[T]) = {
