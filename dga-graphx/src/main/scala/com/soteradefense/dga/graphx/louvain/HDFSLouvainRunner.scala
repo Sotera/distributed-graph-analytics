@@ -18,8 +18,8 @@
 package com.soteradefense.dga.graphx.louvain
 
 import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esotericsoftware.kryo.{Kryo, Serializer}
 import com.esotericsoftware.kryo.serializers.DefaultArraySerializers.ObjectArraySerializer
+import com.esotericsoftware.kryo.{Kryo, Serializer}
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx._
 
@@ -38,6 +38,7 @@ class HDFSLouvainRunner(minProgress: Int, progressCounter: Int, var outputdir: S
   var edgeSavePath: String = outputdir
   override type R = Unit
   override type S = Unit
+
   /**
    * Save the graph at the given level of compression with community labels
    * level 0 = no compression
@@ -53,7 +54,7 @@ class HDFSLouvainRunner(minProgress: Int, progressCounter: Int, var outputdir: S
     println(s"qValue: $q")
 
     // overwrite the q values at each level
-    sc.parallelize(qValues, 1).saveAsTextFile(outputdir + "/qvalues")
+    sc.parallelize(qValues, 1).saveAsTextFile(outputdir + "/qvalues_" + level)
   }
 
   /**
