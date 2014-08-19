@@ -209,9 +209,9 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
             throw e;
         }
         initialBatch = true;
-        maxId = getRequiredHBSEConfiguration(HBSEConfigurationConstants.VERTEX_COUNT);
+        maxId = getRequiredHBSEConfiguration(HBSEConfigurationConstants.TOTAL_PIVOT_COUNT);
         setAggregatedValue(PIVOT_COUNT, new IntWritable(pivotCount));
-        logger.info(HBSEConfigurationConstants.VERTEX_COUNT + "=" + maxId);
+        logger.info(HBSEConfigurationConstants.TOTAL_PIVOT_COUNT + "=" + maxId);
         totalPivotsSelected = 0;
 
     }

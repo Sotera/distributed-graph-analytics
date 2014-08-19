@@ -24,6 +24,18 @@ import com.esotericsoftware.kryo.{Kryo, Serializer}
 import com.soteradefense.dga.hbse.HBSEConfigurationConstants
 import org.apache.spark.SparkConf
 
+/**
+ * Stores the configuration values for the HighBetweennessCore Object.
+ *
+ * @param shortestPathPhases The number of shortest path phases to run through.
+ * @param setStability The delta value that must be met for the set to be stable.
+ * @param setStabilityCounter The number of times the set stability counter must be met.
+ * @param betweennessSetMaxSize The size of the betweenness set.
+ * @param pivotBatchSize The number of pivots to select per run.
+ * @param initialPivotBatchSize The number of pivots to use in the first run.
+ * @param pivotSelectionRandomSeed The random seed to pass to the takeSample.
+ * @param totalNumberOfPivots The total number of pivots to use in an entire run.
+ */
 class HBSEConf(
                 var shortestPathPhases: Int,
                 var setStability: Int,
@@ -32,10 +44,18 @@ class HBSEConf(
                 var pivotBatchSize: Int,
                 var initialPivotBatchSize: Int,
                 var pivotSelectionRandomSeed: Long,
-                var vertexCount: Int) extends Serializable {
+                var totalNumberOfPivots: Int) extends Serializable {
 
+  /**
+   * The default constructor for an HBSEConf Object.
+   * @return HBSEConf object with defaults.
+   */
   def this() = this(1, 0, 1, 10, 5, 5, (new Date).getTime, 10)
 
+  /**
+   * Constructor that instantiates an HBSEConf object from SparkConf values.
+   * @param sparkConf SparkConf object.
+   */
   def this(sparkConf: SparkConf) = {
     this()
     this.shortestPathPhases = sparkConf.getInt(HBSEConfigurationConstants.BETWEENNESS_SHORTEST_PATH_PHASES, 1)
@@ -45,13 +65,14 @@ class HBSEConf(
     this.pivotBatchSize = sparkConf.getInt(HBSEConfigurationConstants.PIVOT_BATCH_SIZE, 5)
     this.initialPivotBatchSize = sparkConf.getInt(HBSEConfigurationConstants.PIVOT_BATCH_SIZE_INITIAL, 5)
     this.pivotSelectionRandomSeed = sparkConf.getLong(HBSEConfigurationConstants.PIVOT_BATCH_RANDOM_SEED, (new Date).getTime)
-    this.vertexCount = sparkConf.getInt(HBSEConfigurationConstants.VERTEX_COUNT, 10)
+    this.totalNumberOfPivots = sparkConf.getInt(HBSEConfigurationConstants.TOTAL_PIVOT_COUNT, 10)
   }
 
-
-  def increaseStabilityCounter() = this.setStabilityCounter += 1
 }
 
+/**
+ * Kryo Serializer for the HBSEConf Object
+ */
 class HBSEConfSerializer extends Serializer[HBSEConf] {
   override def write(kryo: Kryo, output: Output, obj: HBSEConf): Unit = {
     kryo.writeObject(output, obj.shortestPathPhases)
@@ -61,7 +82,7 @@ class HBSEConfSerializer extends Serializer[HBSEConf] {
     kryo.writeObject(output, obj.pivotBatchSize)
     kryo.writeObject(output, obj.initialPivotBatchSize)
     kryo.writeObject(output, obj.pivotSelectionRandomSeed)
-    kryo.writeObject(output, obj.vertexCount)
+    kryo.writeObject(output, obj.totalNumberOfPivots)
   }
 
   override def read(kryo: Kryo, input: Input, classType: Class[HBSEConf]): HBSEConf = {

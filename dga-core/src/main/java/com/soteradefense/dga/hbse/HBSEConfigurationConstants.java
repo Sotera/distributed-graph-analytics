@@ -63,7 +63,7 @@ public class HBSEConfigurationConstants {
     /**
      * Configuration Identifier for the number of vertices to perform the operation on.
      */
-    public static final String VERTEX_COUNT = "vertex.count";
+    public static final String TOTAL_PIVOT_COUNT = "vertex.count";
 
     /**
      * Configuration Identifier for the default file system.

@@ -20,27 +20,63 @@ package com.soteradefense.dga.graphx.hbse
 import com.esotericsoftware.kryo.io.{Input, Output}
 import com.esotericsoftware.kryo.{Kryo, Serializer}
 
-class PathData(private var distance: Long, private var messageSource: Long, private var pivotSource: Long, private var numPaths: Long) extends Serializable {
-  def this() = this(Long.MaxValue, -1, -1, -1)
-
+/**
+ * PathData object for storing path data from a pivot and through a node.
+ *
+ * @param distance Distance from the pivot to message source.
+ * @param pivotSource Source of the initial message.
+ * @param messageSource Source of the node that forwarded that message to you.
+ * @param numPaths Number of paths it took to get there.
+ */
+class PathData(private var distance: Long, private var pivotSource: Long, private var messageSource: Long, private var numPaths: Long) extends Serializable {
+  /**
+   * Returns the distance value.
+   * @return value of distance.
+   */
   def getDistance = this.distance
 
-  def getMessageSource = this.messageSource
-
+  /**
+   * Returns the pivot who send the initial message.
+   * @return value of pivotSource.
+   */
   def getPivotSource = this.pivotSource
 
+  /**
+   * Returns the node that forwarded the message.
+   * @return value of messageSource.
+   */
+  def getMessageSource = this.messageSource
+
+  /**
+   * Returns the number of shortest paths for this object.
+   * @return value of numPaths.
+   */
   def getNumberOfShortestPaths = this.numPaths
 }
 
+/**
+ * Helper object for instantiating a PathData object.
+ */
 object PathData {
+  /**
+   * Creates a PathData object intended for the shortest path run.
+   * @param src Pivot Source.
+   * @param dst Who sent the message.
+   * @param distance Distance from pivot source to message source.
+   * @param numPaths Number of Shortest paths.
+   * @return
+   */
   def createShortestPathMessage(src: Long, dst: Long, distance: Long, numPaths: Long) = new PathData(distance, src, dst, numPaths)
 }
 
+/**
+ * Kryo Serializer for the PathData object.
+ */
 class PathDataSerializer extends Serializer[PathData] {
   override def write(kryo: Kryo, output: Output, obj: PathData): Unit = {
     kryo.writeObject(output, obj.getDistance)
-    kryo.writeObject(output, obj.getMessageSource)
     kryo.writeObject(output, obj.getPivotSource)
+    kryo.writeObject(output, obj.getMessageSource)
     kryo.writeObject(output, obj.getNumberOfShortestPaths)
   }
 

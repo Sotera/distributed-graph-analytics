@@ -37,8 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -111,7 +109,7 @@ public class DGARunner {
                 minimalDefaults.setCustomProperty(HBSEConfigurationConstants.BETWEENNESS_OUTPUT_DIR, outputPath);
                 minimalDefaults.setCustomProperty(HBSEConfigurationConstants.PIVOT_BATCH_SIZE, "10");
                 minimalDefaults.setCustomProperty(HBSEConfigurationConstants.PIVOT_BATCH_SIZE_INITIAL, "10");
-                minimalDefaults.setCustomProperty(HBSEConfigurationConstants.VERTEX_COUNT, "5");
+                minimalDefaults.setCustomProperty(HBSEConfigurationConstants.TOTAL_PIVOT_COUNT, "5");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
 
                 finalConf.setLibDir(libDir);

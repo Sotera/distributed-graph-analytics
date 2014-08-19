@@ -40,7 +40,7 @@ public class HBSEComputeTest {
         conf.set(HBSEConfigurationConstants.BETWEENNESS_SET_MAX_SIZE, "10");
         conf.set(HBSEConfigurationConstants.BETWEENNESS_SET_STABILITY_COUNTER, "3");
         conf.set(HBSEConfigurationConstants.PIVOT_BATCH_SIZE, "2");
-        conf.set(HBSEConfigurationConstants.VERTEX_COUNT, "6");
+        conf.set(HBSEConfigurationConstants.TOTAL_PIVOT_COUNT, "6");
         return conf;
     }
 
@@ -84,7 +84,7 @@ public class HBSEComputeTest {
     @Test
     public void testTwoCriticalPointGraph() throws Exception {
         GiraphConfiguration conf = getConf();
-        conf.set(HBSEConfigurationConstants.VERTEX_COUNT, "10");
+        conf.set(HBSEConfigurationConstants.TOTAL_PIVOT_COUNT, "10");
         TestGraph<Text, VertexData, Text> input = getTwoCriticalPointGraph(conf);
         InMemoryVertexOutputFormat.initializeOutputGraph(conf);
         InternalVertexRunner.run(conf, input);

@@ -20,24 +20,61 @@ package com.soteradefense.dga.graphx.hbse
 import com.esotericsoftware.kryo.io.{Input, Output}
 import com.esotericsoftware.kryo.{Kryo, Serializer}
 
+/**
+ * An object for encapsulating a partial dependency.
+ *
+ * @param successors The number of successors for this dependency.
+ * @param dependency The dependency weight on this object.
+ */
 class PartialDependency(private var successors: Int, private var dependency: Double) extends Serializable {
 
+  /**
+   * Default constructor.
+   * @return PartialDependency Object.
+   */
   def this() = this(0, 0.0)
 
+  /**
+   * Return the dependency.
+   * @return Dependency.
+   */
   def getDependency = this.dependency
 
+  /**
+   * Returns the number of successors.
+   * @return Successors.
+   */
   def getSuccessors = this.successors
 
+  /**
+   * Set the number of successors.
+   * @param successors value to set the successors to.
+   */
   def setSuccessors(successors: Int) = this.successors = successors
 
+  /**
+   * Set the dependency.
+   * @param dep value to set the dependency to.
+   */
   def setDependency(dep: Double) = this.dependency = dep
 
-  def addSuccessors(diff: Int) = this.successors += diff
+  /**
+   * Accumulates the successor object.
+   * @param diff value to add to the successors.
+   */
+  def accumulateSuccessors(diff: Int) = this.successors += diff
 
-  def addDependency(diff: Double) = this.dependency += diff
+  /**
+   * Accumulates the dependency value.
+   * @param diff value to add to the dependencies.
+   */
+  def accumulateDependency(diff: Double) = this.dependency += diff
 
 }
 
+/**
+ * Kryo Serializer for the PartialDependency Object.
+ */
 class PartialDependencySerializer extends Serializer[PartialDependency] {
   override def write(kryo: Kryo, output: Output, obj: PartialDependency): Unit = {
     kryo.writeObject(output, obj.getSuccessors)

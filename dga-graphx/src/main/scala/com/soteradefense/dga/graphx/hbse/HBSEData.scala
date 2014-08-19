@@ -22,17 +22,37 @@ import com.esotericsoftware.kryo.{Kryo, Serializer}
 
 import scala.collection.mutable
 
+/**
+ * Object that stores the required data for the HBSE Run.
+ *
+ * @param pathDataMap A hash map of accumulated PathData from the Pivots.
+ * @param partialDepMap A hash map of dependency accumulation.
+ * @param approximateBetweenness Approximate Betweenness value.
+ */
+class HBSEData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList], private var partialDepMap: mutable.HashMap[Long, PartialDependency], private var approximateBetweenness: Double) extends Serializable {
 
-class VertexData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList], private var partialDepMap: mutable.HashMap[Long, PartialDependency], private var approximateBetweenness: Double) extends Serializable {
-
+  /**
+   * Constructor that accepts an initial betweenness value.
+   * @param betweenness Betweenness value to instantiate.
+   * @return HBSEData object.
+   */
   def this(betweenness: Double) = this(new mutable.HashMap[Long, ShortestPathList], new mutable.HashMap[Long, PartialDependency], betweenness)
 
+  /**
+   * Default Constructor
+   * @return HBSEData object.
+   */
   def this() = this(0.0)
 
 
+  /**
+   * Add or updates path data in the path data map.
+   * @param pathData The new path data.
+   * @return A shortest path list if it was updated or else null.
+   */
   def addPathData(pathData: PathData): ShortestPathList = {
     var list: ShortestPathList = null
-    val source: Long = pathData.getMessageSource
+    val source: Long = pathData.getPivotSource
     if (!pathDataMap.contains(source)) {
       list = new ShortestPathList(pathData)
       this.pathDataMap.put(source, list)
@@ -44,29 +64,48 @@ class VertexData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList
     list
   }
 
+  /**
+   * Return the approxBetweenness value.
+   * @return value of approxBetweenness.
+   */
   def getApproximateBetweenness = this.approximateBetweenness
 
-  def setApproxBetweenness(approx: Double) {
-    this.approximateBetweenness = approx
-  }
 
+  /**
+   * Returns the path data map.
+   * @return pathDataMap
+   */
   def getPathDataMap = this.pathDataMap
 
+  /**
+   * Adds or updates a partial dependency to the hash map.
+   * @param src Node that has the dependency.
+   * @param dependency Value to add to the map.
+   * @param numberOfSuccessors numberOfSuccessors for this node.
+   * @return The partial dependency object that was updated.
+   */
   def addPartialDependency(src: Long, dependency: Double, numberOfSuccessors: Int): PartialDependency = {
     val current: PartialDependency = this.partialDepMap.getOrElse(src, new PartialDependency)
-    current.addDependency(dependency)
-    current.addSuccessors(numberOfSuccessors)
+    current.accumulateDependency(dependency)
+    current.accumulateSuccessors(numberOfSuccessors)
     this.partialDepMap.put(src, current)
     current
   }
 
+  /**
+   * Returns the partial dependency map.
+   * @return value of partialDepMap.
+   */
   def getPartialDependencyMap = this.partialDepMap
 
 }
 
-class VertexDataSerializer extends Serializer[VertexData] {
+/**
+ * Kryo serializer for the HBSEData object.
+ */
+class HBSEDataSerializer extends Serializer[HBSEData] {
 
-  override def write(kryo: Kryo, output: Output, obj: VertexData): Unit = {
+  override def write(kryo: Kryo, output: Output, obj: HBSEData): Unit = {
     kryo.writeObject(output, obj.getPathDataMap.size)
     obj.getPathDataMap.foreach(f => {
       kryo.writeObject(output, f._1)
@@ -84,7 +123,7 @@ class VertexDataSerializer extends Serializer[VertexData] {
     kryo.writeObject(output, obj.getApproximateBetweenness)
   }
 
-  override def read(kryo: Kryo, input: Input, classType: Class[VertexData]): VertexData = {
+  override def read(kryo: Kryo, input: Input, classType: Class[HBSEData]): HBSEData = {
     val pdSize = kryo.readObject(input, classOf[Int])
     var i = 0
     val pathDataMap = new mutable.HashMap[Long, ShortestPathList]
@@ -99,6 +138,6 @@ class VertexDataSerializer extends Serializer[VertexData] {
       val serializer = new PartialDependencySerializer
       partialDepMap.put(kryo.readObject(input, classOf[Long]), serializer.read(kryo, input, classOf[PartialDependency]))
     }
-    new VertexData(pathDataMap, partialDepMap, kryo.readObject(input, classOf[Double]))
+    new HBSEData(pathDataMap, partialDepMap, kryo.readObject(input, classOf[Double]))
   }
 }

@@ -24,15 +24,40 @@ import org.apache.spark.rdd.RDD
 
 import scala.reflect.ClassTag
 
+/**
+ * An abstract class that runs high betweenness set extraction.
+ */
 abstract class AbstractHBSERunner extends Harness with Serializable {
 
+  /**
+   * Return type for the high betweenness save method.
+   */
   type H
+  /**
+   * Overrides the run return type to be the same type as H.
+   */
   override type R = H
 
+  /**
+   * Run method for High Betweenness Set Extraction.  It automatically calls the save methods.
+   *
+   * @param sc The current spark context.
+   * @param graph A graph to run hbse on.
+   * @tparam VD The vertex data type.
+   * @return The type specified by H.
+   */
   def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): R = {
-    val hbseOutput = HBSECore.hbse(sc, graph)
+    val hbseCore = new HighBetweennessCore(sc.getConf)
+    val hbseOutput = hbseCore.runHighBetweennessSetExtraction(sc, graph)
     save(hbseOutput._1, hbseOutput._2)
   }
 
-  def save[ED: ClassTag](betweennessSet: RDD[(Long, Double)], graph: Graph[VertexData, ED]): H
+  /**
+   * Abstract method for saving a high betweenness set extraction graph and set.
+   * @param betweennessSet Set of the highest betweenness values.
+   * @param graph A graph that ran through HBSE.
+   * @tparam ED An edge data type.
+   * @return The type specified by H.
+   */
+  def save[ED: ClassTag](betweennessSet: RDD[(Long, Double)], graph: Graph[HBSEData, ED]): H
 }
