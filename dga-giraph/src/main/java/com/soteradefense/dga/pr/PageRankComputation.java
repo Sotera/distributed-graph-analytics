@@ -18,19 +18,34 @@
 
 package com.soteradefense.dga.pr;
 
+import com.soteradefense.dga.DGALoggingUtil;
+import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.graph.BasicComputation;
+import org.apache.giraph.graph.GraphState;
+import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
+import org.apache.giraph.worker.WorkerAggregatorUsage;
+import org.apache.giraph.worker.WorkerContext;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class PageRankComputation extends BasicComputation<Text, DoubleWritable, Text, DoubleWritable> {
 
+    private static final Logger logger = LoggerFactory.getLogger(PageRankComputation.class);
+
     public static final String MAX_EPSILON = "com.soteradefense.dga.max.epsilon";
     public static final String DAMPING_FACTOR = "damping.factor";
     public static final float DAMPING_FACTOR_DEFAULT_VALUE = 0.85f;
 
+    @Override
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, DoubleWritable, Text> workerClientRequestProcessor, GraphTaskManager<Text, DoubleWritable, Text> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
+        DGALoggingUtil.setDGALogLevel(this.getConf());
+    }
 
     @Override
     public void compute(Vertex<Text, DoubleWritable, Text> vertex, Iterable<DoubleWritable> messages) throws IOException {
@@ -41,6 +56,7 @@ public class PageRankComputation extends BasicComputation<Text, DoubleWritable, 
 
         if (step == 0) {
             //set initial value
+            logger.debug("Superstep is 0: Setting the default value.");
             vertex.setValue(new DoubleWritable(1.0 / getTotalNumVertices()));
         } else { // go until no one votes to continue
 
@@ -53,6 +69,7 @@ public class PageRankComputation extends BasicComputation<Text, DoubleWritable, 
             double delta = Math.abs(rank - vertexValue) / vertexValue;
             aggregate(MAX_EPSILON, new DoubleWritable(delta));
             vertex.setValue(new DoubleWritable(rank));
+            logger.debug("{} is calculated {} for a PageRank.", vertex.getId(), rank);
         }
         distributeRank(vertex);
     }

@@ -83,6 +83,7 @@ public class DGARunner {
             DGAConfiguration fileConf = DGAXMLConfigurationParser.parse(configurationIS);
 
             if (analytic.equals("wcc")) {
+                logger.info("Analytic: Weakly Connected Components");
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eof", DGAEdgeTTTOutputFormat.class.getCanonicalName());
@@ -98,6 +99,7 @@ public class DGARunner {
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
 
             } else if (analytic.equals("hbse")) {
+                logger.info("Analytic: High Betweenness Set Extraction");
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-vof", HBSEOutputFormat.class.getCanonicalName());
@@ -117,6 +119,7 @@ public class DGARunner {
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(HBSEComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
             } else if (analytic.equals("louvain")) {
+                logger.info("Analytic: Louvain Modularity");
                 DGAConfiguration partialConfiguration = DGAConfiguration.coalesce(fileConf, commandLineConf);
                 partialConfiguration.setDGAGiraphProperty("-eip", inputPath);
                 partialConfiguration.setDGAGiraphProperty("-op", outputPath);
@@ -126,6 +129,7 @@ public class DGARunner {
                 LouvainRunner louvainRunner = new LouvainRunner();
                 System.exit(louvainRunner.runUntilComplete(inputPath, outputPath, partialConfiguration));
             } else if (analytic.equals("lc")) {
+                logger.info("Analytic: Leaf Compression");
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eof", DGAEdgeTTTOutputFormat.class.getCanonicalName());
@@ -139,6 +143,7 @@ public class DGARunner {
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(LeafCompressionComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
             } else if (analytic.equals("pr")) {
+                logger.info("Analytic: PageRank");
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eof", DGAEdgeTDTOutputFormat.class.getCanonicalName());

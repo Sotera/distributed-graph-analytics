@@ -27,6 +27,8 @@ import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.apache.giraph.worker.WorkerContext;
 import org.apache.hadoop.io.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -37,6 +39,8 @@ import java.io.IOException;
  * This cycle continues until all leaves have been pruned.
  */
 public class LeafCompressionComputation extends BasicComputation<Text, Text, Text, Text> {
+
+    private static Logger logger = LoggerFactory.getLogger(LeafCompressionComputation.class);
 
     @Override
     public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, Text, Text> workerClientRequestProcessor, GraphTaskManager<Text, Text, Text> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
@@ -79,10 +83,12 @@ public class LeafCompressionComputation extends BasicComputation<Text, Text, Tex
             for (Edge<Text, Text> edge : vertex.getEdges()) {
                 sendMessage(edge.getTargetVertexId(), new Text(vertex.getId().toString() + ":" + vertexValue));
             }
+            logger.debug("{} is being deleted.", vertex.getId());
             vertex.setValue(new Text("-1"));
             // This node will never vote to halt, but will simply be deleted.
         } else if (vertexValue != -1) {
             // If we aren't being imminently deleted
+            logger.debug("{} is still in the graph.", vertex.getId());
             vertex.voteToHalt();
         }
     }

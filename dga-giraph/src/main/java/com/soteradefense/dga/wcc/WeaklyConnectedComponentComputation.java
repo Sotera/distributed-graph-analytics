@@ -17,10 +17,18 @@
  */
 package com.soteradefense.dga.wcc;
 
+import com.soteradefense.dga.DGALoggingUtil;
+import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.BasicComputation;
+import org.apache.giraph.graph.GraphState;
+import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
+import org.apache.giraph.worker.WorkerAggregatorUsage;
+import org.apache.giraph.worker.WorkerContext;
 import org.apache.hadoop.io.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -28,6 +36,14 @@ import java.io.IOException;
  * WeaklyConnectedComponents is the concept of finding how many uniquely connected nodes there are in a specific data set.
  */
 public class WeaklyConnectedComponentComputation extends BasicComputation<Text, Text, Text, Text> {
+
+    private static final Logger logger = LoggerFactory.getLogger(WeaklyConnectedComponentComputation.class);
+
+    @Override
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, Text, Text> workerClientRequestProcessor, GraphTaskManager<Text, Text, Text> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
+        DGALoggingUtil.setDGALogLevel(this.getConf());
+    }
 
     @Override
     public void compute(Vertex<Text, Text, Text> vertex, Iterable<Text> messages) throws IOException {
@@ -63,6 +79,7 @@ public class WeaklyConnectedComponentComputation extends BasicComputation<Text, 
                 maxId = edge.getTargetVertexId().toString();
             }
         }
+        logger.debug("First Superstep for {}: Sending {} to all my edges.", vertex.getId(), maxId);
         broadcastUpdates(vertex, true, maxId);
     }
 
@@ -75,6 +92,7 @@ public class WeaklyConnectedComponentComputation extends BasicComputation<Text, 
      */
     private void broadcastUpdates(Vertex<Text, Text, Text> vertex, boolean changed, String maxId) {
         if (changed) {
+            logger.debug("{} has updated with component id {}", vertex.getId(), maxId);
             vertex.setValue(new Text(maxId));
             sendMessageToAllEdges(vertex, new Text(vertex.getValue().toString()));
         }
