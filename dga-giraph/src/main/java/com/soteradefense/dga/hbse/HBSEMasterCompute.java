@@ -184,13 +184,13 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         this.shortestPathPhasesCompleted = 0;
 
         stabilityCutoff = getOptionalHBSEConfiguration(HBSEConfigurationConstants.BETWEENNESS_SET_STABILITY, 0);
-        logger.info(HBSEConfigurationConstants.BETWEENNESS_SET_STABILITY + "=" + stabilityCutoff);
+        logger.info("{} = {}", HBSEConfigurationConstants.BETWEENNESS_SET_STABILITY, stabilityCutoff);
 
         stabilityCounter = getOptionalHBSEConfiguration(HBSEConfigurationConstants.BETWEENNESS_SET_STABILITY_COUNTER, 1);
-        logger.info(HBSEConfigurationConstants.BETWEENNESS_SET_STABILITY_COUNTER + "=" + stabilityCounter);
+        logger.info("{} = {}", HBSEConfigurationConstants.BETWEENNESS_SET_STABILITY_COUNTER, stabilityCounter);
 
         int maxHighBCSetSize = getRequiredHBSEConfiguration(HBSEConfigurationConstants.BETWEENNESS_SET_MAX_SIZE);
-        logger.info(HBSEConfigurationConstants.BETWEENNESS_SET_MAX_SIZE + "=" + maxHighBCSetSize);
+        logger.info("{} = {}", HBSEConfigurationConstants.BETWEENNESS_SET_MAX_SIZE, maxHighBCSetSize);
 
         try {
             pivotCount = Integer.parseInt(getConf().get(HBSEConfigurationConstants.PIVOT_BATCH_SIZE));
@@ -198,7 +198,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
             logger.error("Option not set or invalid. \"" + HBSEConfigurationConstants.PIVOT_BATCH_SIZE + "\" must be set to a valid double, was set to " + getConf().get(HBSEConfigurationConstants.PIVOT_BATCH_SIZE), e);
             throw e;
         }
-        logger.info(HBSEConfigurationConstants.PIVOT_BATCH_SIZE + "=" + pivotCount);
+        logger.info("{} = {}", HBSEConfigurationConstants.PIVOT_BATCH_SIZE, pivotCount);
 
 
         try {
@@ -211,7 +211,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         initialBatch = true;
         maxId = getRequiredHBSEConfiguration(HBSEConfigurationConstants.TOTAL_PIVOT_COUNT);
         setAggregatedValue(PIVOT_COUNT, new IntWritable(pivotCount));
-        logger.info(HBSEConfigurationConstants.TOTAL_PIVOT_COUNT + "=" + maxId);
+        logger.info("{} = {}", HBSEConfigurationConstants.TOTAL_PIVOT_COUNT, maxId);
         totalPivotsSelected = 0;
 
     }
@@ -228,7 +228,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         try {
             return Integer.parseInt(propValue);
         } catch (NumberFormatException e) {
-            logger.error("Option not set or invalid. \"" + name + "\" must be set to a valid int, was set to: " + propValue, e);
+            logger.error("Option not set or invalid. 'name' must be set to a valid int, was set to: {}", name, propValue);
             throw e;
         }
     }
@@ -247,7 +247,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
                 return defaultValue;
             return Integer.parseInt(propValue);
         } catch (NumberFormatException e) {
-            logger.error("Option not set or invalid. \"" + name + "\" must be set to a valid int, was set to: " + defaultValue, e);
+            logger.error("Option not set or invalid. {} must be set to a valid int, was set to: {}", name, defaultValue);
             return defaultValue;
         }
     }
@@ -267,12 +267,12 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
     @Override
     public void compute() {
         long step = this.getSuperstep();
-        logger.info("Superstep: " + step + " starting in State: " + state);
+        logger.info("Superstep: {} starting in State: {}", step, state);
         switch (state) {
             case START:
                 state = State.PIVOT_SELECTION;
                 setGlobalState(state);
-                logger.info("Superstep: " + step + " Switched to State: " + state);
+                logger.info("Superstep: {} Switched to State: {}", step, state);
                 break;
             case PIVOT_SELECTION:
                 boolean allPivotsAreSelected;
@@ -284,7 +284,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
                 }
                 if (allPivotsAreSelected) {
                     int pivotCount = ((PivotList) getAggregatedValue(PIVOT_AGG)).getPivots().size();
-                    logger.debug("Pivots have been selected!  The count is " + pivotCount);
+                    logger.debug("Pivots have been selected!  The count is {}", pivotCount);
                     totalPivotsSelected += pivotCount;
                     state = State.SHORTEST_PATH_START;
                     setGlobalState(state);
@@ -292,14 +292,14 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
                 break;
             case SHORTEST_PATH_START:
                 int updateCount = ((IntWritable) this.getAggregatedValue(UPDATE_COUNT_AGG)).get();
-                logger.info("Superstep: " + step + " Paths updated: " + updateCount);
+                logger.info("Superstep: {} Paths updated: {}", step, updateCount);
                 state = State.SHORTEST_PATH_RUN;
                 setGlobalState(state);
-                logger.info("Superstep: " + step + " Switched to State: " + state);
+                logger.info("Superstep: {} Switched to State: {}", step, state);
                 break;
             case SHORTEST_PATH_RUN:
                 updateCount = ((IntWritable) this.getAggregatedValue(UPDATE_COUNT_AGG)).get();
-                logger.info("Superstep: " + step + " Paths updated: " + updateCount);
+                logger.info("Superstep: {} Paths updated: {}", step, updateCount);
                 if (updateCount == 0) {
                     shortestPathPhasesCompleted++;
                     if (shortestPathPhasesCompleted == shortestPathPhases) {
@@ -308,19 +308,19 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
                         state = State.SHORTEST_PATH_START;
                     }
                     setGlobalState(state);
-                    logger.info("Superstep: " + step + " UPDATE COUNT 0, shortest path phase " + shortestPathPhasesCompleted + " of " + shortestPathPhases + " Switched to State: " + state);
+                    logger.info("Superstep: {} UPDATE COUNT 0, shortest path phase {} of {} Switched to State: {}", step, shortestPathPhasesCompleted, shortestPathPhases, state);
                 }
                 break;
             case PAIR_DEPENDENCY_PING_PREDECESSOR:
                 shortestPathPhasesCompleted = 0;
                 state = State.PAIR_DEPENDENCY_FIND_SUCCESSORS;
                 setGlobalState(state);
-                logger.info("Superstep: " + step + " Switched to State: " + state);
+                logger.info("Superstep: {} Switched to State: {}", step, state);
                 break;
             case PAIR_DEPENDENCY_FIND_SUCCESSORS:
                 state = State.PAIR_DEPENDENCY_RUN;
                 setGlobalState(state);
-                logger.info("Superstep: " + step + " Switched to State: " + state);
+                logger.info("Superstep: {} Switched to State: {}", step, state);
                 break;
             case PAIR_DEPENDENCY_RUN:
                 updateCount = ((IntWritable) this.getAggregatedValue(UPDATE_COUNT_AGG)).get();
@@ -328,38 +328,36 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
                     state = State.PAIR_DEPENDENCY_COMPLETE;
                     setGlobalState(state);
                 }
-                logger.info("Superstep: " + step + " UPDATE COUNT " + updateCount + ", State: " + state);
+                logger.info("Superstep: {} UPDATE COUNT: {} STATE: {}", step, updateCount, state);
                 break;
             case PAIR_DEPENDENCY_COMPLETE:
                 HighBetweennessList hbl = getAggregatedValue(HIGH_BC_SET_AGG);
                 Set<String> incomingSet = hbl.getHighBetweennessSet();
                 int delta = this.compareHighBetweennessSet(incomingSet);
                 highBetweennessSet = incomingSet;
-
-                logger.info("High Betweenness Set Delta: " + delta);
-                String logprefix = "Finished Cycle: " + cycle;
+                logger.info("High Betweenness Set Delta: {}", delta);
                 cycle++;
 
                 if (delta <= stabilityCutoff) {
                     stabilityRunningCounter++;
                     if (stabilityRunningCounter >= stabilityCounter) {
-                        logger.info(logprefix + " Set Delta < cutoff value; counter=" + stabilityRunningCounter + " approximation complete.");
+                        logger.info("Finished Cycle: {} Set Delta < cutoff value; counter={} approximation complete.", cycle, stabilityRunningCounter);
                         state = State.FINISHED;
                     } else {
-                        logger.info(logprefix + " Set Delta < cutoff value; counter=" + stabilityRunningCounter);
+                        logger.info("Finished Cycle: {} Set Delta < cutoff value; counter={}", cycle, stabilityRunningCounter);
                         state = State.SHORTEST_PATH_START;
                     }
 
                 } else if (totalPivotsSelected >= this.maxId) {
-                    logger.info(logprefix + " All possible pivots selected, exiting");
+                    logger.info("Finished Cycle: {} All possible pivots selected, exiting", cycle);
                     state = State.FINISHED;
                 } else {
                     stabilityRunningCounter = 0; // reset stabilityRunningCounter
-                    logger.info(logprefix + " Delta did not meet cutoff, starting next cycle.");
+                    logger.info("Finished Cycle: {} Delta did not meet cutoff, starting next cycle.", cycle);
                     state = State.SHORTEST_PATH_START;
                 }
                 setGlobalState(state);
-                logger.info("Superstep: " + step + ", going to State: " + state);
+                logger.info("Superstep: {} Switched to State: {}", step, state);
                 break;
             case FINISHED:
                 this.haltComputation();
@@ -368,7 +366,7 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
                 this.writeStats();
                 break;
             default:
-                logger.error("INVALID STATE: " + state);
+                logger.error("INVALID STATE: {}", state);
                 throw new IllegalStateException("Invalid State" + state);
         }
     }

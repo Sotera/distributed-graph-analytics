@@ -86,6 +86,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
             case PIVOT_SELECTION:
                 logger.debug("Started the Pivot Selection Process.");
                 if (!vertexValue.getWasPivotPoint() && isPossiblePivotPoint(id)) {
+                    logger.debug("{} has been selected.", vertex.getId());
                     aggregate(HBSEMasterCompute.PIVOT_AGG, new PivotList(id));
                 }
                 break;
@@ -94,7 +95,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
             case SHORTEST_PATH_START:
                 if (isPivotPoint(id)) {
                     vertexValue.setWasPivotPoint(true);
-                    logger.debug("Superstep: " + step + " Start new shortest path computation. Source = " + id);
+                    logger.debug("Superstep: {} Start new shortest path computation. Source = {}", step, id);
                     for (Edge<Text, Text> edge : vertex.getEdges()) {
                         sendMessage(edge.getTargetVertexId(), PathData.getShortestPathMessage(id, id, getEdgeValue(edge.getValue().toString()), BigInteger.valueOf(1)));
                     }
@@ -144,7 +145,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
 
                 }
                 if (builder.length() > 1) builder.deleteCharAt(builder.length() - 1);
-                logger.trace("ID: " + id + " Step: " + step + " State: " + state + " sent messages (pred,source):  " + builder.toString());
+                logger.trace("ID: {} Step: {} State: {} send messages (pred, source): {}", id, step, state, builder.toString());
                 break;
             // process ping messages form PAIR_DEPENDENCY_PING_PREDECESSOR to determine if
             // this vertex has any successors
@@ -183,7 +184,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                 }
 
                 if (builder.length() > 1) builder.deleteCharAt(builder.length() - 1);
-                logger.trace("ID: " + id + " Step: " + step + " State: " + state + " set noSuccessor " + builder.toString());
+                logger.trace("ID: {} Step: {} State: {} set noSuccessor {}", id, step, state, builder);
                 break;
             // continue the pair dependency phase until no updates are done / all dependencies are accumulated.
             case PAIR_DEPENDENCY_RUN:
@@ -198,7 +199,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                     BigInteger successorNumPaths = message.getNumPaths();
                     BigInteger numPaths = vertexValue.getPathDataMap().get(src).getShortestPathCount();
                     double partialDep = (numPaths.doubleValue() / successorNumPaths.doubleValue()) * (1 + successorDep);
-                    logger.debug("ID: " + id + " Step: " + step + " message {src:" + src + " successorPaths:" + successorNumPaths + " successorDep:" + successorDep + "} calculated {paths:" + numPaths + ", dep:" + partialDep + "}");
+                    logger.debug("ID: {} Step: {} message [src:{} successorPaths:{} successorDep:{}] calculated [paths:{}, dep:{}]", id, step, src, successorNumPaths, successorDep, numPaths, partialDep);
 
                     // accumulate the dependency and subtract one successor
                     PartialDependency partialSum = vertexValue.addPartialDep(src, partialDep, -1);
@@ -213,7 +214,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                             builder.append(predecessor).append(",");
                         }
                         if (builder.length() > 1) builder.deleteCharAt(builder.length() - 1);
-                        logger.debug("ID: " + id + " Step: " + step + " forwarding partial dep to predecessors (" + builder.toString() + ") {src:" + src + ", paths:" + numPaths + ", dep:" + partialSum.getDependency() + "}");
+                        logger.debug("ID: {} Step: {} forwarding partial dep to predecessors ({}) [src: {}, paths:{}, dep:{}]", id, step, builder, src, numPaths, partialSum.getDependency());
                     }
                 }
                 break;
@@ -225,6 +226,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
                 for (PartialDependency partialDependency : vertexValue.getPartialDependencyMap().values()) {
                     approxBetweenness += partialDependency.getDependency();
                 }
+                logger.debug("ID: {} has betweenness value of {}", vertex.getId(), approxBetweenness);
                 vertexValue.setApproxBetweenness(approxBetweenness);
                 vertexValue.getPartialDependencyMap().clear();
                 vertexValue.getPathDataMap().clear();
@@ -290,13 +292,13 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         double percentageCutoff = (double) ((IntWritable) getAggregatedValue(HBSEMasterCompute.PIVOT_COUNT)).get() / getTotalNumVertices();
         double randomNumber = random.nextDouble();
         boolean isPivot = randomNumber < percentageCutoff;
-        logger.debug("Selected as a possible pivot: " + id);
+        logger.debug("Selected as a possible pivot: {}", id);
         return isPivot;
     }
 
     private boolean isPivotPoint(String id) {
         PivotList pivots = getAggregatedValue(HBSEMasterCompute.PIVOT_AGG);
-        logger.debug("Pivots have been selected for computation!  The count is " + pivots.getPivots().size());
+        logger.debug("Pivots have been selected for computation!  The count is {}", pivots.getPivots().size());
         return pivots.getPivots().contains(id);
     }
 
@@ -314,7 +316,7 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
         } else {
             long seed = Long.parseLong(randomSeedStr);
             random = new Random(seed);
-            logger.debug("Set random seed: " + seed);
+            logger.debug("Set random seed: {}", seed);
         }
         return random;
     }
