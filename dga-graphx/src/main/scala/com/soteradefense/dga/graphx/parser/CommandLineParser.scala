@@ -19,8 +19,16 @@ package com.soteradefense.dga.graphx.parser
 
 import com.soteradefense.dga.graphx.config.Config
 
+/**
+ * Class that parses the command line arguments for the runner.
+ */
 class CommandLineParser {
 
+  /**
+   * Method that parses the command line arguments.
+   * @param args Array of arguments from the command line.
+   * @return A Config object containing all the parsed arguments.
+   */
   def parseCommandLine(args: Array[String]): Config = {
     val parser = new scopt.OptionParser[Config](this.getClass.toString) {
       head("dga-graphx", "0.1")

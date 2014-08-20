@@ -23,15 +23,15 @@ import org.apache.spark.graphx._
 import scala.reflect.ClassTag
 
 
-object PageRankCore extends Logging {
+class PageRankCore extends Logging with Serializable {
 
   private final val dampingFactor = 0.85f
 
-  def prGraphX[VD: ClassTag](graph: Graph[VD, Long], delta: Double): (Graph[Double, Double]) = {
+  def runPageRankGraphX[VD: ClassTag](graph: Graph[VD, Long], delta: Double): (Graph[Double, Double]) = {
     graph.pageRank(delta)
   }
 
-  def pr[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED], delta: Double): (Graph[Double, Int]) = {
+  def runPageRank[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED], delta: Double): (Graph[Double, Int]) = {
     logInfo("Starting the PageRank Algorithm")
     val numberOfVertices = graph.vertices.count()
     val initialVertexValue = 1.0 / numberOfVertices

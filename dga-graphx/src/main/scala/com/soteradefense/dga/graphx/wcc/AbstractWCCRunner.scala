@@ -23,15 +23,36 @@ import org.apache.spark.graphx.Graph
 
 import scala.reflect.ClassTag
 
+/**
+ * Abstract class for running weakly connected components.
+ */
 abstract class AbstractWCCRunner extends Harness with Serializable {
 
+  /**
+   * The return type of R is S.
+   */
   override type R = S
 
+  /**
+   * Runs our implementation of weakly connected components.
+   * @param sc The current spark context.
+   * @param graph A Graph object with an optional edge weight.
+   * @tparam VD ClassTag for the vertex data type.
+   * @return The type of R
+   */
   def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): R = {
-    save(WeaklyConnectionComponentsCore.wcc(graph))
+    val wccCore = new WeaklyConnectionComponentsCore
+    save(wccCore.runWeaklyConnectedComponents(graph))
   }
 
+  /**
+   * Runs the graphx implementation of weakly connected components.
+   * @param graph A graph
+   * @tparam VD The type of the vertex attribute.
+   * @return The type of S.
+   */
   def runGraphXImplementation[VD: ClassTag](graph: Graph[VD, Long]): S = {
-    save(WeaklyConnectionComponentsCore.wccGraphX(graph))
+    val wccCore = new WeaklyConnectionComponentsCore
+    save(wccCore.runWeaklyConnectedComponentsGraphX(graph))
   }
 }

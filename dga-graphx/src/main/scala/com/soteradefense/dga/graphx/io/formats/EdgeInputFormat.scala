@@ -30,6 +30,12 @@ import org.apache.spark.rdd.RDD
  * @param parallelism The number of tasks to do in parallel.
  */
 class EdgeInputFormat(var inputFile: String, var delimiter: String, var parallelism: Int = 20) extends Serializable  {
+  /**
+   * Reads in an edge list from the class variable inputFile
+   * @param sc The spark context to use to read in the file.
+   * @param typeConversionMethod A method that is passed in to convert your data to a long value.
+   * @return Edge RDD.
+   */
   def getEdgeRDD(sc: SparkContext, typeConversionMethod: String => Long = _.toLong): RDD[Edge[Long]] = {
     sc.textFile(inputFile, parallelism).map(row => {
       val tokens = row.split(delimiter).map(_.trim())
@@ -42,6 +48,9 @@ class EdgeInputFormat(var inputFile: String, var delimiter: String, var parallel
   }
 }
 
+/**
+ * Kryo Serializer for EdgeInputFormat.
+ */
 class EdgeInputFormatSerializer extends Serializer[EdgeInputFormat] {
   override def write(kryo: Kryo, out: Output, obj: EdgeInputFormat): Unit = {
     kryo.writeObject(out, obj.inputFile)

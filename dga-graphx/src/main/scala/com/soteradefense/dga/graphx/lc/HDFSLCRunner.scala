@@ -23,16 +23,32 @@ import org.apache.spark.graphx.Graph
 
 import scala.reflect.ClassTag
 
-
+/**
+ * Class for running Leaf Compression with data on hdfs.
+ * @param output_dir Directory to output the results.
+ * @param delimiter Character to split the result.
+ */
 class HDFSLCRunner(var output_dir: String, var delimiter: String) extends AbstractLCRunner {
 
+  /**
+   * The save return type is of type Unit.
+   */
   override type S = Unit
 
+  /**
+   * Maps and saves each edge in the graph.
+   * @param graph A graph of any type.
+   * @tparam VD ClassTag for the vertex data.
+   * @tparam ED ClassTag for the edge data.
+   */
   override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): S = {
     graph.triplets.map(t => s"${t.srcId}$delimiter${t.dstId}").saveAsTextFile(output_dir)
   }
 }
 
+/**
+ * Kryo serializer for HDFSLCRunner
+ */
 class HDFSLCRunnerSerializer extends Serializer[HDFSLCRunner] {
   override def write(kryo: Kryo, out: Output, obj: HDFSLCRunner): Unit = {
     kryo.writeObject(out, obj.output_dir)

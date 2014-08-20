@@ -23,16 +23,33 @@ import org.apache.spark.graphx.Graph
 
 import scala.reflect.ClassTag
 
-
+/**
+ * PageRank runner for HDFS.
+ * @param output_dir The directory to output the results to.
+ * @param delimiter The delimiter to use when splitting the data.
+ * @param delta The convergence value for stopping the algorithm.
+ */
 class HDFSPRRunner(var output_dir: String, var delimiter: String, delta: Double) extends AbstractPRRunner(delta) {
 
+  /**
+   * The return type is Unit for S.
+   */
   override type S = Unit
 
+  /**
+   * Saves the results to output_dir in hdfs.
+   * @param graph A graph of any type.
+   * @tparam VD ClassTag for the vertex data.
+   * @tparam ED ClassTag for the edge data.
+   */
   override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]) = {
     graph.vertices.map(f => s"${f._1}${delimiter}${f._2}").saveAsTextFile(output_dir)
   }
 }
 
+/**
+ * Kryo serializer for HDFSPRRunner.
+ */
 class HDFSPRRunnerSerializer extends Serializer[HDFSPRRunner] {
   override def write(kryo: Kryo, out: Output, obj: HDFSPRRunner): Unit = {
     kryo.writeObject(out, obj.output_dir)

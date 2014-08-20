@@ -30,7 +30,14 @@ import org.apache.spark.graphx.{GraphKryoRegistrator, Graph}
 import org.apache.spark.serializer.KryoSerializer
 import org.apache.spark.{SparkConf, SparkContext}
 
+/**
+ * Object for kicking off analytics.
+ */
 object DGARunner {
+  /**
+   * Main method for parsing arguments and running analytics.
+   * @param args Commandline arguments.
+   */
   def main(args: Array[String]) {
     val analytic = args(0)
     println(s"Analytic: $analytic")

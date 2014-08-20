@@ -23,16 +23,33 @@ import org.apache.spark.graphx.Graph
 
 import scala.reflect.ClassTag
 
+/**
+ * Class for running weakly connected components with hdfs.
+ * @param output_dir The directory to save the results.
+ * @param delimiter The delimiter to split the results.
+ */
 class HDFSWCCRunner(var output_dir: String, var delimiter: String) extends AbstractWCCRunner {
 
+  /**
+   * The return type for S is Unit.
+   */
   override type S = Unit
 
+  /**
+   * Saves the graph and it's component ID to HDFS.
+   * @param graph A graph of any type.
+   * @tparam VD ClassTag for the vertex data.
+   * @tparam ED ClassTag for the edge data.
+   */
   def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): S = {
     graph.triplets.map(t => s"${t.srcId}$delimiter${t.dstId}$delimiter${t.srcAttr}").saveAsTextFile(output_dir)
   }
 
 }
 
+/**
+ * Kryo serializer for HDFSWCCRunner.
+ */
 class HDFSWCCRunnerSerializer extends Serializer[HDFSWCCRunner] {
   override def write(kryo: Kryo, out: Output, obj: HDFSWCCRunner): Unit = {
     kryo.writeObject(out, obj.output_dir)

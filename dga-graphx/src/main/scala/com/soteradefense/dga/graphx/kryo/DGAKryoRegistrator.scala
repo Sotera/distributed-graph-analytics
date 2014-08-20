@@ -28,6 +28,9 @@ import org.apache.spark.graphx.GraphKryoRegistrator
 
 import scala.collection.immutable
 
+/**
+ * Kryo Registrator for DGA's classes.  Extends from the GraphX Registrator.
+ */
 class DGAKryoRegistrator extends GraphKryoRegistrator {
   override def registerClasses(kryo: Kryo) {
     super.registerClasses(kryo)

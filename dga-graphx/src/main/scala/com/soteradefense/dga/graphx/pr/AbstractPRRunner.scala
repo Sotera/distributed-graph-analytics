@@ -23,15 +23,37 @@ import org.apache.spark.graphx.Graph
 
 import scala.reflect.ClassTag
 
+/**
+ * Abstract class for running the page rank algorithm.
+ * @param delta The convergence value for stopping the algorithm.
+ */
 abstract class AbstractPRRunner(var delta: Double) extends Harness with Serializable {
 
+  /**
+   * The run return type is the save return type.
+   */
   override type R = S
 
+  /**
+   * Runs our implementation of the page rank algorithm.
+   * @param sc The current spark context.
+   * @param graph A Graph object with an optional edge weight.
+   * @tparam VD ClassTag for the vertex data type.
+   * @return The type of R.
+   */
   override def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): R = {
-    save(PageRankCore.pr(graph, delta))
+    val prCore = new PageRankCore
+    save(prCore.runPageRank(graph, delta))
   }
 
-  def runGraphXImplementation[VD: ClassTag](graph: Graph[VD, Long]): S = {
-    save(PageRankCore.prGraphX(graph, delta))
+  /**
+   * Runs the graphx implementation of the page rank algorithm.
+   * @param graph A graph.
+   * @tparam VD Type of the vertex attribute.
+   * @return The type of R.
+   */
+  def runGraphXImplementation[VD: ClassTag](graph: Graph[VD, Long]): R = {
+    val prCore = new PageRankCore
+    save(prCore.runPageRankGraphX(graph, delta))
   }
 }

@@ -23,12 +23,12 @@ import org.apache.spark.graphx._
 import scala.reflect.ClassTag
 
 
-object WeaklyConnectionComponentsCore extends Logging{
-  def wccGraphX[VD: ClassTag](graph: Graph[VD, Long]): (Graph[VertexId, Long]) = {
+class WeaklyConnectionComponentsCore extends Logging with Serializable {
+  def runWeaklyConnectedComponentsGraphX[VD: ClassTag](graph: Graph[VD, Long]): (Graph[VertexId, Long]) = {
     graph.connectedComponents()
   }
 
-  def wcc[VD: ClassTag](graph: Graph[VD, Long]): (Graph[VertexId, Long]) = {
+  def runWeaklyConnectedComponents[VD: ClassTag](graph: Graph[VD, Long]): (Graph[VertexId, Long]) = {
     logInfo("Setting each vertex to the maximum neighbor value.")
     val vertexRDD = graph.mapReduceTriplets(e => Iterator((e.dstId, Math.max(e.dstId, e.srcId))), (a1: VertexId, a2: VertexId) => Math.max(a1, a2))
     logInfo("Creating the graph from the messages.")

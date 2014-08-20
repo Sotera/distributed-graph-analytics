@@ -22,9 +22,18 @@ import org.apache.spark.graphx.{EdgeTriplet, Graph, VertexId}
 
 import scala.reflect.ClassTag
 
-
-object LeafCompressionCore extends Logging {
-  def lc[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Graph[Long, Long] = {
+/**
+ * Core class for running the leaf compression algorithm.
+ */
+class LeafCompressionCore extends Logging with Serializable {
+  /**
+   * Runs the leaf compression algorithm.
+   * @param graph A graph
+   * @tparam VD type of the vertex attribute
+   * @tparam ED type of the edge attribute
+   * @return A compressed graph.
+   */
+  def runLeafCompression[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Graph[Long, Long] = {
     logInfo("Creating a graph for Leaf Compression")
     val previousGraph = graph.outerJoinVertices(graph.outDegrees) { (vid, vdata, deg) => deg.getOrElse(0).toLong}.mapTriplets(e => e.srcAttr).cache()
     logInfo("Trimming Nodes off of the previous graph")
@@ -32,7 +41,7 @@ object LeafCompressionCore extends Logging {
     val graphChanged = previousGraph.vertices.count() != filteredGraph.vertices.count()
     logInfo(s"Graph Changed: $graphChanged")
     if (graphChanged)
-      LeafCompressionCore.lc(filteredGraph)
+      runLeafCompression(filteredGraph)
     else
       filteredGraph
   }
