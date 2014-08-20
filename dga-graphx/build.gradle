@@ -15,6 +15,15 @@ repositories {
 
 }
 
+sourceSets {
+    main {
+        resources {
+            exclude 'dga-graphx'
+            exclude 'log4j.properties'
+        }
+    }
+}
+
 dependencies {
     compile project(':dga-core')
     compile group: 'org.apache.spark', name: 'spark-core_2.10', version: '1.0.1'
@@ -32,7 +41,6 @@ task distJars(dependsOn: 'distConf', type: Copy) {
     from jar
     include "dga-core*.jar"
     include "dga-graphx*.jar"
-    include "*graphx*.jar"
     into "${buildDir}/dist/lib"
 }
 
@@ -41,9 +49,7 @@ task distConf(dependsOn: 'assemble', type: Copy) {
     into "${buildDir}/dist/conf"
 }
 
-
 task dist(dependsOn: 'distJars', type: Copy) {
     from project.file("src/main/resources/dga-graphx")
     into "${buildDir}/dist"
 }
-
