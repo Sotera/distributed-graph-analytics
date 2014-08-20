@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.graphx.lc
 
+import com.esotericsoftware.kryo.KryoSerializable
 import com.soteradefense.dga.graphx.harness.Harness
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Graph
@@ -26,7 +27,7 @@ import scala.reflect.ClassTag
 /**
  * Abstract class for running the leaf compression algorithm.
  */
-abstract class AbstractLCRunner extends Harness with Serializable {
+abstract class AbstractLCRunner extends Harness with Serializable with KryoSerializable {
 
   /**
    * The run return type is the save return type for this particular runner.

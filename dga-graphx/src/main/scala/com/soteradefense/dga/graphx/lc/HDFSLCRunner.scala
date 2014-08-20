@@ -44,18 +44,14 @@ class HDFSLCRunner(var output_dir: String, var delimiter: String) extends Abstra
   override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): S = {
     graph.triplets.map(t => s"${t.srcId}$delimiter${t.dstId}").saveAsTextFile(output_dir)
   }
-}
 
-/**
- * Kryo serializer for HDFSLCRunner
- */
-class HDFSLCRunnerSerializer extends Serializer[HDFSLCRunner] {
-  override def write(kryo: Kryo, out: Output, obj: HDFSLCRunner): Unit = {
-    kryo.writeObject(out, obj.output_dir)
-    kryo.writeObject(out, obj.delimiter)
+  override def write(kryo: Kryo, out: Output): Unit = {
+    kryo.writeObject(out, this.output_dir)
+    kryo.writeObject(out, this.delimiter)
   }
 
-  override def read(kryo: Kryo, in: Input, cls: Class[HDFSLCRunner]): HDFSLCRunner = {
-    new HDFSLCRunner(kryo.readObject(in, classOf[String]), kryo.readObject(in, classOf[String]))
+  override def read(kryo: Kryo, in: Input): Unit = {
+    this.output_dir = kryo.readObject(in, classOf[String])
+    this.delimiter = kryo.readObject(in, classOf[String])
   }
 }

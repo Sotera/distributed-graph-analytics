@@ -69,18 +69,13 @@ class HDFSHBSERunner(var output_dir: String, var delimiter: String) extends Abst
     graph.vertices.map(m => s"${m._1}$delimiter${m._2.asInstanceOf[HBSEData].getApproximateBetweenness}").saveAsTextFile(output_dir)
   }
 
-}
-
-/**
- * Kryo Serializer for the HDFSHBSERunner.
- */
-class HDFSHBSERunnerSerializer extends Serializer[HDFSHBSERunner] {
-  override def write(kryo: Kryo, out: Output, obj: HDFSHBSERunner): Unit = {
-    kryo.writeObject(out, obj.output_dir)
-    kryo.writeObject(out, obj.delimiter)
+  override def write(kryo: Kryo, out: Output): Unit = {
+    kryo.writeObject(out, this.output_dir)
+    kryo.writeObject(out, this.delimiter)
   }
 
-  override def read(kryo: Kryo, in: Input, cls: Class[HDFSHBSERunner]): HDFSHBSERunner = {
-    new HDFSHBSERunner(kryo.readObject(in, classOf[String]), kryo.readObject(in, classOf[String]))
+  override def read(kryo: Kryo, in: Input): Unit = {
+    this.output_dir = kryo.readObject(in, classOf[String])
+    this.delimiter = kryo.readObject(in, classOf[String])
   }
 }

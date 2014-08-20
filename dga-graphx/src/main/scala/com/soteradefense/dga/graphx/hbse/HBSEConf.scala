@@ -20,7 +20,7 @@ package com.soteradefense.dga.graphx.hbse
 import java.util.Date
 
 import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esotericsoftware.kryo.{Kryo, Serializer}
+import com.esotericsoftware.kryo.{KryoSerializable, Kryo, Serializer}
 import com.soteradefense.dga.hbse.HBSEConfigurationConstants
 import org.apache.spark.SparkConf
 
@@ -36,7 +36,7 @@ import org.apache.spark.SparkConf
  * @param pivotSelectionRandomSeed The random seed to pass to the takeSample.
  * @param totalNumberOfPivots The total number of pivots to use in an entire run.
  */
-class HBSEConf(
+case class HBSEConf(
                 var shortestPathPhases: Int,
                 var setStability: Int,
                 var setStabilityCounter: Int,
@@ -44,7 +44,7 @@ class HBSEConf(
                 var pivotBatchSize: Int,
                 var initialPivotBatchSize: Int,
                 var pivotSelectionRandomSeed: Long,
-                var totalNumberOfPivots: Int) extends Serializable {
+                var totalNumberOfPivots: Int) extends Serializable with KryoSerializable {
 
   /**
    * The default constructor for an HBSEConf Object.
@@ -68,25 +68,25 @@ class HBSEConf(
     this.totalNumberOfPivots = sparkConf.getInt(HBSEConfigurationConstants.TOTAL_PIVOT_COUNT, 10)
   }
 
-}
-
-/**
- * Kryo Serializer for the HBSEConf Object
- */
-class HBSEConfSerializer extends Serializer[HBSEConf] {
-  override def write(kryo: Kryo, output: Output, obj: HBSEConf): Unit = {
-    kryo.writeObject(output, obj.shortestPathPhases)
-    kryo.writeObject(output, obj.setStability)
-    kryo.writeObject(output, obj.setStabilityCounter)
-    kryo.writeObject(output, obj.betweennessSetMaxSize)
-    kryo.writeObject(output, obj.pivotBatchSize)
-    kryo.writeObject(output, obj.initialPivotBatchSize)
-    kryo.writeObject(output, obj.pivotSelectionRandomSeed)
-    kryo.writeObject(output, obj.totalNumberOfPivots)
+  override def write(kryo: Kryo, output: Output): Unit = {
+    kryo.writeObject(output, this.shortestPathPhases)
+    kryo.writeObject(output, this.setStability)
+    kryo.writeObject(output, this.setStabilityCounter)
+    kryo.writeObject(output, this.betweennessSetMaxSize)
+    kryo.writeObject(output, this.pivotBatchSize)
+    kryo.writeObject(output, this.initialPivotBatchSize)
+    kryo.writeObject(output, this.pivotSelectionRandomSeed)
+    kryo.writeObject(output, this.totalNumberOfPivots)
   }
 
-  override def read(kryo: Kryo, input: Input, classType: Class[HBSEConf]): HBSEConf = {
-    new HBSEConf(kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]),
-      kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Long]), kryo.readObject(input, classOf[Int]))
+  override def read(kryo: Kryo, input: Input): Unit = {
+    this.shortestPathPhases = kryo.readObject(input, classOf[Int])
+    this.setStability = kryo.readObject(input, classOf[Int])
+    this.setStabilityCounter = kryo.readObject(input, classOf[Int])
+    this.betweennessSetMaxSize = kryo.readObject(input, classOf[Int])
+    this.pivotBatchSize = kryo.readObject(input, classOf[Int])
+    this.initialPivotBatchSize = kryo.readObject(input, classOf[Int])
+    this.pivotSelectionRandomSeed = kryo.readObject(input, classOf[Long])
+    this.totalNumberOfPivots = kryo.readObject(input, classOf[Int])
   }
 }

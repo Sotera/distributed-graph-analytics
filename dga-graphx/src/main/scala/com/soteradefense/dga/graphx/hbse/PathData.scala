@@ -18,7 +18,7 @@
 package com.soteradefense.dga.graphx.hbse
 
 import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esotericsoftware.kryo.{Kryo, Serializer}
+import com.esotericsoftware.kryo.{KryoSerializable, Kryo, Serializer}
 
 /**
  * PathData object for storing path data from a pivot and through a node.
@@ -28,7 +28,7 @@ import com.esotericsoftware.kryo.{Kryo, Serializer}
  * @param messageSource Source of the node that forwarded that message to you.
  * @param numPaths Number of paths it took to get there.
  */
-class PathData(private var distance: Long, private var pivotSource: Long, private var messageSource: Long, private var numPaths: Long) extends Serializable {
+class PathData(private var distance: Long, private var pivotSource: Long, private var messageSource: Long, private var numPaths: Long) extends Serializable with KryoSerializable {
   /**
    * Returns the distance value.
    * @return value of distance.
@@ -52,6 +52,20 @@ class PathData(private var distance: Long, private var pivotSource: Long, privat
    * @return value of numPaths.
    */
   def getNumberOfShortestPaths = this.numPaths
+
+  override def write(kryo: Kryo, output: Output): Unit = {
+    kryo.writeObject(output, this.getDistance)
+    kryo.writeObject(output, this.getPivotSource)
+    kryo.writeObject(output, this.getMessageSource)
+    kryo.writeObject(output, this.getNumberOfShortestPaths)
+  }
+
+  override def read(kryo: Kryo, input: Input): Unit = {
+    this.distance = kryo.readObject(input, classOf[Long])
+    this.pivotSource = kryo.readObject(input, classOf[Long])
+    this.messageSource = kryo.readObject(input, classOf[Long])
+    this.numPaths = kryo.readObject(input, classOf[Long])
+  }
 }
 
 /**
@@ -67,20 +81,4 @@ object PathData {
    * @return
    */
   def createShortestPathMessage(pivotSource: Long, messageSource: Long, distance: Long, numPaths: Long) = new PathData(distance, pivotSource, messageSource, numPaths)
-}
-
-/**
- * Kryo Serializer for the PathData object.
- */
-class PathDataSerializer extends Serializer[PathData] {
-  override def write(kryo: Kryo, output: Output, obj: PathData): Unit = {
-    kryo.writeObject(output, obj.getDistance)
-    kryo.writeObject(output, obj.getPivotSource)
-    kryo.writeObject(output, obj.getMessageSource)
-    kryo.writeObject(output, obj.getNumberOfShortestPaths)
-  }
-
-  override def read(kryo: Kryo, input: Input, classType: Class[PathData]): PathData = {
-    new PathData(kryo.readObject(input, classOf[Long]), kryo.readObject(input, classOf[Long]), kryo.readObject(input, classOf[Long]), kryo.readObject(input, classOf[Long]))
-  }
 }

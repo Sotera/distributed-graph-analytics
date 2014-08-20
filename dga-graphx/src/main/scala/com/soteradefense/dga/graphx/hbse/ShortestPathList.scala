@@ -18,7 +18,7 @@
 package com.soteradefense.dga.graphx.hbse
 
 import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esotericsoftware.kryo.{Kryo, Serializer}
+import com.esotericsoftware.kryo.{Kryo, KryoSerializable}
 
 import scala.collection.mutable
 
@@ -27,7 +27,7 @@ import scala.collection.mutable
  * @param distance Shortest distance in the shortest path map.
  * @param predecessorPathCountMap Map for storing a nodes predecessors.
  */
-class ShortestPathList(private var distance: Long, private var predecessorPathCountMap: mutable.HashMap[Long, Long]) extends Serializable {
+class ShortestPathList(private var distance: Long, private var predecessorPathCountMap: mutable.HashMap[Long, Long]) extends Serializable with KryoSerializable {
 
   /**
    * Default Constructor.
@@ -83,32 +83,26 @@ class ShortestPathList(private var distance: Long, private var predecessorPathCo
     }
     updated
   }
-}
 
-/**
- * Kryo serializer for ShortestPathList
- */
-class ShortestPathListSerializer extends Serializer[ShortestPathList] {
-  override def write(kryo: Kryo, output: Output, obj: ShortestPathList): Unit = {
-    kryo.writeObject(output, obj.getDistance)
-    kryo.writeObject(output, obj.getPredecessorPathCountMap.size)
-    obj.getPredecessorPathCountMap.foreach(f => {
-      kryo.writeObject(output, f._1)
-      kryo.writeObject(output, f._2)
+  override def write(kryo: Kryo, output: Output): Unit = {
+    kryo.writeObject(output, this.getDistance)
+    kryo.writeObject(output, this.getPredecessorPathCountMap.size)
+    this.getPredecessorPathCountMap.foreach(f => {
+      val (vertexId, numberOfShortestPaths) = f
+      kryo.writeObject(output, vertexId)
+      kryo.writeObject(output, numberOfShortestPaths)
     })
   }
 
-
-  override def read(kryo: Kryo, input: Input, classType: Class[ShortestPathList]): ShortestPathList = {
-    val distance = kryo.readObject(input, classOf[Long])
+  override def read(kryo: Kryo, input: Input): Unit = {
+    val dist = kryo.readObject(input, classOf[Long])
     val pathCountMapSize = kryo.readObject(input, classOf[Int])
     val map = new mutable.HashMap[Long, Long]
     var i = 0
     for (i <- 0 to pathCountMapSize) {
       map.put(kryo.readObject(input, classOf[Long]), kryo.readObject(input, classOf[Long]))
     }
-
-    new ShortestPathList(distance, map)
-
+    this.distance = dist
+    this.predecessorPathCountMap = map
   }
 }

@@ -19,6 +19,8 @@
 
 package com.soteradefense.dga.graphx.hbse
 
+import com.esotericsoftware.kryo.Kryo
+import com.esotericsoftware.kryo.io.{Input, Output}
 import org.apache.spark.graphx.Graph
 import org.apache.spark.rdd.RDD
 
@@ -33,4 +35,11 @@ class HBSETestRunner extends AbstractHBSERunner {
 
   override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): S = graph.asInstanceOf[Graph[HBSEData, Long]]
 
+  override def write(kryo: Kryo, output: Output): Unit = {
+    // Nothing needs to be serialized
+  }
+
+  override def read(kryo: Kryo, input: Input): Unit = {
+    // Nothing needs to be read.
+  }
 }

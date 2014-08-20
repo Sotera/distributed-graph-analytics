@@ -28,11 +28,12 @@ import scala.reflect.ClassTag
 
 /**
  * Execute the louvain algorithim and save the vertices and edges in hdfs at each level.
- * Can also save locally if in local mode.
  *
- * See LouvainHarness for algorithm details
+ * @param minProgress Minimum compression progress.
+ * @param progressCounter Progress counter.
+ * @param outputdir Directory to output the results.
  */
-class HDFSLouvainRunner(minProgress: Int, progressCounter: Int, var outputdir: String) extends AbstractLouvainRunner(minProgress, progressCounter) {
+class HDFSLouvainRunner(minProgress: Int, progressCounter: Int, var outputdir: String) extends AbstractLouvainRunner(minProgress, progressCounter, Array[(Int, Double)]()) {
 
   var vertexSavePath: String = outputdir
   var edgeSavePath: String = outputdir
@@ -44,12 +45,10 @@ class HDFSLouvainRunner(minProgress: Int, progressCounter: Int, var outputdir: S
    * level 0 = no compression
    *
    */
-  def saveLevel(sc: SparkContext, level: Int, q: Double, graph: Graph[VertexState, Long]) = {
+  def saveLevel(sc: SparkContext, level: Int, q: Double, graph: Graph[LouvainData, Long]) = {
     vertexSavePath = outputdir + "/level_" + level + "_vertices"
     edgeSavePath = outputdir + "/level_" + level + "_edges"
     save(graph)
-    //graph.vertices.map( {case (id,v) => ""+id+","+v.internalWeight+","+v.community }).saveAsTextFile(outputdir+"/level_"+level+"_vertices")
-    //graph.edges.mapValues({case e=>""+e.srcId+","+e.dstId+","+e.attr}).saveAsTextFile(outputdir+"/level_"+level+"_edges")
     qValues = qValues :+ ((level, q))
     println(s"qValue: $q")
 
@@ -61,7 +60,7 @@ class HDFSLouvainRunner(minProgress: Int, progressCounter: Int, var outputdir: S
    * Complete any final save actions required
    *
    */
-  def finalSave(sc: SparkContext, level: Int, q: Double, graph: Graph[VertexState, Long]) = {
+  def finalSave(sc: SparkContext, level: Int, q: Double, graph: Graph[LouvainData, Long]) = {
 
   }
 
@@ -69,21 +68,15 @@ class HDFSLouvainRunner(minProgress: Int, progressCounter: Int, var outputdir: S
     graph.vertices.saveAsTextFile(vertexSavePath)
     graph.edges.saveAsTextFile(edgeSavePath)
   }
-}
 
-class HDFSLouvainRunnerSerializer extends Serializer[HDFSLouvainRunner] {
-  override def write(kryo: Kryo, output: Output, obj: HDFSLouvainRunner): Unit = {
-    kryo.writeObject(output, obj.minProgress)
-    kryo.writeObject(output, obj.progressCounter)
-    kryo.writeObject(output, obj.outputdir)
-    val objectArraySerializer = new ObjectArraySerializer
-    objectArraySerializer.write(kryo, output, obj.qValues.asInstanceOf[Array[Object]])
+  override def write(kryo: Kryo, output: Output): Unit = {
+    super.write(kryo, output)
+    kryo.writeObject(output, this.outputdir)
+
   }
 
-  override def read(kryo: Kryo, input: Input, classType: Class[HDFSLouvainRunner]): HDFSLouvainRunner = {
-    val runner = new HDFSLouvainRunner(kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[String]))
-    val objectArraySerializer = new ObjectArraySerializer
-    runner.qValues = objectArraySerializer.read(kryo, input, classOf[Array[Object]]).asInstanceOf[Array[(Int, Double)]]
-    runner
+  override def read(kryo: Kryo, input: Input): Unit = {
+    super.read(kryo, input)
+    this.outputdir = kryo.readObject(input, classOf[String])
   }
 }

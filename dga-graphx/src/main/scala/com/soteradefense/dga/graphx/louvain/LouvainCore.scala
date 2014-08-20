@@ -17,7 +17,7 @@
  */
 package com.soteradefense.dga.graphx.louvain
 
-import org.apache.spark.SparkContext
+import org.apache.spark.{Logging, SparkContext}
 import org.apache.spark.SparkContext._
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.graphx._
@@ -32,7 +32,7 @@ import scala.reflect.ClassTag
  *
  * For details on the sequential algorithm see:  Fast unfolding of communities in large networks, Blondel 2008
  */
-object LouvainCore {
+class LouvainCore extends Logging with Serializable {
 
 
   /**
@@ -40,7 +40,7 @@ object LouvainCore {
    * Graph[VD,Long].  The resulting graph can be used for louvain computation.
    *
    */
-  def createLouvainGraph[VD: ClassTag](graph: Graph[VD, Long]): Graph[VertexState, Long] = {
+  def createLouvainGraph[VD: ClassTag](graph: Graph[VD, Long]): Graph[LouvainData, Long] = {
     // Create the initial Louvain graph.  
     val nodeWeightMapFunc = (e: EdgeTriplet[VD, Long]) => Iterator((e.srcId, e.attr), (e.dstId, e.attr))
     val nodeWeightReduceFunc = (e1: Long, e2: Long) => e1 + e2
@@ -48,16 +48,15 @@ object LouvainCore {
 
     graph.outerJoinVertices(nodeWeights)((vid, data, weightOption) => {
       val weight = weightOption.getOrElse(0L)
-      new VertexState(vid, weight, 0L, weight, false)
+      new LouvainData(vid, weight, 0L, weight, false)
     }).partitionBy(PartitionStrategy.EdgePartition2D).groupEdges(_ + _)
   }
-
 
   /**
    * Transform a graph from [VD,Long] to a a [VertexState,Long] graph and label each vertex with a community
    * to maximize global modularity (without compressing the graph)
    */
-  def louvainFromStandardGraph[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long], minProgress: Int = 1, progressCounter: Int = 1): (Double, Graph[VertexState, Long], Int) = {
+  def louvainFromStandardGraph[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long], minProgress: Int = 1, progressCounter: Int = 1): (Double, Graph[LouvainData, Long], Int) = {
     val louvainGraph = createLouvainGraph(graph)
     louvain(sc, louvainGraph, minProgress, progressCounter)
   }
@@ -67,7 +66,7 @@ object LouvainCore {
    * For a graph of type Graph[VertexState,Long] label each vertex with a community to maximize global modularity. 
    * (without compressing the graph)
    */
-  def louvain(sc: SparkContext, graph: Graph[VertexState, Long], minProgress: Int = 1, progressCounter: Int = 1): (Double, Graph[VertexState, Long], Int) = {
+  def louvain(sc: SparkContext, graph: Graph[LouvainData, Long], minProgress: Int = 1, progressCounter: Int = 1): (Double, Graph[LouvainData, Long], Int) = {
     var louvainGraph = graph.cache()
     val graphWeight = louvainGraph.vertices.values.map(vdata => vdata.internalWeight + vdata.nodeWeight).reduce(_ + _)
     val totalGraphWeight = sc.broadcast(graphWeight)
@@ -169,11 +168,11 @@ object LouvainCore {
   /**
    * Creates the messages passed between each vertex to convey neighborhood community data.
    */
-  private def sendMsg(et: EdgeTriplet[VertexState, Long]) = {
+  private def sendMsg(et: EdgeTriplet[LouvainData, Long]) = {
     if (et.dstAttr == null)
-      et.dstAttr = new VertexState(et.dstId, 0L, 0L, 0L, false)
+      et.dstAttr = new LouvainData(et.dstId, 0L, 0L, 0L, false)
     if (et.srcAttr == null)
-      et.srcAttr = new VertexState(et.srcId, 0L, 0L, 0L, false)
+      et.srcAttr = new LouvainData(et.srcId, 0L, 0L, 0L, false)
     val m1 = (et.dstId, Map((et.srcAttr.community, et.srcAttr.communitySigmaTot) -> et.attr))
     val m2 = (et.srcId, Map((et.dstAttr.community, et.dstAttr.communitySigmaTot) -> et.attr))
     Iterator(m1, m2)
@@ -201,7 +200,7 @@ object LouvainCore {
    * Join vertices with community data form their neighborhood and select the best community for each vertex to maximize change in modularity.
    * Returns a new set of vertices with the updated vertex state.
    */
-  private def louvainVertJoin(louvainGraph: Graph[VertexState, Long], msgRDD: VertexRDD[Map[(Long, Long), Long]], totalEdgeWeight: Broadcast[Long], even: Boolean) = {
+  private def louvainVertJoin(louvainGraph: Graph[LouvainData, Long], msgRDD: VertexRDD[Map[(Long, Long), Long]], totalEdgeWeight: Broadcast[Long], even: Boolean) = {
     louvainGraph.vertices.innerJoin(msgRDD)((vid, vdata, msgs) => {
       var bestCommunity = vdata.community
       var startingCommunityId = bestCommunity
@@ -257,7 +256,7 @@ object LouvainCore {
    * Compress a graph by its communities, aggregate both internal node weights and edge
    * weights within communities.
    */
-  def compressGraph(graph: Graph[VertexState, Long], debug: Boolean = true): Graph[VertexState, Long] = {
+  def compressGraph(graph: Graph[LouvainData, Long], debug: Boolean = true): Graph[LouvainData, Long] = {
 
     // aggregate the edge weights of self loops. edges with both src and dst in the same community.
     // WARNING  can not use graph.mapReduceTriplets because we are mapping to new vertexIds
@@ -275,7 +274,7 @@ object LouvainCore {
     // join internal weights and self edges to find new interal weight of each community
     val newVerts = internalWeights.leftOuterJoin(internalEdgeWeights).map({ case (vid, (weight1, weight2Option)) =>
       val weight2 = weight2Option.getOrElse(0L)
-      val state = new VertexState()
+      val state = new LouvainData()
       state.community = vid
       state.changed = false
       state.communitySigmaTot = 0L
@@ -300,7 +299,7 @@ object LouvainCore {
       .partitionBy(PartitionStrategy.EdgePartition2D).groupEdges(_ + _)
 
     // calculate the weighted degree of each node
-    val nodeWeightMapFunc = (e: EdgeTriplet[VertexState, Long]) => Iterator((e.srcId, e.attr), (e.dstId, e.attr))
+    val nodeWeightMapFunc = (e: EdgeTriplet[LouvainData, Long]) => Iterator((e.srcId, e.attr), (e.dstId, e.attr))
     val nodeWeightReduceFunc = (e1: Long, e2: Long) => e1 + e2
     val nodeWeights = compressedGraph.mapReduceTriplets(nodeWeightMapFunc, nodeWeightReduceFunc)
 
@@ -324,14 +323,14 @@ object LouvainCore {
 
 
   // debug printing
-  private def printlouvain(graph: Graph[VertexState, Long]) = {
+  private def printlouvain(graph: Graph[LouvainData, Long]) = {
     print("\ncommunity label snapshot\n(vid,community,sigmaTot)\n")
     graph.vertices.mapValues((vid, vdata) => (vdata.community, vdata.communitySigmaTot)).collect().foreach(f => println(" " + f))
   }
 
 
   // debug printing
-  private def printedgetriplets(graph: Graph[VertexState, Long]) = {
+  private def printedgetriplets(graph: Graph[LouvainData, Long]) = {
     print("\ncommunity label snapshot FROM TRIPLETS\n(vid,community,sigmaTot)\n")
     graph.triplets.flatMap(e => Iterator((e.srcId, e.srcAttr.community, e.srcAttr.communitySigmaTot), (e.dstId, e.dstAttr.community, e.dstAttr.communitySigmaTot))).collect().foreach(f => println(" " + f))
   }

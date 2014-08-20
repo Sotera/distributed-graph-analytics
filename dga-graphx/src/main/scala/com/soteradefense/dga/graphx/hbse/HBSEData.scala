@@ -18,7 +18,7 @@
 package com.soteradefense.dga.graphx.hbse
 
 import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esotericsoftware.kryo.{Kryo, Serializer}
+import com.esotericsoftware.kryo.{Kryo, KryoSerializable}
 
 import scala.collection.mutable
 
@@ -29,7 +29,8 @@ import scala.collection.mutable
  * @param partialDepMap A hash map of dependency accumulation.
  * @param approximateBetweenness Approximate Betweenness value.
  */
-class HBSEData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList], private var partialDepMap: mutable.HashMap[Long, PartialDependency], private var approximateBetweenness: Double) extends Serializable {
+class HBSEData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList], private var partialDepMap: mutable.HashMap[Long, PartialDependency], private var approximateBetweenness: Double)
+  extends Serializable with KryoSerializable {
 
   /**
    * Constructor that accepts an initial betweenness value.
@@ -98,46 +99,44 @@ class HBSEData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList],
    */
   def getPartialDependencyMap = this.partialDepMap
 
-}
-
-/**
- * Kryo serializer for the HBSEData object.
- */
-class HBSEDataSerializer extends Serializer[HBSEData] {
-
-  override def write(kryo: Kryo, output: Output, obj: HBSEData): Unit = {
-    kryo.writeObject(output, obj.getPathDataMap.size)
-    obj.getPathDataMap.foreach(f => {
-      kryo.writeObject(output, f._1)
-      val serializer = new ShortestPathListSerializer
-      serializer.write(kryo, output, f._2)
+  override def write(kryo: Kryo, output: Output): Unit = {
+    kryo.writeObject(output, this.getPathDataMap.size)
+    this.getPathDataMap.foreach(f => {
+      val (pivotId, shortestPathList) = f
+      kryo.writeObject(output, pivotId)
+      shortestPathList.write(kryo, output)
     })
 
-    kryo.writeObject(output, obj.getPartialDependencyMap.size)
-    obj.getPartialDependencyMap.foreach(f => {
-      kryo.writeObject(output, f._1)
-      val serializer = new PartialDependencySerializer
-      serializer.write(kryo, output, f._2)
+    kryo.writeObject(output, this.getPartialDependencyMap.size)
+    this.getPartialDependencyMap.foreach(f => {
+      val (vertexId, partialDependency) = f
+      kryo.writeObject(output, vertexId)
+      partialDependency.write(kryo, output)
     })
 
-    kryo.writeObject(output, obj.getApproximateBetweenness)
+    kryo.writeObject(output, this.getApproximateBetweenness)
   }
 
-  override def read(kryo: Kryo, input: Input, classType: Class[HBSEData]): HBSEData = {
+  override def read(kryo: Kryo, input: Input): Unit = {
     val pdSize = kryo.readObject(input, classOf[Int])
     var i = 0
-    val pathDataMap = new mutable.HashMap[Long, ShortestPathList]
+    val pdMap = new mutable.HashMap[Long, ShortestPathList]
     for (i <- 0 to (pdSize - 1)) {
-      val serializer = new ShortestPathListSerializer
-      pathDataMap.put(kryo.readObject(input, classOf[Long]), serializer.read(kryo, input, classOf[ShortestPathList]))
+      val shortestPathList = new ShortestPathList
+      val pivotId = kryo.readObject(input, classOf[Long])
+      shortestPathList.read(kryo, input)
+      pdMap.put(pivotId, shortestPathList)
     }
+
     i = 0
     val partialDepSize = kryo.readObject(input, classOf[Int])
-    val partialDepMap = new mutable.HashMap[Long, PartialDependency]
+    val partialDMap = new mutable.HashMap[Long, PartialDependency]
     for (i <- 0 to (partialDepSize - 1)) {
-      val serializer = new PartialDependencySerializer
-      partialDepMap.put(kryo.readObject(input, classOf[Long]), serializer.read(kryo, input, classOf[PartialDependency]))
+      val partialDep = new PartialDependency
+      partialDep.read(kryo, input)
     }
-    new HBSEData(pathDataMap, partialDepMap, kryo.readObject(input, classOf[Double]))
+    this.pathDataMap = pdMap
+    this.partialDepMap = partialDMap
+    this.approximateBetweenness = kryo.readObject(input, classOf[Double])
   }
 }

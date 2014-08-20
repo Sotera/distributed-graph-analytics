@@ -43,9 +43,8 @@ class LouvainCoreTest extends TestCase {
       new Edge(tokens(0).toLong, tokens(1).toLong, tokens(2).toLong)
     })
     val graph = Graph.fromEdges(edgeRDD, None)
-    val louvainGraph = LouvainCore.createLouvainGraph(graph)
     val runner = new LouvainTestRunner(2000, 1)
-    val result = runner.run(sc, louvainGraph)
+    val result = runner.run(sc, graph)
     assert(result.vertices.map(m => m._2.community == 1).reduce((a, b) => a == b))
   }
 
@@ -58,9 +57,8 @@ class LouvainCoreTest extends TestCase {
       new Edge(tokens(0).toLong, tokens(1).toLong, tokens(2).toLong)
     })
     val graph = Graph.fromEdges(edgeRDD, None)
-    val louvainGraph = LouvainCore.createLouvainGraph(graph)
     val runner = new LouvainTestRunner(2000, 1)
-    val result = runner.run(sc, louvainGraph)
+    val result = runner.run(sc, graph)
     assert(result.vertices.filter(f => f._2.community == 1).count() == 2)
     assert(result.vertices.filter(f => f._2.community == 4).count() == 2)
     assert(result.vertices.filter(f => f._2.community == 5).count() == 2)

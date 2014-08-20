@@ -17,6 +17,8 @@
  */
 package com.soteradefense.dga.graphx.pr
 
+import com.esotericsoftware.kryo.io.{Output, Input}
+import com.esotericsoftware.kryo.{Kryo, KryoSerializable}
 import com.soteradefense.dga.graphx.harness.Harness
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Graph
@@ -27,7 +29,7 @@ import scala.reflect.ClassTag
  * Abstract class for running the page rank algorithm.
  * @param delta The convergence value for stopping the algorithm.
  */
-abstract class AbstractPRRunner(var delta: Double) extends Harness with Serializable {
+abstract class AbstractPRRunner(var delta: Double) extends Harness with Serializable with KryoSerializable{
 
   /**
    * The run return type is the save return type.
@@ -55,5 +57,13 @@ abstract class AbstractPRRunner(var delta: Double) extends Harness with Serializ
   def runGraphXImplementation[VD: ClassTag](graph: Graph[VD, Long]): R = {
     val prCore = new PageRankCore
     save(prCore.runPageRankGraphX(graph, delta))
+  }
+
+  override def write(kryo: Kryo, output: Output): Unit = {
+    kryo.writeObject(output, this.delta)
+  }
+
+  override def read(kryo: Kryo, input: Input): Unit = {
+    this.delta = kryo.readObject(input, classOf[Double])
   }
 }

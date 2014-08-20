@@ -45,19 +45,16 @@ class HDFSPRRunner(var output_dir: String, var delimiter: String, delta: Double)
   override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]) = {
     graph.vertices.map(f => s"${f._1}${delimiter}${f._2}").saveAsTextFile(output_dir)
   }
-}
 
-/**
- * Kryo serializer for HDFSPRRunner.
- */
-class HDFSPRRunnerSerializer extends Serializer[HDFSPRRunner] {
-  override def write(kryo: Kryo, out: Output, obj: HDFSPRRunner): Unit = {
-    kryo.writeObject(out, obj.output_dir)
-    kryo.writeObject(out, obj.delimiter)
-    out.writeDouble(obj.delta)
+  override def write(kryo: Kryo, output: Output): Unit = {
+    super.write(kryo, output)
+    kryo.writeObject(output, this.output_dir)
+    kryo.writeObject(output, this.delimiter)
   }
 
-  override def read(kryo: Kryo, in: Input, cls: Class[HDFSPRRunner]): HDFSPRRunner = {
-    new HDFSPRRunner(kryo.readObject(in, classOf[String]), kryo.readObject(in, classOf[String]), in.readDouble())
+  override def read(kryo: Kryo, input: Input): Unit = {
+    super.read(kryo, input)
+    this.output_dir = kryo.readObject(input, classOf[String])
+    this.delimiter = kryo.readObject(input, classOf[String])
   }
 }

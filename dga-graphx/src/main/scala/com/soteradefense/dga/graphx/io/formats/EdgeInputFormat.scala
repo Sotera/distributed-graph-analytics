@@ -17,7 +17,7 @@
  */
 package com.soteradefense.dga.graphx.io.formats
 
-import com.esotericsoftware.kryo.Serializer
+import com.esotericsoftware.kryo.{KryoSerializable, Serializer}
 import com.twitter.chill._
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Edge
@@ -29,7 +29,7 @@ import org.apache.spark.rdd.RDD
  * @param delimiter Delimiter that splits the edges.
  * @param parallelism The number of tasks to do in parallel.
  */
-class EdgeInputFormat(var inputFile: String, var delimiter: String, var parallelism: Int = 20) extends Serializable  {
+class EdgeInputFormat(var inputFile: String, var delimiter: String, var parallelism: Int = 20) extends Serializable with KryoSerializable  {
   /**
    * Reads in an edge list from the class variable inputFile
    * @param sc The spark context to use to read in the file.
@@ -46,19 +46,16 @@ class EdgeInputFormat(var inputFile: String, var delimiter: String, var parallel
       }
     })
   }
-}
 
-/**
- * Kryo Serializer for EdgeInputFormat.
- */
-class EdgeInputFormatSerializer extends Serializer[EdgeInputFormat] {
-  override def write(kryo: Kryo, out: Output, obj: EdgeInputFormat): Unit = {
-    kryo.writeObject(out, obj.inputFile)
-    kryo.writeObject(out, obj.delimiter)
-    kryo.writeObject(out, obj.parallelism)
+  override def write(kryo: Kryo, output: Output): Unit = {
+    kryo.writeObject(output, this.inputFile)
+    kryo.writeObject(output, this.delimiter)
+    kryo.writeObject(output, this.parallelism)
   }
 
-  override def read(kryo: Kryo, in: Input, cls: Class[EdgeInputFormat]): EdgeInputFormat = {
-    new EdgeInputFormat(kryo.readObject(in, classOf[String]), kryo.readObject(in, classOf[String]), kryo.readObject(in, classOf[Int]))
+  override def read(kryo: Kryo, input: Input): Unit = {
+    this.inputFile = kryo.readObject(input, classOf[String])
+    this.delimiter = kryo.readObject(input, classOf[String])
+    this.parallelism = kryo.readObject(input, classOf[Int])
   }
 }

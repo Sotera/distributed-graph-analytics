@@ -19,14 +19,12 @@ package com.soteradefense.dga.graphx.kryo
 
 import com.esotericsoftware.kryo.Kryo
 import com.soteradefense.dga.graphx.hbse._
-import com.soteradefense.dga.graphx.io.formats.{EdgeInputFormat, EdgeInputFormatSerializer}
-import com.soteradefense.dga.graphx.lc.{HDFSLCRunnerSerializer, HDFSLCRunner}
-import com.soteradefense.dga.graphx.louvain.{VertexStateSerializer, VertexState, HDFSLouvainRunnerSerializer, HDFSLouvainRunner}
-import com.soteradefense.dga.graphx.pr.{HDFSPRRunnerSerializer, HDFSPRRunner}
-import com.soteradefense.dga.graphx.wcc.{HDFSWCCRunner, HDFSWCCRunnerSerializer}
+import com.soteradefense.dga.graphx.io.formats.EdgeInputFormat
+import com.soteradefense.dga.graphx.lc.HDFSLCRunner
+import com.soteradefense.dga.graphx.louvain.{HDFSLouvainRunner, LouvainData}
+import com.soteradefense.dga.graphx.pr.HDFSPRRunner
+import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
 import org.apache.spark.graphx.GraphKryoRegistrator
-
-import scala.collection.immutable
 
 /**
  * Kryo Registrator for DGA's classes.  Extends from the GraphX Registrator.
@@ -34,27 +32,27 @@ import scala.collection.immutable
 class DGAKryoRegistrator extends GraphKryoRegistrator {
   override def registerClasses(kryo: Kryo) {
     super.registerClasses(kryo)
-    kryo.register(classOf[EdgeInputFormat], new EdgeInputFormatSerializer)
+    kryo.register(classOf[EdgeInputFormat])
 
     //WCC
-    kryo.register(classOf[HDFSWCCRunner], new HDFSWCCRunnerSerializer)
+    kryo.register(classOf[HDFSWCCRunner])
 
     //HBSE
-    kryo.register(classOf[PartialDependency], new PartialDependencySerializer)
-    kryo.register(classOf[PathData], new PathDataSerializer)
-    kryo.register(classOf[HBSEData], new HBSEDataSerializer)
-    kryo.register(classOf[ShortestPathList], new ShortestPathListSerializer)
-    kryo.register(classOf[HDFSHBSERunner], new HDFSHBSERunnerSerializer)
-    kryo.register(classOf[HBSEConf], new HBSEConfSerializer)
+    kryo.register(classOf[PartialDependency])
+    kryo.register(classOf[PathData])
+    kryo.register(classOf[HBSEData])
+    kryo.register(classOf[ShortestPathList])
+    kryo.register(classOf[HDFSHBSERunner])
+    kryo.register(classOf[HBSEConf])
 
     //LC
-    kryo.register(classOf[HDFSLCRunner], new HDFSLCRunnerSerializer)
+    kryo.register(classOf[HDFSLCRunner])
 
     //PR
-    kryo.register(classOf[HDFSPRRunner], new HDFSPRRunnerSerializer)
+    kryo.register(classOf[HDFSPRRunner])
 
     //Louvain
-    kryo.register(classOf[HDFSLouvainRunner], new HDFSLouvainRunnerSerializer)
-    kryo.register(classOf[VertexState], new VertexStateSerializer)
+    kryo.register(classOf[HDFSLouvainRunner])
+    kryo.register(classOf[LouvainData])
   }
 }

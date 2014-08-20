@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.graphx.wcc
 
+import com.esotericsoftware.kryo.KryoSerializable
 import com.soteradefense.dga.graphx.harness.Harness
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Graph
@@ -26,7 +27,7 @@ import scala.reflect.ClassTag
 /**
  * Abstract class for running weakly connected components.
  */
-abstract class AbstractWCCRunner extends Harness with Serializable {
+abstract class AbstractWCCRunner extends Harness with Serializable with KryoSerializable {
 
   /**
    * The return type of R is S.

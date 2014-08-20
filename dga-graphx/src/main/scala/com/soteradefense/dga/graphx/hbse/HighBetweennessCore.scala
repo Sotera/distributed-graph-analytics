@@ -19,6 +19,11 @@ package com.soteradefense.dga.graphx.hbse
 
 import java.util.Date
 
+import com.esotericsoftware.kryo.io.{Input, Output}
+import com.esotericsoftware.kryo.serializers.CollectionSerializer
+import com.esotericsoftware.kryo.serializers.DefaultArraySerializers.ObjectArraySerializer
+import com.esotericsoftware.kryo.{Kryo, KryoSerializable}
+import com.twitter.chill.ObjectSerializer
 import org.apache.spark.broadcast._
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
@@ -35,7 +40,7 @@ import scala.reflect.ClassTag
  * @param hbseConf A configuration for the run.
  * @param previousPivots List of vertices not to use as pivots.
  */
-class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mutable.Set[VertexId]) extends Logging with Serializable {
+class HighBetweennessCore(var hbseConf: HBSEConf, private var previousPivots: mutable.Set[VertexId]) extends Logging with Serializable with KryoSerializable {
 
 
   /**
@@ -653,6 +658,18 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
     }
     leftMessageMap.foldLeft(rightMessageMap)(mergeMapMessages)
   }
-}
 
-//TODO: Needs serializer
+  override def write(kryo: Kryo, output: Output): Unit = {
+    hbseConf.write(kryo, output)
+    val collectionSerializer = new ObjectSerializer[mutable.Set[VertexId]]
+    collectionSerializer.write(kryo, output, previousPivots)
+  }
+
+  override def read(kryo: Kryo, input: Input): Unit = {
+    val conf = new HBSEConf()
+    conf.read(kryo, input)
+    this.hbseConf = conf
+    val collectionSerializer = new ObjectSerializer[mutable.Set[VertexId]]
+    this.previousPivots = collectionSerializer.read(kryo, input, classOf[mutable.Set[VertexId]])
+  }
+}

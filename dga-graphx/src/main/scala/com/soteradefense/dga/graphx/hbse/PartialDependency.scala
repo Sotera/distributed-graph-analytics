@@ -18,7 +18,7 @@
 package com.soteradefense.dga.graphx.hbse
 
 import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esotericsoftware.kryo.{Kryo, Serializer}
+import com.esotericsoftware.kryo.{KryoSerializable, Kryo, Serializer}
 
 /**
  * An object for encapsulating a partial dependency.
@@ -26,7 +26,7 @@ import com.esotericsoftware.kryo.{Kryo, Serializer}
  * @param successors The number of successors for this dependency.
  * @param dependency The dependency weight on this object.
  */
-class PartialDependency(private var successors: Int, private var dependency: Double) extends Serializable {
+class PartialDependency(private var successors: Int, private var dependency: Double) extends Serializable with KryoSerializable{
 
   /**
    * Default constructor.
@@ -70,18 +70,13 @@ class PartialDependency(private var successors: Int, private var dependency: Dou
    */
   def accumulateDependency(diff: Double) = this.dependency += diff
 
-}
-
-/**
- * Kryo Serializer for the PartialDependency Object.
- */
-class PartialDependencySerializer extends Serializer[PartialDependency] {
-  override def write(kryo: Kryo, output: Output, obj: PartialDependency): Unit = {
-    kryo.writeObject(output, obj.getSuccessors)
-    kryo.writeObject(output, obj.getDependency)
+  override def write(kryo: Kryo, output: Output): Unit = {
+    kryo.writeObject(output, this.getSuccessors)
+    kryo.writeObject(output, this.getDependency)
   }
 
-  override def read(kryo: Kryo, input: Input, `type`: Class[PartialDependency]): PartialDependency = {
-    new PartialDependency(kryo.readObject(input, classOf[Int]), kryo.readObject(input, classOf[Double]))
+  override def read(kryo: Kryo, input: Input): Unit = {
+    this.successors = kryo.readObject(input, classOf[Int])
+    this.dependency = kryo.readObject(input, classOf[Double])
   }
 }

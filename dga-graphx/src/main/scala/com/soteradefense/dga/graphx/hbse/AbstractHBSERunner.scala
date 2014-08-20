@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.graphx.hbse
 
+import com.esotericsoftware.kryo.KryoSerializable
 import com.soteradefense.dga.graphx.harness.Harness
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Graph
@@ -27,7 +28,7 @@ import scala.reflect.ClassTag
 /**
  * An abstract class that runs high betweenness set extraction.
  */
-abstract class AbstractHBSERunner extends Harness with Serializable {
+abstract class AbstractHBSERunner extends Harness with Serializable with KryoSerializable {
 
   /**
    * Return type for the high betweenness save method.

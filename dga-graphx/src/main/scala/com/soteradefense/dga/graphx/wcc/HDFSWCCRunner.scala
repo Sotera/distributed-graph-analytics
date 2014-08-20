@@ -45,18 +45,13 @@ class HDFSWCCRunner(var output_dir: String, var delimiter: String) extends Abstr
     graph.triplets.map(t => s"${t.srcId}$delimiter${t.dstId}$delimiter${t.srcAttr}").saveAsTextFile(output_dir)
   }
 
-}
-
-/**
- * Kryo serializer for HDFSWCCRunner.
- */
-class HDFSWCCRunnerSerializer extends Serializer[HDFSWCCRunner] {
-  override def write(kryo: Kryo, out: Output, obj: HDFSWCCRunner): Unit = {
-    kryo.writeObject(out, obj.output_dir)
-    kryo.writeObject(out, obj.delimiter)
+  override def write(kryo: Kryo, output: Output): Unit = {
+    kryo.writeObject(output, this.output_dir)
+    kryo.writeObject(output, this.delimiter)
   }
 
-  override def read(kryo: Kryo, in: Input, cls: Class[HDFSWCCRunner]): HDFSWCCRunner = {
-    new HDFSWCCRunner(kryo.readObject(in, classOf[String]), kryo.readObject(in, classOf[String]))
+  override def read(kryo: Kryo, input: Input): Unit = {
+    this.output_dir = kryo.readObject(input, classOf[String])
+    this.delimiter = kryo.readObject(input, classOf[String])
   }
 }
