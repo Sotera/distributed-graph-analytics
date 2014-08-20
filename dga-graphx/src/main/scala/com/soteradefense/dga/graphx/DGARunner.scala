@@ -26,7 +26,7 @@ import com.soteradefense.dga.graphx.louvain.HDFSLouvainRunner
 import com.soteradefense.dga.graphx.parser.CommandLineParser
 import com.soteradefense.dga.graphx.pr.HDFSPRRunner
 import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
-import org.apache.spark.graphx.{GraphKryoRegistrator, Graph}
+import org.apache.spark.graphx.{Graph, GraphKryoRegistrator}
 import org.apache.spark.serializer.KryoSerializer
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -34,6 +34,25 @@ import org.apache.spark.{SparkConf, SparkContext}
  * Object for kicking off analytics.
  */
 object DGARunner {
+  val WeaklyConnectedComponents = "wcc"
+  val HighBetweennessSetExtraction = "hbse"
+  val LouvainModularity = "louvain"
+  val PageRank = "pr"
+  val LeafCompression = "lc"
+  val PageRankGraphX = "prGraphX"
+  val WeaklyConnectedComponentsGraphX = "wccGraphX"
+
+  val MinProgressConfiguration = "minProgress"
+  val MinProgressDefaultConfiguration = "2000"
+  val ProgressCounterConfiguration = "progressCounter"
+  val ProgressCounterDefaultConfiguration = "1"
+  val DeltaConvergenceConfiguration = "delta"
+  val DeltaConvergenceDefaultConfiguration = "0.001"
+  val ParallelismConfiguration = "parallelism"
+  val ParallelismDefaultConfiguration = "-1"
+  val DefaultJarSplitDelimiter = ","
+
+
   /**
    * Main method for parsing arguments and running analytics.
    * @param args Commandline arguments.
@@ -47,39 +66,42 @@ object DGARunner {
     val conf = new SparkConf().setMaster(cmdLine.master)
       .setAppName(cmdLine.appName)
       .setSparkHome(cmdLine.sparkHome)
-      .setJars(cmdLine.jars.split(","))
+      .setJars(cmdLine.jars.split(DefaultJarSplitDelimiter))
     conf.setAll(cmdLine.customArguments)
-    if(cmdLine.kryo){
+    if (cmdLine.kryo) {
       conf.set("spark.serializer", classOf[KryoSerializer].getCanonicalName)
-      conf.set("spark.kryo.registrator", classOf[GraphKryoRegistrator].getCanonicalName)
+      conf.set("spark.kryo.registrator", classOf[DGAKryoRegistrator].getCanonicalName)
     }
     val sc = new SparkContext(conf)
-    val parallelism = Integer.parseInt(cmdLine.customArguments.getOrElse("parallelism", "-1"))
+    val parallelism = Integer.parseInt(cmdLine.customArguments.getOrElse(ParallelismConfiguration, ParallelismDefaultConfiguration))
     val inputFormat = if (parallelism != -1) new EdgeInputFormat(cmdLine.input, cmdLine.edgeDelimiter, parallelism) else new EdgeInputFormat(cmdLine.input, cmdLine.edgeDelimiter)
     val edgeRDD = inputFormat.getEdgeRDD(sc)
     val graph = Graph.fromEdges(edgeRDD, None)
     var runner: Harness = null
-    if (analytic.equals("wcc")) {
-      runner = new HDFSWCCRunner(cmdLine.output, cmdLine.edgeDelimiter)
+    analytic match {
+      case WeaklyConnectedComponents | WeaklyConnectedComponentsGraphX =>
+        runner = new HDFSWCCRunner(cmdLine.output, cmdLine.edgeDelimiter)
+      case HighBetweennessSetExtraction =>
+        runner = new HDFSHBSERunner(cmdLine.output, cmdLine.edgeDelimiter)
+      case LouvainModularity =>
+        val minProgress = cmdLine.customArguments.getOrElse(MinProgressConfiguration, MinProgressDefaultConfiguration).toInt
+        val progressCounter = cmdLine.customArguments.getOrElse(ProgressCounterConfiguration, ProgressCounterDefaultConfiguration).toInt
+        runner = new HDFSLouvainRunner(minProgress, progressCounter, cmdLine.output)
+      case LeafCompression =>
+        runner = new HDFSLCRunner(cmdLine.output, cmdLine.edgeDelimiter)
+      case PageRank | PageRankGraphX =>
+        val delta = cmdLine.customArguments.getOrElse(DeltaConvergenceConfiguration, DeltaConvergenceDefaultConfiguration).toDouble
+        runner = new HDFSPRRunner(cmdLine.output, cmdLine.edgeDelimiter, delta)
+      case _  =>
+        throw new IllegalArgumentException(s"$analytic is not supported")
     }
-    else if (analytic.equals("hbse")) {
-      runner = new HDFSHBSERunner(cmdLine.output, cmdLine.edgeDelimiter)
+    analytic match {
+      case WeaklyConnectedComponents | HighBetweennessSetExtraction | LouvainModularity | LeafCompression | PageRank =>
+        runner.run(sc, graph)
+      case PageRankGraphX =>
+        runner.asInstanceOf[HDFSPRRunner].runGraphXImplementation(graph)
+      case WeaklyConnectedComponentsGraphX =>
+        runner.asInstanceOf[HDFSWCCRunner].runGraphXImplementation(graph)
     }
-    else if (analytic.equals("louvain")) {
-      val minProgress = cmdLine.customArguments.getOrElse("minProgress", "2000").toInt
-      val progressCounter = cmdLine.customArguments.getOrElse("progressCounter", "1").toInt
-      runner = new HDFSLouvainRunner(minProgress, progressCounter, cmdLine.output)
-    }
-    else if (analytic.equals("lc")) {
-      runner = new HDFSLCRunner(cmdLine.output, cmdLine.edgeDelimiter)
-    }
-    else if (analytic.equals("pr")) {
-      val delta = cmdLine.customArguments.getOrElse("delta", "0.001").toDouble
-      runner = new HDFSPRRunner(cmdLine.output, cmdLine.edgeDelimiter, delta)
-    }
-    else {
-      throw new IllegalArgumentException(s"$analytic is not supported")
-    }
-    runner.run(sc, graph)
   }
 }
