@@ -8,6 +8,8 @@ classes/
 build
 .idea
 out
+target/*
+gradle/
 .gradle/
 example.log*
 _site/

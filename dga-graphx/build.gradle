@@ -10,28 +10,46 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven {
-    
-url "https://repository.cloudera.com/artifactory/cloudera-repos"
+        url "https://repository.cloudera.com/artifactory/cloudera-repos"
     }
-   
+
 }
- 
+
+sourceSets {
+    main {
+        resources {
+            exclude 'dga-graphx'
+            exclude 'log4j.properties'
+        }
+    }
+}
+
 dependencies {
-    compile 'org.scala-lang:scala-library:2.10.3'
-    compile group: 'org.apache.spark', name: 'spark-core_2.10', version: '0.9.0-cdh5.0.0-beta-2'
-    compile group: 'org.apache.spark', name: 'spark-graphx_2.10', version: '0.9.0-cdh5.0.0-beta-2'
+    compile project(':dga-core')
+    compile group: 'org.apache.spark', name: 'spark-core_2.10', version: '1.0.1'
+    compile group: 'org.apache.spark', name: 'spark-graphx_2.10', version: '1.0.1'
     compile group: 'com.github.scopt', name: 'scopt_2.10', version: '3.2.0'
+    testCompile 'junit:junit:4.11'
     compile(
-      [group: 'org.slf4j', name: 'slf4j-api', version: '1.6.6'],
-      [group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.6.6']
+            [group: 'org.slf4j', name: 'slf4j-api', version: '1.6.6'],
+            [group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.6.6']
     )
 }
 
-
-task dist(dependsOn: 'assemble', type: Copy) {
-        from configurations.runtime
-        from jar
-        include "**/*.jar"
-        into "${buildDir}/dist"
+task distJars(dependsOn: 'distConf', type: Copy) {
+    from configurations.runtime
+    from jar
+    include "dga-core*.jar"
+    include "dga-graphx*.jar"
+    into "${buildDir}/dist/lib"
 }
 
+task distConf(dependsOn: 'assemble', type: Copy) {
+    from project.file("src/main/resources/log4j.properties")
+    into "${buildDir}/dist/conf"
+}
+
+task dist(dependsOn: 'distJars', type: Copy) {
+    from project.file("src/main/resources/dga-graphx")
+    into "${buildDir}/dist"
+}

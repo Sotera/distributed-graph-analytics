@@ -1,7 +1,26 @@
+/*
+ *
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package com.soteradefense.dga;
 
 
 import com.soteradefense.dga.hbse.HBSEComputation;
+import com.soteradefense.dga.hbse.HBSEConfigurationConstants;
 import com.soteradefense.dga.hbse.HBSEMasterCompute;
 import com.soteradefense.dga.io.formats.DGAEdgeTDTOutputFormat;
 import com.soteradefense.dga.io.formats.DGAEdgeTTTOutputFormat;
@@ -18,8 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -88,11 +105,11 @@ public class DGARunner {
                 requiredConf.setDGAGiraphProperty("-mc", HBSEMasterCompute.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
                 DGAConfiguration minimalDefaults = new DGAConfiguration();
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.BETWEENNESS_SET_MAX_SIZE, "10");
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.BETWEENNESS_OUTPUT_DIR, outputPath);
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.PIVOT_BATCH_SIZE, "10");
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.PIVOT_BATCH_SIZE_INITIAL, "10");
-                minimalDefaults.setCustomProperty(HBSEMasterCompute.VERTEX_COUNT, "5");
+                minimalDefaults.setCustomProperty(HBSEConfigurationConstants.BETWEENNESS_SET_MAX_SIZE, "10");
+                minimalDefaults.setCustomProperty(HBSEConfigurationConstants.BETWEENNESS_OUTPUT_DIR, outputPath);
+                minimalDefaults.setCustomProperty(HBSEConfigurationConstants.PIVOT_BATCH_SIZE, "10");
+                minimalDefaults.setCustomProperty(HBSEConfigurationConstants.PIVOT_BATCH_SIZE_INITIAL, "10");
+                minimalDefaults.setCustomProperty(HBSEConfigurationConstants.TOTAL_PIVOT_COUNT, "5");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
 
                 finalConf.setLibDir(libDir);

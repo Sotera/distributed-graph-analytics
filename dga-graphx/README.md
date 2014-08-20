@@ -6,8 +6,8 @@ The dga-graphX package contains several pre-built executable graph algorithms bu
 
 ### pre-requisites
 
- * [Spark]  (http://spark.apache.org/)   0.9.0 or later
- * [graphX]  (http://spark.apache.org/docs/latest/graphx-programming-guide.html)   
+ * [Spark]  (http://spark.apache.org/)   1.0.x
+ * [GraphX]  (http://spark.apache.org/docs/latest/graphx-programming-guide.html)   
  * [Gradle] (http://www.gradle.org/) 
 
 ### build
@@ -108,11 +108,17 @@ Note: the output is laid out as if you were in hdfs even when running local.  Fo
 
 ### running louvain on a cluster
 
-To run on a cluster be sure your input and output paths are of the form "hdfs://<namenode>/path" and ensure you provide the --master and --sparkhome options.  The --jars option is already set by the louvain script itself and need not be applied.
+To run on a cluster be sure your input and output paths are of the form "hdfs://<namenode>/path" and ensure you provide the --master and --sparkhome options.  The --jars option is already coded into the 
+default config options
 
 ### parallelism
 
-To change the level of parallelism use the -p or --parallelism option.  If this option is not set parallelism will be based on the layout of the input data in HDFS.  The number of partitions of the input file sets the level of parallelism.   
+To change the level of parallelism use the --ca parallelism=400.  If this option is not set parallelism will be based on the layout of the input data in HDFS.  The number of partitions
+ of the input file sets the level of parallelism.   
+
+### How To Run:
+
+./dga-graphx wcc -i hdfs://spark.hostname:8020/path/to/input/example.csv -o hdfs://spark.hostname:8020/path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
 
 ### advanced
 

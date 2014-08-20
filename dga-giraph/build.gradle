@@ -19,6 +19,7 @@ configurations {
 }
 
 dependencies {
+    compile project(':dga-core')
     compile('org.apache.giraph:giraph-core:1.1.0-SNAPSHOT') {
         exclude module: 'guava'
         exclude module: 'zookeeper'
