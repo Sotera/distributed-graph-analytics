@@ -102,11 +102,12 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
       betweennessSetStabilityCutOff = 0
       logInfo("Selecting Pivots")
       // Select the nodes that will send the initial messages.
-      val pivots: Broadcast[mutable.Set[VertexId]] = selectPivots(sc, hbseGraph, totalNumberOfVertices)
+      var pivots: Broadcast[mutable.Set[VertexId]] = null
+      pivots = selectPivots(sc, hbseGraph, totalNumberOfVertices)
       logInfo("Shortest Path Phase")
       hbseGraph = shortestPathRun(hbseGraph, pivots)
       logInfo("Ping Predecessors and Find Successors")
-      hbseGraph = pingPredecessorsAndFindSuccessors(hbseGraph)
+      hbseGraph = pingPredecessorsAndFindSuccessors(hbseGraph, sc)
       logInfo("Compute High Betweenness List")
       hbseGraph = computeHighBetweenness(hbseGraph)
       newlyComputedBetweennessSet = getHighBetweennessSet(hbseGraph)
@@ -220,6 +221,7 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
       new HBSEData(approxBetweenness)
     }).cache()
     // Persist the new state in memory
+    hbseGraph.triplets.count()
     hbseGraph.vertices.count()
     // Unpersist the old state
     prevG.unpersistVertices(blocking = false)
@@ -239,12 +241,14 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
     var shortestPathPhasesCompleted = 0
     // Initialize the Pivots with a pathdata containing their own vertex
     var hbseGraph = graph.mapVertices((vertexId, vertexData) => {
+      val map = new mutable.HashMap[Long, ShortestPathList]
       if (pivots.value.contains(vertexId)) {
-        vertexData.addPathData(PathData.createShortestPathMessage(vertexId, vertexId, 0, 1L))
-        (vertexData, -1)
+        val shortestPathList = vertexData.addPathData(PathData.createShortestPathMessage(vertexId, vertexId, 0, 1L))
+        map.put(vertexId, shortestPathList)
+        (vertexData, map)
       }
       else {
-        (vertexData, 0)
+        (vertexData, map)
       }
     }).cache()
 
@@ -259,30 +263,28 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
        * @param messages Map of new Path Data that might need updated.
        * @return Updated Vertex Data values.
        */
-      def accumulatePathData(vertexId: VertexId, vertexStorage: (HBSEData, Int), messages: mutable.Map[Long, PathData]): (HBSEData, Int) = {
+      def accumulatePathData(vertexId: VertexId, vertexStorage: (HBSEData, mutable.HashMap[Long, ShortestPathList]), messages: mutable.Map[Long, PathData]): (HBSEData, mutable.HashMap[Long, ShortestPathList]) = {
         //Stores the Paths that were updated
         //Process Incoming Messages
-        val (graphData, updateCount) = vertexStorage
+        val (graphData, updatedPaths) = vertexStorage
         /**
          * Updates a pathdata object in my map of path data.
          *
-         * @param updateCount Accumulated total of updates.
+         * @param updatedPaths Accumulated total of updates.
          * @param item An item from the messages Map.
          * @return updateCount [+ 1]
          */
-        def pathUpdateAccumulation(updateCount: Int, item: (Long, PathData)) = {
+        def pathUpdateAccumulation(updatedPaths: mutable.HashMap[Long, ShortestPathList], item: (Long, PathData)) = {
           //Add the PathData to the current vertex
           val pathData = item._2
           val updatedPath = graphData.addPathData(pathData)
           if (updatedPath != null)
-            updateCount + 1
-          else
-            updateCount
-
+            updatedPaths.put(pathData.getPivotSource, updatedPath)
+          updatedPaths
         }
         // Process each message one at a time.  Add any updates to the updated path map.
         if (messages.nonEmpty) {
-          (graphData, messages.foldLeft(0)(pathUpdateAccumulation))
+          (graphData, messages.foldLeft(new mutable.HashMap[Long, ShortestPathList])(pathUpdateAccumulation))
         }
         else {
           vertexStorage
@@ -295,11 +297,10 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
        * @param triplet An edge triplet that contains the (VertexData, UpdateCount), Edge Weight.
        * @return An iterator of map messages containing path data.
        */
-      def sendShortestPathMessage(triplet: EdgeTriplet[(HBSEData, Int), Long]) = {
-        val (graphData, updateCount) = triplet.srcAttr
-        if (updateCount > 0) {
+      def sendShortestPathMessage(triplet: EdgeTriplet[(HBSEData, mutable.HashMap[Long, ShortestPathList]), Long]) = {
+        val (graphData, updatedPaths) = triplet.srcAttr
+        if (updatedPaths.size > 0) {
           val singleMap: mutable.Map[Long, PathData] = new mutable.HashMap[Long, PathData]
-          val updatedPathMap = graphData.getPathDataMap
           /**
            * Builds shortest path messages map from a pivot.
            *
@@ -308,20 +309,13 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
            * @return Map of path values.
            */
           def buildShortestPathMessage(map: mutable.Map[Long, PathData], item: (Long, ShortestPathList)) = {
-            val (messageSource, shortestPathList) = item
-            map.put(messageSource, PathData.createShortestPathMessage(messageSource, triplet.srcId, shortestPathList.getDistance + triplet.attr, shortestPathList.getShortestPathCount))
+            val (pivotSource, shortestPathList) = item
+            val newDistance = shortestPathList.getDistance + triplet.attr
+            map.put(pivotSource, PathData.createShortestPathMessage(pivotSource, triplet.srcId, newDistance, shortestPathList.getShortestPathCount))
             map
           }
           logInfo(s"Sending ShortestPath Update Message to ${triplet.dstId} from ${triplet.srcId}")
-          Iterator((triplet.dstId, updatedPathMap.foldLeft(singleMap)(buildShortestPathMessage)))
-        }
-        else if (updateCount == -1) {
-          val singleMessageMap = new mutable.HashMap[VertexId, PathData]
-          // Send a Shortest Path Message to my neighbor.
-          singleMessageMap.put(triplet.srcId, PathData.createShortestPathMessage(triplet.srcId, triplet.srcId, triplet.attr, 1))
-          logInfo(s"Sending ShortestPath Message to ${triplet.dstId} from ${triplet.srcId}")
-          // Needs to be a list because all PathData messages need to be sent to the node from every possible pivot.
-          Iterator((triplet.dstId, singleMessageMap))
+          Iterator((triplet.dstId, updatedPaths.foldLeft(singleMap)(buildShortestPathMessage)))
         }
         else {
           Iterator.empty
@@ -332,7 +326,18 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
 
       prevG.unpersistVertices(blocking = false)
       prevG.edges.unpersist(blocking = false)
-
+      hbseGraph = hbseGraph.mapVertices((vertexId, vertexData) => {
+        val (graphData, updatedMaps) = vertexData
+        val map = new mutable.HashMap[Long, ShortestPathList]
+        if (pivots.value.contains(vertexId)) {
+          val shortestPathList = graphData.addPathData(PathData.createShortestPathMessage(vertexId, vertexId, 0, 1L))
+          map.put(vertexId, shortestPathList)
+          (graphData, map)
+        }
+        else {
+          (graphData, map)
+        }
+      }).cache()
 
 
       // Increase the Number of Completed Phases
@@ -352,7 +357,7 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
    * @param graph A graph with shortest path data accumulated.
    * @return A updated graph with it's dependencies accumulated.
    */
-  private def pingPredecessorsAndFindSuccessors(graph: Graph[HBSEData, Long]): Graph[HBSEData, Long] = {
+  private def pingPredecessorsAndFindSuccessors(graph: Graph[HBSEData, Long], sc: SparkContext): Graph[HBSEData, Long] = {
     var hbseGraph = graph.cache()
     // Send a message to all of your predecessors that sent you shortest path messages.
     val pingRDD = hbseGraph.mapReduceTriplets(sendPingMessage, merge[Long]).cache()
@@ -397,6 +402,7 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
     }).cache()
 
     runGraph.vertices.count()
+    runGraph.triplets.count()
 
 
     // Pair Dependency Run State
@@ -420,29 +426,16 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
        * @return A running list of dependencies that has been fully accumulated.
        */
       def partialDependencyCalculation(accumulatedDependencies: ListBuffer[(Long, Double, Long)], partialDependency: (Long, Double, Long)) = {
-        val messageSource = partialDependency._1
+        val (messageSource, successorDep, successorNumberOfPaths) = partialDependency
         if (messageSource != vertexId) {
-          try {
-            // Calculates your dependency
-            val successorDep = partialDependency._2
-            val successorNumberOfPaths = partialDependency._3
-            val numPaths = graphData.getPathDataMap.get(messageSource).get.getShortestPathCount
-            val partialDep = (numPaths.toDouble / successorNumberOfPaths.toDouble) * (1 + successorDep)
-            val partialSum = graphData.addPartialDependency(messageSource, partialDep, -1)
-            // If you're done processing all of your predecessors, then you can add a forwarded message to your predecessors.
-            if (partialSum.getSuccessors == 0) {
-              val listItem = Tuple3(messageSource, partialSum.getDependency, numPaths)
-              accumulatedDependencies += listItem
-            }
-          }
-          catch {
-            case nse: NoSuchElementException => {
-              logInfo(s"$messageSource was not found in $vertexId map")
-              for ((k, v) <- graphData.getPathDataMap) {
-                logInfo(s"$k is in $vertexId map")
-              }
-            }
-            case e: Exception => throw e
+          // Calculates your dependency
+          val numPaths = graphData.getPathDataMap.get(messageSource).get.getShortestPathCount
+          val partialDep = (numPaths.toDouble / successorNumberOfPaths.toDouble) * (1 + successorDep)
+          val partialSum = graphData.addPartialDependency(messageSource, partialDep, -1)
+          // If you're done processing all of your predecessors, then you can add a forwarded message to your predecessors.
+          if (partialSum.getSuccessors == 0) {
+            val listItem = Tuple3(messageSource, partialSum.getDependency, numPaths)
+            accumulatedDependencies += listItem
           }
         }
         accumulatedDependencies
@@ -499,6 +492,8 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
       val (graphData, listOfMessages) = vertexData
       graphData
     }).cache()
+
+    hbseGraph.triplets.count()
     hbseGraph.vertices.count()
 
     // Release the previous and merged graph because they are no longer needed.
@@ -659,3 +654,5 @@ class HighBetweennessCore(val hbseConf: HBSEConf, private var previousPivots: mu
     leftMessageMap.foldLeft(rightMessageMap)(mergeMapMessages)
   }
 }
+
+//TODO: Needs serializer

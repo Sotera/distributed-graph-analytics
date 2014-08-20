@@ -23,8 +23,13 @@ import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Edge
 import org.apache.spark.rdd.RDD
 
-
-case class EdgeInputFormat(var inputFile: String, var delimiter: String, var parallelism: Int = 20) extends Serializable  {
+/**
+ * Input format for reading an edge lists into an RDD of Edges
+ * @param inputFile Location of the edge list.
+ * @param delimiter Delimiter that splits the edges.
+ * @param parallelism The number of tasks to do in parallel.
+ */
+class EdgeInputFormat(var inputFile: String, var delimiter: String, var parallelism: Int = 20) extends Serializable  {
   def getEdgeRDD(sc: SparkContext, typeConversionMethod: String => Long = _.toLong): RDD[Edge[Long]] = {
     sc.textFile(inputFile, parallelism).map(row => {
       val tokens = row.split(delimiter).map(_.trim())

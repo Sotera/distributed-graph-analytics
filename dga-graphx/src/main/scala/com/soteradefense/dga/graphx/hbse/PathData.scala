@@ -60,13 +60,13 @@ class PathData(private var distance: Long, private var pivotSource: Long, privat
 object PathData {
   /**
    * Creates a PathData object intended for the shortest path run.
-   * @param src Pivot Source.
-   * @param dst Who sent the message.
+   * @param pivotSource Pivot Source.
+   * @param messageSource Who sent the message.
    * @param distance Distance from pivot source to message source.
    * @param numPaths Number of Shortest paths.
    * @return
    */
-  def createShortestPathMessage(src: Long, dst: Long, distance: Long, numPaths: Long) = new PathData(distance, src, dst, numPaths)
+  def createShortestPathMessage(pivotSource: Long, messageSource: Long, distance: Long, numPaths: Long) = new PathData(distance, pivotSource, messageSource, numPaths)
 }
 
 /**
