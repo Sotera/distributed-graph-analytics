@@ -17,7 +17,7 @@
  */
 package com.soteradefense.dga.graphx.louvain
 
-import com.esotericsoftware.kryo.io.{Output, Input}
+import com.esotericsoftware.kryo.io.{Input, Output}
 import com.esotericsoftware.kryo.serializers.DefaultArraySerializers.ObjectArraySerializer
 import com.esotericsoftware.kryo.{Kryo, KryoSerializable}
 import com.soteradefense.dga.graphx.harness.Harness
@@ -28,10 +28,10 @@ import scala.reflect.ClassTag
 
 /**
  * Abstract class for running the full louvain algorithm.
- * @param minProgress Minimum compression progress.
+ * @param minimumCompressionProgress Minimum compression progress.
  * @param progressCounter Progress counter.
  */
-abstract class AbstractLouvainRunner(var minProgress: Int, var progressCounter: Int, protected var qValues: Array[(Int, Double)]) extends Harness with Serializable with KryoSerializable {
+abstract class AbstractLouvainRunner(var minimumCompressionProgress: Int, var progressCounter: Int, protected var qValues: Array[(Int, Double)]) extends Harness with Serializable with KryoSerializable {
 
   /**
    * Run method for running the full louvain algorithm.
@@ -44,25 +44,25 @@ abstract class AbstractLouvainRunner(var minProgress: Int, var progressCounter: 
     val louvainCore = new LouvainCore
     var louvainGraph = louvainCore.createLouvainGraph(graph)
 
-    var level = -1 // number of times the graph has been compressed
-    var q = -1.0 // current modularity value
+    var compressionLevel = -1 // number of times the graph has been compressed
+    var q_modularityValue = -1.0 // current modularity value
     var halt = false
     do {
-      level += 1
-      println(s"\nStarting Louvain level $level")
+      compressionLevel += 1
+      println(s"\nStarting Louvain level $compressionLevel")
 
       // label each vertex with its best community choice at this level of compression
-      val (currentQ, currentGraph, passes) = louvainCore.louvain(sc, louvainGraph, minProgress, progressCounter)
+      val (currentQModularityValue, currentGraph, numberOfPasses) = louvainCore.louvain(sc, louvainGraph, minimumCompressionProgress, progressCounter)
       louvainGraph.unpersistVertices(blocking = false)
       louvainGraph = currentGraph
 
-      saveLevel(sc, level, currentQ, louvainGraph)
+      saveLevel(sc, compressionLevel, currentQModularityValue, louvainGraph)
 
       // If modularity was increased by at least 0.001 compress the graph and repeat
       // halt immediately if the community labeling took less than 3 passes
       //println(s"if ($passes > 2 && $currentQ > $q + 0.001 )")
-      if (passes > 2 && currentQ > q + 0.001) {
-        q = currentQ
+      if (numberOfPasses > 2 && currentQModularityValue > q_modularityValue + 0.001) {
+        q_modularityValue = currentQModularityValue
         louvainGraph = louvainCore.compressGraph(louvainGraph)
       }
       else {
@@ -70,7 +70,7 @@ abstract class AbstractLouvainRunner(var minProgress: Int, var progressCounter: 
       }
 
     } while (!halt)
-    finalSave(sc, level, q, louvainGraph)
+    finalSave(sc, compressionLevel, q_modularityValue, louvainGraph)
   }
 
   /**
@@ -102,7 +102,7 @@ abstract class AbstractLouvainRunner(var minProgress: Int, var progressCounter: 
   override def save[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): S
 
   override def write(kryo: Kryo, output: Output): Unit = {
-    kryo.writeObject(output, this.minProgress)
+    kryo.writeObject(output, this.minimumCompressionProgress)
     kryo.writeObject(output, this.progressCounter)
     val objectArraySerializer = new ObjectArraySerializer
     objectArraySerializer.write(kryo, output, this.qValues.asInstanceOf[Array[Object]])
@@ -110,7 +110,7 @@ abstract class AbstractLouvainRunner(var minProgress: Int, var progressCounter: 
 
 
   override def read(kryo: Kryo, input: Input): Unit = {
-    this.minProgress = kryo.readObject(input, classOf[Int])
+    this.minimumCompressionProgress = kryo.readObject(input, classOf[Int])
     this.progressCounter = kryo.readObject(input, classOf[Int])
     val objectArraySerializer = new ObjectArraySerializer
     this.qValues = objectArraySerializer.read(kryo, input, classOf[Array[Object]]).asInstanceOf[Array[(Int, Double)]]

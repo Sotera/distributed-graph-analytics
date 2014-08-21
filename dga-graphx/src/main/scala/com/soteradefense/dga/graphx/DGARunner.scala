@@ -17,6 +17,7 @@
  */
 package com.soteradefense.dga.graphx
 
+import com.soteradefense.dga.graphx.config.Config
 import com.soteradefense.dga.graphx.harness.Harness
 import com.soteradefense.dga.graphx.hbse.HDFSHBSERunner
 import com.soteradefense.dga.graphx.io.formats.EdgeInputFormat
@@ -26,14 +27,16 @@ import com.soteradefense.dga.graphx.louvain.HDFSLouvainRunner
 import com.soteradefense.dga.graphx.parser.CommandLineParser
 import com.soteradefense.dga.graphx.pr.HDFSPRRunner
 import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
-import org.apache.spark.graphx.{Graph, GraphKryoRegistrator}
+import org.apache.spark.graphx.Graph
 import org.apache.spark.serializer.KryoSerializer
 import org.apache.spark.{SparkConf, SparkContext}
+
 
 /**
  * Object for kicking off analytics.
  */
 object DGARunner {
+
   val WeaklyConnectedComponents = "wcc"
   val HighBetweennessSetExtraction = "hbse"
   val LouvainModularity = "louvain"
@@ -61,47 +64,55 @@ object DGARunner {
     val analytic = args(0)
     println(s"Analytic: $analytic")
     val newArgs = args.slice(1, args.length)
-    val cmdLine = new CommandLineParser().parseCommandLine(newArgs)
-    cmdLine.properties.foreach({ case (k, v) => System.setProperty(k, v)})
-    val conf = new SparkConf().setMaster(cmdLine.master)
-      .setAppName(cmdLine.appName)
-      .setSparkHome(cmdLine.sparkHome)
-      .setJars(cmdLine.jars.split(DefaultJarSplitDelimiter))
-    conf.setAll(cmdLine.customArguments)
-    if (cmdLine.kryo) {
+    val commandLineConfig: Config = CommandLineParser.parseCommandLine(newArgs)
+    commandLineConfig.systemProperties.foreach({
+      case (systemPropertyKey, systemPropertyValue) =>
+        System.setProperty(systemPropertyKey, systemPropertyValue)
+    })
+    val conf = new SparkConf()
+      .setMaster(commandLineConfig.sparkMasterUrl)
+      .setAppName(commandLineConfig.sparkAppName)
+      .setSparkHome(commandLineConfig.sparkHome)
+      .setJars(commandLineConfig.sparkJars.split(DefaultJarSplitDelimiter))
+    conf.setAll(commandLineConfig.customArguments)
+    if (commandLineConfig.useKryoSerializer) {
       conf.set("spark.serializer", classOf[KryoSerializer].getCanonicalName)
       conf.set("spark.kryo.registrator", classOf[DGAKryoRegistrator].getCanonicalName)
     }
-    val sc = new SparkContext(conf)
-    val parallelism = Integer.parseInt(cmdLine.customArguments.getOrElse(ParallelismConfiguration, ParallelismDefaultConfiguration))
-    val inputFormat = if (parallelism != -1) new EdgeInputFormat(cmdLine.input, cmdLine.edgeDelimiter, parallelism) else new EdgeInputFormat(cmdLine.input, cmdLine.edgeDelimiter)
-    val edgeRDD = inputFormat.getEdgeRDD(sc)
-    val graph = Graph.fromEdges(edgeRDD, None)
+    val sparkContext = new SparkContext(conf)
+    val parallelism = Integer.parseInt(commandLineConfig.customArguments.getOrElse(ParallelismConfiguration, ParallelismDefaultConfiguration))
+    var inputFormat: EdgeInputFormat = null
+    if (parallelism != -1)
+      inputFormat = new EdgeInputFormat(commandLineConfig.inputPath, commandLineConfig.edgeDelimiter, parallelism)
+    else
+      inputFormat = new EdgeInputFormat(commandLineConfig.inputPath, commandLineConfig.edgeDelimiter)
+    val edgeRDD = inputFormat.getEdgeRDD(sparkContext)
+    val initialGraph = Graph.fromEdges(edgeRDD, None)
     var runner: Harness = null
     analytic match {
       case WeaklyConnectedComponents | WeaklyConnectedComponentsGraphX =>
-        runner = new HDFSWCCRunner(cmdLine.output, cmdLine.edgeDelimiter)
+        runner = new HDFSWCCRunner(commandLineConfig.outputPath, commandLineConfig.edgeDelimiter)
       case HighBetweennessSetExtraction =>
-        runner = new HDFSHBSERunner(cmdLine.output, cmdLine.edgeDelimiter)
+        runner = new HDFSHBSERunner(commandLineConfig.outputPath, commandLineConfig.edgeDelimiter)
       case LouvainModularity =>
-        val minProgress = cmdLine.customArguments.getOrElse(MinProgressConfiguration, MinProgressDefaultConfiguration).toInt
-        val progressCounter = cmdLine.customArguments.getOrElse(ProgressCounterConfiguration, ProgressCounterDefaultConfiguration).toInt
-        runner = new HDFSLouvainRunner(minProgress, progressCounter, cmdLine.output)
+        val minProgress = commandLineConfig.customArguments.getOrElse(MinProgressConfiguration, MinProgressDefaultConfiguration).toInt
+        val progressCounter = commandLineConfig.customArguments.getOrElse(ProgressCounterConfiguration, ProgressCounterDefaultConfiguration).toInt
+        runner = new HDFSLouvainRunner(minProgress, progressCounter, commandLineConfig.outputPath)
       case LeafCompression =>
-        runner = new HDFSLCRunner(cmdLine.output, cmdLine.edgeDelimiter)
+        runner = new HDFSLCRunner(commandLineConfig.outputPath, commandLineConfig.edgeDelimiter)
       case PageRank | PageRankGraphX =>
-        val delta = cmdLine.customArguments.getOrElse(DeltaConvergenceConfiguration, DeltaConvergenceDefaultConfiguration).toDouble
-        runner = new HDFSPRRunner(cmdLine.output, cmdLine.edgeDelimiter, delta)
+        val delta = commandLineConfig.customArguments.getOrElse(DeltaConvergenceConfiguration, DeltaConvergenceDefaultConfiguration).toDouble
+        runner = new HDFSPRRunner(commandLineConfig.outputPath, commandLineConfig.edgeDelimiter, delta)
       case _  =>
         throw new IllegalArgumentException(s"$analytic is not supported")
     }
     analytic match {
       case WeaklyConnectedComponents | HighBetweennessSetExtraction | LouvainModularity | LeafCompression | PageRank =>
-        runner.run(sc, graph)
+        runner.run(sparkContext, initialGraph)
       case PageRankGraphX =>
-        runner.asInstanceOf[HDFSPRRunner].runGraphXImplementation(graph)
+        runner.asInstanceOf[HDFSPRRunner].runGraphXImplementation(initialGraph)
       case WeaklyConnectedComponentsGraphX =>
-        runner.asInstanceOf[HDFSWCCRunner].runGraphXImplementation(graph)
+        runner.asInstanceOf[HDFSWCCRunner].runGraphXImplementation(initialGraph)
     }
   }
 }

@@ -17,7 +17,7 @@
  */
 package com.soteradefense.dga.graphx.io.formats
 
-import com.esotericsoftware.kryo.{KryoSerializable, Serializer}
+import com.esotericsoftware.kryo.KryoSerializable
 import com.twitter.chill._
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Edge

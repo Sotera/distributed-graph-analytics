@@ -49,8 +49,8 @@ abstract class AbstractHBSERunner extends Harness with Serializable with KryoSer
    */
   def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]): R = {
     val hbseCore = new HighBetweennessCore(sc.getConf)
-    val hbseOutput = hbseCore.runHighBetweennessSetExtraction(sc, graph)
-    save(hbseOutput._1, hbseOutput._2)
+    val (betweennessSet, betweennessGraph) = hbseCore.runHighBetweennessSetExtraction(sc, graph)
+    save(betweennessSet, betweennessGraph)
   }
 
   /**

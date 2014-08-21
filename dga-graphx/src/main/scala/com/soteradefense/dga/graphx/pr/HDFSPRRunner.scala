@@ -17,7 +17,6 @@
  */
 package com.soteradefense.dga.graphx.pr
 
-import com.esotericsoftware.kryo.Serializer
 import com.twitter.chill._
 import org.apache.spark.graphx.Graph
 

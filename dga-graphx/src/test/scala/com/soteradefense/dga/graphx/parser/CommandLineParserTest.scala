@@ -28,23 +28,23 @@ class CommandLineParserTest extends TestCase {
   @Test
   def testCommandLineWithOnlyIO() {
     val args = Array("-i", "/path/to/input/", "-o", "/path/to/output/")
-    val cmdLine: Config = new CommandLineParser().parseCommandLine(args)
-    assert(cmdLine.input.equals("/path/to/input/"))
-    assert(cmdLine.output.equals("/path/to/output/"))
-    assert(cmdLine.master.equals("local"))
-    assert(cmdLine.appName.equals("GraphX Analytic"))
-    assert(!cmdLine.kryo)
+    val cmdLine: Config = CommandLineParser.parseCommandLine(args)
+    assert(cmdLine.inputPath.equals("/path/to/input/"))
+    assert(cmdLine.outputPath.equals("/path/to/output/"))
+    assert(cmdLine.sparkMasterUrl.equals("local"))
+    assert(cmdLine.sparkAppName.equals("GraphX Analytic"))
+    assert(!cmdLine.useKryoSerializer)
   }
 
   @Test
   def testCommandLineWithKryoEnabled() {
     val args = Array("-i", "/path/to/input/", "-o", "/path/to/output/", "-k", "true")
-    val cmdLine: Config = new CommandLineParser().parseCommandLine(args)
-    assert(cmdLine.input.equals("/path/to/input/"))
-    assert(cmdLine.output.equals("/path/to/output/"))
-    assert(cmdLine.master.equals("local"))
-    assert(cmdLine.appName.equals("GraphX Analytic"))
-    assert(cmdLine.kryo)
+    val cmdLine: Config = CommandLineParser.parseCommandLine(args)
+    assert(cmdLine.inputPath.equals("/path/to/input/"))
+    assert(cmdLine.outputPath.equals("/path/to/output/"))
+    assert(cmdLine.sparkMasterUrl.equals("local"))
+    assert(cmdLine.sparkAppName.equals("GraphX Analytic"))
+    assert(cmdLine.useKryoSerializer)
   }
 
 
@@ -52,7 +52,7 @@ class CommandLineParserTest extends TestCase {
   def testCommandLineWithNoIO() {
     try {
       val args = new Array[String](0)
-      val cmdLine: Config = new CommandLineParser().parseCommandLine(args)
+      val cmdLine: Config = CommandLineParser.parseCommandLine(args)
       fail()
     }
     catch {

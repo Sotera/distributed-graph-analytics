@@ -25,7 +25,7 @@ import scala.collection.mutable
 /**
  * Object for storing the number of shortest paths through a node.
  * @param distance Shortest distance in the shortest path map.
- * @param predecessorPathCountMap Map for storing a nodes predecessors.
+ * @param predecessorPathCountMap Map for storing a nodes predecessors in the format of (vertexId, edge weight).
  */
 class ShortestPathList(private var distance: Long, private var predecessorPathCountMap: mutable.HashMap[Long, Long]) extends Serializable with KryoSerializable {
 
@@ -53,7 +53,7 @@ class ShortestPathList(private var distance: Long, private var predecessorPathCo
   def getPredecessorPathCountMap = this.predecessorPathCountMap
 
   /**
-   * Returns the distance of the shortestpathlist.
+   * Returns the distance of the shortest path list.
    * @return value of distance.
    */
   def getDistance = this.distance
@@ -65,6 +65,11 @@ class ShortestPathList(private var distance: Long, private var predecessorPathCo
   def getShortestPathCount = this.predecessorPathCountMap.foldLeft(0L)((total: Long, mapItem: (Long, Long)) => total + mapItem._2)
 
 
+  /**
+   * Updates the distance from a pivot to this vertex.
+   * @param pathData Object that encapsulates the updated path data.
+   * @return True if updated.
+   */
   def update(pathData: PathData): Boolean = {
     var updated: Boolean = false
     if (this.distance == pathData.getDistance) {
