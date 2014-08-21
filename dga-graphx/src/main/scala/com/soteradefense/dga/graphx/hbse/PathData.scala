@@ -18,7 +18,7 @@
 package com.soteradefense.dga.graphx.hbse
 
 import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esotericsoftware.kryo.{KryoSerializable, Kryo, Serializer}
+import com.esotericsoftware.kryo.{Kryo, KryoSerializable}
 
 /**
  * PathData object for storing path data from a pivot and through a node.
@@ -26,9 +26,9 @@ import com.esotericsoftware.kryo.{KryoSerializable, Kryo, Serializer}
  * @param distance Distance from the pivot to message source.
  * @param pivotSource Source of the initial message.
  * @param messageSource Source of the node that forwarded that message to you.
- * @param numPaths Number of paths it took to get there.
+ * @param numberOfPaths Number of paths it took to get there.
  */
-class PathData(private var distance: Long, private var pivotSource: Long, private var messageSource: Long, private var numPaths: Long) extends Serializable with KryoSerializable {
+class PathData(private var distance: Long, private var pivotSource: Long, private var messageSource: Long, private var numberOfPaths: Long) extends Serializable with KryoSerializable {
   /**
    * Returns the distance value.
    * @return value of distance.
@@ -49,9 +49,9 @@ class PathData(private var distance: Long, private var pivotSource: Long, privat
 
   /**
    * Returns the number of shortest paths for this object.
-   * @return value of numPaths.
+   * @return value of numberOfPaths.
    */
-  def getNumberOfShortestPaths = this.numPaths
+  def getNumberOfShortestPaths = this.numberOfPaths
 
   override def write(kryo: Kryo, output: Output): Unit = {
     kryo.writeObject(output, this.getDistance)
@@ -64,7 +64,7 @@ class PathData(private var distance: Long, private var pivotSource: Long, privat
     this.distance = kryo.readObject(input, classOf[Long])
     this.pivotSource = kryo.readObject(input, classOf[Long])
     this.messageSource = kryo.readObject(input, classOf[Long])
-    this.numPaths = kryo.readObject(input, classOf[Long])
+    this.numberOfPaths = kryo.readObject(input, classOf[Long])
   }
 }
 

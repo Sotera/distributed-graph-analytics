@@ -17,7 +17,6 @@
  */
 package com.soteradefense.dga.graphx.hbse
 
-import com.esotericsoftware.kryo.Serializer
 import com.twitter.chill._
 import org.apache.spark.graphx.Graph
 import org.apache.spark.rdd.RDD

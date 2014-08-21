@@ -36,28 +36,29 @@ class PageRankCore extends Logging with Serializable {
     val numberOfVertices = graph.vertices.count()
     val initialVertexValue = 1.0 / numberOfVertices
     logInfo("Creating the PageRank Graph")
-    val prGraph: Graph[(Double, Double), Int] = graph
+    val pageRankGraph: Graph[(Double, Double), Int] = graph
       .outerJoinVertices(graph.outDegrees) {
-      (vid, vdata, deg) => deg.getOrElse(0)
+      (vertexId, pageRankData, degree) => degree.getOrElse(0)
     }
-      .mapTriplets(e => 1 / e.srcAttr)
-      .mapVertices((vid, vd) => (0.0, 0.0))
+      .mapTriplets(triplet => 1 / triplet.srcAttr)
+      .mapVertices((vertexId, vertexData) => (0.0, 0.0))
       .cache()
 
-    def vertexProgram(id: VertexId, attr: (Double, Double), sumOfMessages: Double) = {
-      val (previousPR, previousDelta) = attr
-      val rank = ((1.0 - dampingFactor) / numberOfVertices) + (dampingFactor * sumOfMessages)
-      var deltaVal = 0.0
-      val rankDifference = Math.abs(rank - previousPR)
-      deltaVal = rankDifference / previousPR
-      (rank, deltaVal)
+    def vertexProgram(vertexId: VertexId, pageRankData: (Double, Double), messageSum: Double) = {
+      val (previousPageRank, previousDelta) = pageRankData
+      val rank = ((1.0 - dampingFactor) / numberOfVertices) + (dampingFactor * messageSum)
+      var delta = 0.0
+      val rankDifference = Math.abs(rank - previousPageRank)
+      delta = rankDifference / previousPageRank
+      (rank, delta)
     }
 
     def messageCombiner(a: Double, b: Double): Double = a + b
 
-    def sendMessage(edge: EdgeTriplet[(Double, Double), Int]) = {
-      if (delta < edge.srcAttr._2) {
-        Iterator((edge.dstId, edge.srcAttr._1 * edge.attr))
+    def sendMessage(triplet: EdgeTriplet[(Double, Double), Int]) = {
+      val (pageRank, pageRankDifference) = triplet.srcAttr
+      if (delta < pageRankDifference) {
+        Iterator((triplet.dstId, pageRank * triplet.attr))
       }
       else {
         Iterator.empty
@@ -65,7 +66,11 @@ class PageRankCore extends Logging with Serializable {
     }
 
     logInfo("Starting Pregel Operation")
-    Pregel(prGraph, initialVertexValue, activeDirection = EdgeDirection.Out)(vertexProgram, sendMessage, messageCombiner).mapVertices((vid, attr) => attr._1)
+    Pregel(pageRankGraph, initialVertexValue, activeDirection = EdgeDirection.Out)(vertexProgram, sendMessage, messageCombiner)
+      .mapVertices((vertexId, pageRankData) => {
+      val (pageRank, delta) = pageRankData
+      pageRank
+    })
   }
 
 }

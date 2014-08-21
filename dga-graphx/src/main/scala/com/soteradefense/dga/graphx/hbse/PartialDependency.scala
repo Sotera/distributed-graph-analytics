@@ -18,15 +18,15 @@
 package com.soteradefense.dga.graphx.hbse
 
 import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esotericsoftware.kryo.{KryoSerializable, Kryo, Serializer}
+import com.esotericsoftware.kryo.{Kryo, KryoSerializable}
 
 /**
  * An object for encapsulating a partial dependency.
  *
- * @param successors The number of successors for this dependency.
- * @param dependency The dependency weight on this object.
+ * @param numberOfSuccessors The number of successors for this dependency.
+ * @param accumulatedDependency The dependency weight on this object.
  */
-class PartialDependency(private var successors: Int, private var dependency: Double) extends Serializable with KryoSerializable{
+class PartialDependency(private var numberOfSuccessors: Int, private var accumulatedDependency: Double) extends Serializable with KryoSerializable {
 
   /**
    * Default constructor.
@@ -38,37 +38,37 @@ class PartialDependency(private var successors: Int, private var dependency: Dou
    * Return the dependency.
    * @return Dependency.
    */
-  def getDependency = this.dependency
+  def getDependency = this.accumulatedDependency
 
   /**
    * Returns the number of successors.
    * @return Successors.
    */
-  def getSuccessors = this.successors
+  def getSuccessors = this.numberOfSuccessors
 
   /**
    * Set the number of successors.
    * @param successors value to set the successors to.
    */
-  def setSuccessors(successors: Int) = this.successors = successors
+  def setSuccessors(successors: Int) = this.numberOfSuccessors = successors
 
   /**
    * Set the dependency.
-   * @param dep value to set the dependency to.
+   * @param dependency value to set the dependency to.
    */
-  def setDependency(dep: Double) = this.dependency = dep
+  def setDependency(dependency: Double) = this.accumulatedDependency = dependency
 
   /**
    * Accumulates the successor object.
-   * @param diff value to add to the successors.
+   * @param valueToAdd value to add to the successors.
    */
-  def accumulateSuccessors(diff: Int) = this.successors += diff
+  def accumulateSuccessors(valueToAdd: Int) = this.numberOfSuccessors += valueToAdd
 
   /**
    * Accumulates the dependency value.
-   * @param diff value to add to the dependencies.
+   * @param valueToAdd value to add to the dependencies.
    */
-  def accumulateDependency(diff: Double) = this.dependency += diff
+  def accumulateDependency(valueToAdd: Double) = this.accumulatedDependency += valueToAdd
 
   override def write(kryo: Kryo, output: Output): Unit = {
     kryo.writeObject(output, this.getSuccessors)
@@ -76,7 +76,7 @@ class PartialDependency(private var successors: Int, private var dependency: Dou
   }
 
   override def read(kryo: Kryo, input: Input): Unit = {
-    this.successors = kryo.readObject(input, classOf[Int])
-    this.dependency = kryo.readObject(input, classOf[Double])
+    this.numberOfSuccessors = kryo.readObject(input, classOf[Int])
+    this.accumulatedDependency = kryo.readObject(input, classOf[Double])
   }
 }

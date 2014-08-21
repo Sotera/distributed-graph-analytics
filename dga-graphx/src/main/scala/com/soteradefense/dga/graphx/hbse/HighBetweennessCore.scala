@@ -20,8 +20,6 @@ package com.soteradefense.dga.graphx.hbse
 import java.util.Date
 
 import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esotericsoftware.kryo.serializers.CollectionSerializer
-import com.esotericsoftware.kryo.serializers.DefaultArraySerializers.ObjectArraySerializer
 import com.esotericsoftware.kryo.{Kryo, KryoSerializable}
 import com.twitter.chill.ObjectSerializer
 import org.apache.spark.broadcast._
@@ -98,17 +96,15 @@ class HighBetweennessCore(var hbseConf: HBSEConf, private var previousPivots: mu
     var newlyComputedBetweennessSet: mutable.Set[(Long, Double)] = new mutable.TreeSet[(Long, Double)]()(orderedBetweennessSet)
     var setDifferenceCount: Int = 0
     var keepRunning: Boolean = true
-    var betweennessSetStabilityCutOff: Int = 0
     // Create an HBSE Graph
     var hbseGraph: Graph[HBSEData, Long] = createHBSEGraph(graph).cache()
     // Calculate this once, so we don't have to do it every run.
-    val totalNumberOfVertices = hbseGraph.vertices.count()
+    hbseConf.totalNumberOfVertices = hbseGraph.vertices.count()
     do {
-      betweennessSetStabilityCutOff = 0
       logInfo("Selecting Pivots")
       // Select the nodes that will send the initial messages.
       var pivots: Broadcast[mutable.Set[VertexId]] = null
-      pivots = selectPivots(sc, hbseGraph, totalNumberOfVertices)
+      pivots = selectPivots(sc, hbseGraph)
       logInfo("Shortest Path Phase")
       hbseGraph = shortestPathRun(hbseGraph, pivots)
       logInfo("Ping Predecessors and Find Successors")
@@ -123,9 +119,7 @@ class HighBetweennessCore(var hbseConf: HBSEConf, private var previousPivots: mu
       // Decided if the algorithm needs to run another pass.
       val numberOfPivotsSelected = previousPivots.size + pivots.value.size
       previousPivots ++= pivots.value
-      val shouldKeepRunningResult: (Boolean, Int) = shouldKeepRunning(setDifferenceCount, betweennessSetStabilityCutOff, numberOfPivotsSelected, totalNumberOfVertices)
-      keepRunning = shouldKeepRunningResult._1
-      betweennessSetStabilityCutOff = shouldKeepRunningResult._2
+      keepRunning = shouldKeepRunning(setDifferenceCount, numberOfPivotsSelected)
 
     } while (keepRunning)
     previousPivots.clear()
@@ -139,29 +133,24 @@ class HighBetweennessCore(var hbseConf: HBSEConf, private var previousPivots: mu
    * A method that decides if the algorithm should keep running.
    *
    * @param delta The change in the betweenness sets.
-   * @param stabilityCutOffMetCount The number of times the delta met the set stability configuration.
    * @param numberOfPivotsSelected The total number of pivots selected.
-   * @param totalNumberOfVertices The total number of vertices.
    * @return A boolean value of whether or not the algorithm should keep running and an updated set stability cut off count.
    */
-  private def shouldKeepRunning(delta: Int, stabilityCutOffMetCount: Int, numberOfPivotsSelected: Int, totalNumberOfVertices: Long): (Boolean, Int) = {
-    if (delta <= hbseConf.setStability) {
-      val increaseStabilityCount = stabilityCutOffMetCount + 1
-      if (increaseStabilityCount >= hbseConf.setStabilityCounter) {
-        (false, stabilityCutOffMetCount + 1)
-      }
-      else if (numberOfPivotsSelected >= totalNumberOfVertices) {
-        (false, increaseStabilityCount)
+  private def shouldKeepRunning(delta: Int, numberOfPivotsSelected: Int): Boolean = {
+    if (hbseConf.totalNumberOfPivots < numberOfPivotsSelected) {
+      false
+    }
+    else if (delta <= hbseConf.setStabilityDifference) {
+      hbseConf.increaseSetStabilityCount()
+      if (hbseConf.setStabilityDifferenceCount < hbseConf.setStabilityCounter) {
+        false
       }
       else {
-        (true, increaseStabilityCount)
+        true
       }
     }
-    else if (numberOfPivotsSelected >= hbseConf.totalNumberOfPivots) {
-      (false, stabilityCutOffMetCount)
-    }
     else {
-      (true, stabilityCutOffMetCount)
+      true
     }
   }
 
@@ -575,10 +564,9 @@ class HighBetweennessCore(var hbseConf: HBSEConf, private var previousPivots: mu
    *
    * @param sc The current SparkContext
    * @param hbseGraph An hbse graph.
-   * @param vertexCount The total number of vertices in hbseGraph.
    * @return A set of pivot points stored in a broadcast variable.
    */
-  private def selectPivots(sc: SparkContext, hbseGraph: Graph[HBSEData, Long], vertexCount: Long) = {
+  private def selectPivots(sc: SparkContext, hbseGraph: Graph[HBSEData, Long]) = {
     var totalNumberOfPivotsUsed = previousPivots.size
     var pivots: mutable.Set[VertexId] = new mutable.HashSet[VertexId]
     /**
@@ -595,7 +583,7 @@ class HighBetweennessCore(var hbseConf: HBSEConf, private var previousPivots: mu
       }
       runningSet
     }
-    while (pivots.size < hbseConf.pivotBatchSize && totalNumberOfPivotsUsed < vertexCount) {
+    while (pivots.size < hbseConf.pivotBatchSize && totalNumberOfPivotsUsed < hbseConf.totalNumberOfVertices) {
       pivots ++= hbseGraph.vertices.takeSample(withReplacement = false, hbseConf.pivotBatchSize, (new Date).getTime).foldLeft(new mutable.HashSet[VertexId])(buildSetOfPivots)
       totalNumberOfPivotsUsed = previousPivots.size + pivots.size
     }

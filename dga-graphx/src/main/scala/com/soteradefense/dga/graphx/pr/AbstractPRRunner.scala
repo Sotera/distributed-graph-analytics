@@ -17,7 +17,7 @@
  */
 package com.soteradefense.dga.graphx.pr
 
-import com.esotericsoftware.kryo.io.{Output, Input}
+import com.esotericsoftware.kryo.io.{Input, Output}
 import com.esotericsoftware.kryo.{Kryo, KryoSerializable}
 import com.soteradefense.dga.graphx.harness.Harness
 import org.apache.spark.SparkContext

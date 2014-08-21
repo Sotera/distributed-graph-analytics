@@ -17,9 +17,8 @@
  */
 package com.soteradefense.dga.graphx.louvain
 
+import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esotericsoftware.kryo.serializers.DefaultArraySerializers.ObjectArraySerializer
-import com.esotericsoftware.kryo.{Kryo, Serializer}
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx._
 

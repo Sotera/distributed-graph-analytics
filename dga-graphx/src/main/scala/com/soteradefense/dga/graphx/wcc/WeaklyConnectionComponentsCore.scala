@@ -30,24 +30,28 @@ class WeaklyConnectionComponentsCore extends Logging with Serializable {
 
   def runWeaklyConnectedComponents[VD: ClassTag](graph: Graph[VD, Long]): (Graph[VertexId, Long]) = {
     logInfo("Setting each vertex to the maximum neighbor value.")
-    val vertexRDD = graph.mapReduceTriplets(e => Iterator((e.dstId, Math.max(e.dstId, e.srcId))), (a1: VertexId, a2: VertexId) => Math.max(a1, a2))
+    val initialComponentCalculation: VertexRDD[VertexId] = graph.mapReduceTriplets(triplet => {
+      Iterator((triplet.dstId, Math.max(triplet.dstId, triplet.srcId)))
+    }, (vertexId1: VertexId, vertexId2: VertexId) => {
+      Math.max(vertexId1, vertexId2)
+    })
     logInfo("Creating the graph from the messages.")
-    val componentGraph = graph.outerJoinVertices(vertexRDD) {
-      (vid, vdata, highestValue) => highestValue.getOrElse(vid)
+    val componentGraph = graph.outerJoinVertices(initialComponentCalculation) {
+      (vertexId, vertexData, initialComponentId) => initialComponentId.getOrElse(vertexId)
     }.cache()
 
-    def sendMessage(edge: EdgeTriplet[VertexId, Long]) = {
-      if (edge.srcAttr < edge.dstAttr)
-        Iterator((edge.srcId, edge.dstAttr))
-      else if (edge.dstAttr < edge.srcAttr)
-        Iterator((edge.dstId, edge.srcAttr))
+    def sendComponentIdUpdate(triplet: EdgeTriplet[VertexId, Long]) = {
+      if (triplet.srcAttr < triplet.dstAttr)
+        Iterator((triplet.srcId, triplet.dstAttr))
+      else if (triplet.dstAttr < triplet.srcAttr)
+        Iterator((triplet.dstId, triplet.srcAttr))
       else
         Iterator.empty
     }
-    val initialValue = Long.MinValue
-    val vertexDataSelector = (id: VertexId, vd: Long, attr: Long) => Math.max(vd, attr)
-    val mergeMessage = (attr1: Long, attr2: Long) => Math.max(attr1, attr2)
+    val initialComponentId = Long.MinValue
+    val vertexDataSelector = (vertexId: VertexId, componentId: Long, highestComponentIdSent: Long) => Math.max(componentId, highestComponentIdSent)
+    val takeHighestComponentId = (componentId1: Long, componentId2: Long) => Math.max(componentId1, componentId2)
     logInfo("Starting Pregel Operation")
-    Pregel(componentGraph, initialValue, activeDirection = EdgeDirection.Either)(vertexDataSelector, sendMessage, mergeMessage)
+    Pregel(componentGraph, initialComponentId, activeDirection = EdgeDirection.Either)(vertexDataSelector, sendComponentIdUpdate, takeHighestComponentId)
   }
 }

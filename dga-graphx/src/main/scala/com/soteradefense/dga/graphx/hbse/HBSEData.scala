@@ -25,11 +25,11 @@ import scala.collection.mutable
 /**
  * Object that stores the required data for the HBSE Run.
  *
- * @param pathDataMap A hash map of accumulated PathData from the Pivots.
- * @param partialDepMap A hash map of dependency accumulation.
+ * @param pivotPathMap A hash map of accumulated PathData from the Pivots.
+ * @param partialDependencyMap A hash map of dependency accumulation.
  * @param approximateBetweenness Approximate Betweenness value.
  */
-class HBSEData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList], private var partialDepMap: mutable.HashMap[Long, PartialDependency], private var approximateBetweenness: Double)
+class HBSEData(private var pivotPathMap: mutable.HashMap[Long, ShortestPathList], private var partialDependencyMap: mutable.HashMap[Long, PartialDependency], private var approximateBetweenness: Double)
   extends Serializable with KryoSerializable {
 
   /**
@@ -54,12 +54,12 @@ class HBSEData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList],
   def addPathData(pathData: PathData): ShortestPathList = {
     var list: ShortestPathList = null
     val source: Long = pathData.getPivotSource
-    if (!pathDataMap.contains(source)) {
+    if (!pivotPathMap.contains(source)) {
       list = new ShortestPathList(pathData)
-      this.pathDataMap.put(source, list)
+      this.pivotPathMap.put(source, list)
     }
     else {
-      list = pathDataMap.get(source).get
+      list = pivotPathMap.get(source).get
       list = if (list.update(pathData)) list else null
     }
     list
@@ -74,9 +74,9 @@ class HBSEData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList],
 
   /**
    * Returns the path data map.
-   * @return pathDataMap
+   * @return pivotPathMap
    */
-  def getPathDataMap = this.pathDataMap
+  def getPathDataMap = this.pivotPathMap
 
   /**
    * Adds or updates a partial dependency to the hash map.
@@ -86,18 +86,18 @@ class HBSEData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList],
    * @return The partial dependency object that was updated.
    */
   def addPartialDependency(src: Long, dependency: Double, numberOfSuccessors: Int): PartialDependency = {
-    val current: PartialDependency = this.partialDepMap.getOrElse(src, new PartialDependency)
+    val current: PartialDependency = this.partialDependencyMap.getOrElse(src, new PartialDependency)
     current.accumulateDependency(dependency)
     current.accumulateSuccessors(numberOfSuccessors)
-    this.partialDepMap.put(src, current)
+    this.partialDependencyMap.put(src, current)
     current
   }
 
   /**
    * Returns the partial dependency map.
-   * @return value of partialDepMap.
+   * @return value of partialDependencyMap.
    */
-  def getPartialDependencyMap = this.partialDepMap
+  def getPartialDependencyMap = this.partialDependencyMap
 
   override def write(kryo: Kryo, output: Output): Unit = {
     kryo.writeObject(output, this.getPathDataMap.size)
@@ -135,8 +135,8 @@ class HBSEData(private var pathDataMap: mutable.HashMap[Long, ShortestPathList],
       val partialDep = new PartialDependency
       partialDep.read(kryo, input)
     }
-    this.pathDataMap = pdMap
-    this.partialDepMap = partialDMap
+    this.pivotPathMap = pdMap
+    this.partialDependencyMap = partialDMap
     this.approximateBetweenness = kryo.readObject(input, classOf[Double])
   }
 }

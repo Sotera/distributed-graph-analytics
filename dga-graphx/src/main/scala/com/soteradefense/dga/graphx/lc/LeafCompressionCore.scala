@@ -37,12 +37,12 @@ class LeafCompressionCore extends Logging with Serializable {
     logInfo("Creating a graph for Leaf Compression")
     val previousGraph = graph.outerJoinVertices(graph.outDegrees) { (vid, vdata, deg) => deg.getOrElse(0).toLong}.mapTriplets(e => e.srcAttr).cache()
     logInfo("Trimming Nodes off of the previous graph")
-    val filteredGraph = previousGraph.subgraph((e: EdgeTriplet[Long, Long]) => e.attr != 1 && e.attr != 0, (vid: VertexId, vdata: Long) => vdata != 0 && vdata != 1)
-    val graphChanged = previousGraph.vertices.count() != filteredGraph.vertices.count()
+    val compressedGraph = previousGraph.subgraph((e: EdgeTriplet[Long, Long]) => e.attr != 1 && e.attr != 0, (vid: VertexId, vdata: Long) => vdata != 0 && vdata != 1)
+    val graphChanged = previousGraph.vertices.count() != compressedGraph.vertices.count()
     logInfo(s"Graph Changed: $graphChanged")
     if (graphChanged)
-      runLeafCompression(filteredGraph)
+      runLeafCompression(compressedGraph)
     else
-      filteredGraph
+      compressedGraph
   }
 }
