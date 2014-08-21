@@ -1,0 +1,125 @@
+<html>
+{% include head.html %}
+<body>
+{% include navbar.html %}
+<div class="container-fluid">
+    <h3><a name="real-data-examples" class="anchor" href="#real-data-examples"><span class="glyphicon glyphicon-link"></span></a> Walkthrough With Data</h3>
+    <h4><a name="prereqs" class="anchor" href="#prereqs"><span class="glyphicon glyphicon-link"></span></a> Prerequisites</h4>
+    <ol>
+        <li>
+            <a href="/distributed-graph-analytics/HowToGet/">How To Get DGA</a>
+        </li>
+        <li>
+            <a href="/distributed-graph-analytics/HowToBuild/">How To Build DGA</a>
+        </li>
+        <li>
+            <a href="/distributed-graph-analytics/HowToDeploy/">How To Deploy DGA</a>
+        </li>
+    </ol>
+    <h3><a name="started" class="anchor" href="#started"><span class="glyphicon glyphicon-link"></span></a> Let's Get Started</h3>
+    <p><a href="/distributed-graph-analytics/{{page.analytic}}/xdata/">Following along on the XDATA VM?</a></p>
+    <p>In this example, we will be running <a href="/distributed-graph-analytics/{{page.analytic}}/">{{page.title}}</a> with DGA.</p>
+
+    <p>First, let's get some sample data from <a href="/distributed-graph-analytics/data/example.csv">here</a>. Already have data you want to use? That's great! Make sure it follows <a
+            href="/distributed-graph-analytics/FAQ/#how-data">this</a> format and it
+        will work with DGA.</p>
+
+    <p>All set? Now we need to deploy this out to our cluster.</p>
+<pre>
+<code>
+    $ scp -r dga-graphx/build/dist/ hostname:/path/on/disks
+</code>
+</pre>
+    <p>Now, let's scp our data out to the cluster. Navigate to the directory you downloaded the file to and run the command below.</p>
+<pre>
+<code>
+    $ scp example.csv hostname:/path/on/disks
+</code>
+</pre>
+    <p>Next, we need to ssh into our cluster.</p>
+<pre>
+<code>
+    $ ssh hostname
+</code>
+</pre>
+    <p>Now let's see if our files made it to the cluster. Run the command below and you should see a dist folder and example.tsv.</p>
+<pre>
+<code>
+    $ ls -al
+</code>
+</pre>
+    <p>If everything checks out! We can now copy our data set to a directory in hdfs. For this example we will create a directory in tmp for the input.</p>
+<pre>
+<code>
+    $ hdfs dfs -mkdir -p /tmp/dga/{{page.analytic}}/input/
+</code>
+</pre>
+    <p>No need to create the output directory. That will be done for us when our job is complete.</p>
+
+    <p>Now let's copy our data onto hdfs.</p>
+<pre>
+<code>
+    $ hdfs dfs -copyFromLocal example.csv /tmp/dga/{{page.analytic}}/input/
+</code>
+</pre>
+    <p>Finally, we can now run our analytic! The command below uses the built in DGARunner to run {{page.title}}.</p>
+<pre>
+<code>
+    $ cd /opt/dga/
+    $ ./dga-graphx {{page.analytic}} -i hdfs://scc.silverdale.dev:8020/tmp/dga/{{page.analytic}}/input/edges.csv -o hdfs://scc.silverdale.dev:8020/tmp/dga/{{page.analytic}}/output/ -s /opt/spark -n NameOfJob -m
+    spark://spark.master.url:7077 --S spark.executor.memory=30g --ca parallelism=378 --S spark.worker.timeout=400 --S spark.cores.max=126
+</code>
+</pre>
+    <p>The command above, runs the dga-graphx-0.0.1.jar and executes the DGARunner class. It passes in 5 command line arguments.</p>
+    <ul>
+        <li>
+            {{page.analytic}} - Tells the DGARunner which analytic it needs to run. This is required.
+        </li>
+        <li>
+            -i hdfs://scc.silverdale.dev:8020/tmp/dga/{{page.analytic}}/input/edges.csv - Tells the DGARunner where the input data is located. This is required.
+        </li>
+        <li>
+            -o hdfs://scc.silverdale.dev:8020/tmp/dga/{{page.analytic}}/output/ - Tells the DGARunner where to output the data. This is required.
+        </li>
+        <li>
+            -s /opt/spark - Tells the DGARunner where the $SPARK_HOME is located
+        </li>
+        <li>
+            -n NameOfJob - Tells the DGARunner what to name the job.
+        </li>
+        <li>
+            -m spark://spark.master.url:7077 - Tells the DGARunner what the spark master url is.
+        </li>
+        <li>
+            --S spark.executor.memory=30g - Sets a system property that tells spark how much memory it should use.
+        </li>
+        <li>
+            --ca parallelism=378 - Tells the DGARunner how many tasks to run in parallel.
+        </li>
+        <li>
+            --S spark.worker.timeout=400 - Sets a system property that tells spark when to consider a worker node dead.
+        </li>
+        <li>
+            --S spark.cores.max=126 - Sets a system property that tells spark the number of cores to use.
+        </li>
+    </ul>
+    <p>Is it done yet? If so, lets see the results!</p>
+<pre>
+<code>
+    $ mkdir results/
+    $ cd results
+    $ hdfs dfs -copyToLocal /tmp/dga/{{page.analytic}}/output/* .
+</code>
+</pre>
+    <p>What are all these parts? Don't worry, let's make them one!  Note: You might need to open up a subdirectory to see the parts.  Use the cd command to navigate.</p>
+<pre>
+<code>
+    $ cat part-* >> bigfile.txt
+    $ vi bigfile.txt
+</code>
+</pre>
+    <p>And there you have it! You ran your first analytic with DGA!</p>
+</div>
+</body>
+{% include footer.html %}
+</html>

@@ -1,56 +1,110 @@
 ---
 layout: base
 ---
-
-<h3><a name="help-examples" class="anchor" href="#help-examples"><span class="glyphicon glyphicon-link"></span></a> Help</h3>
+<h3><a name="giraph-usage" class="anchor" href="#giraph-usage"><span class="glyphicon glyphicon-link"></span></a> DGA-Giraph Usage</h3>
+<h5><a name="help-examples" class="anchor" href="#help-examples"><span class="glyphicon glyphicon-link"></span></a> Help</h5>
 <pre>
 <code>
     $ ./bin/dga-giraph -h
 </code>
 </pre>
 
-<h3><a name="wcc-examples" class="anchor" href="#wcc-examples"><span class="glyphicon glyphicon-link"></span></a> Weakly Connected
-    Components Example</h3>
+<h5><a name="wcc-examples" class="anchor" href="#wcc-examples"><span class="glyphicon glyphicon-link"></span></a> Weakly Connected
+    Components Example</h5>
 <pre>
 <code>
     $ ./bin/dga-giraph wcc /input/directory /output/directory -ca io.edge.reverse.duplicator=true
 </code>
 </pre>
 
-<h3><a name="lc-examples" class="anchor" href="#lc-examples"><span class="glyphicon glyphicon-link"></span></a> Leaf Compression Example</h3>
+<h5><a name="lc-examples" class="anchor" href="#lc-examples"><span class="glyphicon glyphicon-link"></span></a> Leaf Compression Example</h5>
 <pre>
 <code>
     $ ./bin/dga-giraph lc /input/directory /output/directory
 </code>
 </pre>
 
-<h3><a name="louvain-examples" class="anchor" href="#louvain-examples"><span class="glyphicon glyphicon-link"></span></a> Louvain Modularity
-    Example</h3>
+<h5><a name="louvain-examples" class="anchor" href="#louvain-examples"><span class="glyphicon glyphicon-link"></span></a> Louvain Modularity
+    Example</h5>
 <pre>
 <code>
     $ ./bin/dga-giraph louvain /input/directory /output/directory
 </code>
 </pre>
 
-<h3><a name="hbse-examples" class="anchor" href="#hbse-examples"><span class="glyphicon glyphicon-link"></span></a> High Betweenness Set
-    Extraction Example</h3>
+<h5><a name="hbse-examples" class="anchor" href="#hbse-examples"><span class="glyphicon glyphicon-link"></span></a> High Betweenness Set
+    Extraction Example</h5>
 <pre>
 <code>
     $ ./bin/dga-giraph hbse /input/directory /output/directory
 </code>
 </pre>
 
-<h3><a name="pr-examples" class="anchor" href="#pr-examples"><span class="glyphicon glyphicon-link"></span></a> PageRank Example</h3>
+<h5><a name="pr-examples" class="anchor" href="#pr-examples"><span class="glyphicon glyphicon-link"></span></a> PageRank Example</h5>
 <pre>
 <code>
     $ ./bin/dga-giraph pr /input/directory /output/directory
 </code>
 </pre>
 
-<h3><a name="complex-examples" class="anchor" href="#complex-examples"><span class="glyphicon glyphicon-link"></span></a> More Complex Example
-</h3>
+<h5><a name="complex-examples" class="anchor" href="#complex-examples"><span class="glyphicon glyphicon-link"></span></a> More Complex Example
+</h5>
 <pre>
 <code>
     $ ./bin/dga-giraph wcc /input/directory /output/directory -w 21 -D giraph.zkList=localhost:2121 -ca io.edge.reverse.duplicator=true
+</code>
+</pre>
+
+<h3><a name="graphx-usage" class="anchor" href="#graphx-usage"><span class="glyphicon glyphicon-link"></span></a> DGA-GraphX Usage</h3>
+<h5><a name="help-examples-graphx" class="anchor" href="#help-examples-graphx"><span class="glyphicon glyphicon-link"></span></a> Help</h5>
+<pre>
+<code>
+    $ ./dga-graphx -h
+</code>
+</pre>
+
+<h5><a name="wcc-examples-graphx" class="anchor" href="#wcc-examples-graphx"><span class="glyphicon glyphicon-link"></span></a> Weakly Connected
+    Components Example</h5>
+<pre>
+<code>
+    $ ./dga-graphx wcc -i hdfs://path.to.namenode:port/input/directory -o hdfs://path.to.namenode:port/output/directory
+</code>
+</pre>
+
+<h5><a name="lc-examples-graphx" class="anchor" href="#lc-examples-graphx"><span class="glyphicon glyphicon-link"></span></a> Leaf Compression Example</h5>
+<pre>
+<code>
+    $ ./dga-graphx lc -i hdfs://path.to.namenode:port/input/directory -o hdfs://path.to.namenode:port/output/directory
+</code>
+</pre>
+
+<h5><a name="louvain-examples-graphx" class="anchor" href="#louvain-examples-graphx"><span class="glyphicon glyphicon-link"></span></a> Louvain Modularity
+    Example</h5>
+<pre>
+<code>
+    $ ./dga-graphx louvain -i hdfs://path.to.namenode:port/input/directory -o hdfs://path.to.namenode:port/output/directory
+</code>
+</pre>
+
+<h5><a name="hbse-examples-graphx" class="anchor" href="#hbse-examples-graphx"><span class="glyphicon glyphicon-link"></span></a> High Betweenness Set
+    Extraction Example</h5>
+<pre>
+<code>
+    $ ./dga-graphx hbse -i hdfs://path.to.namenode:port/input/directory -o hdfs://path.to.namenode:port/output/directory
+</code>
+</pre>
+
+<h5><a name="pr-examples-graphx" class="anchor" href="#pr-examples-graphx"><span class="glyphicon glyphicon-link"></span></a> PageRank Example</h5>
+<pre>
+<code>
+    $ ./dga-graphx pr -i hdfs://path.to.namenode:port/input/directory -o hdfs://path.to.namenode:port/output/directory
+</code>
+</pre>
+
+<h5><a name="complex-examples-graphx" class="anchor" href="#complex-examples-graphx"><span class="glyphicon glyphicon-link"></span></a> More Complex Example
+</h5>
+<pre>
+<code>
+    $ ./dga-graphx wcc -i hdfs://path.to.namenode:port/input/directory -o hdfs://path.to.namenode:port/output/directory --S spark.cores.max=126
 </code>
 </pre>

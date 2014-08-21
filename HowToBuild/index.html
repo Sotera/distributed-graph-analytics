@@ -7,7 +7,7 @@ layout: base
         <a href="http://git-scm.com/">Git</a>
     </li>
     <li>
-        <a href="http://www.gradle.org/">Gradle</a>
+        <a href="http://www.gradle.org/">Gradle</a> (You may also use the gradle wrapper.  Substitute ./gradlew with gradle when building.)
     </li>
     <li>
         <a href="https://www.java.com/en/download/">Java 7</a>
@@ -27,24 +27,28 @@ layout: base
 
 <h3><a name="how-to-build" class="anchor" href="#how-to-build"><span class="glyphicon glyphicon-link"></span></a> How To
     Build DGA</h3>
-<p><b>Note:</b> You must make sure you add your respective zookeeper nodes to the list via the command below.  The property is giraph.zkList.  It takes a comma seperated list with no spaces!  This must be
-    done before you build.</p>
+<p><b>Note:</b> You must make sure you add your respective zookeeper nodes to the list via the command below.  The property is giraph.zkList.  It takes a comma separated list with no spaces!  This can be
+    done before or after you build.  If you want to edit it after the build, then you must edit the one in dga-giraph/build/dist/conf/.</p>
 <pre>
 <code>
     $ vi distributed-graph-analytics/dga-giraph/src/main/resources/dga-config.xml
 </code>
 </pre>
+<h3><a name="build-both" class="anchor" href="#build-both"><span class="glyphicon glyphicon-link"></span></a> How To
+    Build Both DGA-GraphX and DGA-Giraph</h3>
 <pre>
 <code>
     $ cd distributed-graph-analytics
-    $ gradle clean distDGA
+    $ gradle clean dist
 </code>
 </pre>
+<p>The above command will take care of building both the giraph and graphx analytics.  If you would like to build them individually, navigate to their individual project directories and run the same
+    command.</p>
 <h3><a name="how-to-build-4" class="anchor" href="#how-to-build-4"><span class="glyphicon glyphicon-link"></span></a> How To
     Build DGA For CDH4</h3>
 <pre>
 <code>
-    $ gradle clean distDGA -Pcdhversion=cdh4
+    $ gradle clean dist -Pcdhversion=cdh4
 </code>
 </pre>
 <p><b>Note: </b>Before you build DGA for CDH4 or any other version of hadoop, you must build giraph for that same version.</p>
@@ -79,4 +83,4 @@ layout: base
 </code>
 </pre>
 <h3><a name="how-to-build-dga-giraph" class="anchor" href="#how-to-build-dga-giraph"><span class="glyphicon glyphicon-link"></span></a> Ready to Go?</h3>
-<p>See: <a href="/distributed-graph-analytics/HowToDeploy">How To Deploy</a></p>
+<p>See: <a href="/distributed-graph-analytics/HowToDeploy/">How To Deploy</a></p>

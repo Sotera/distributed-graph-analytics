@@ -11,10 +11,18 @@
 
     <h3><a name="how-to-run" class="anchor" href="#how-to-run"><span class="glyphicon glyphicon-link"></span></a> How To Run</h3>
 
-    <p>Note: First see <a href="/distributed-graph-analytics/HowToBuild">How To Build</a></p>
+    <p>Note: First see <a href="/distributed-graph-analytics/HowToBuild/">How To Build</a></p>
+    <h5><a name="how-to-run-giraph" class="anchor" href="#how-to-run-giraph"><span class="glyphicon glyphicon-link"></span></a> How To Run DGA-Giraph</h5>
 <pre>
     <code>
         $ ./bin/dga-giraph {{page.analytic}} /path/to/input /path/to/output
+    </code>
+</pre>
+    <h5><a name="how-to-run-graphx" class="anchor" href="#how-to-run-graphx"><span class="glyphicon glyphicon-link"></span></a> How To Run HBSE with DGA-GraphX</h5>
+
+<pre>
+    <code>
+        $ ./dga-graphx {{page.analytic}} -i hdfs://url.for.namenode:port/path/to/input -o hdfs://url.for.namenode:port/path/to/output
     </code>
 </pre>
 </div>
