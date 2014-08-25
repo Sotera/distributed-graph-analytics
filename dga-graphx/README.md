@@ -28,9 +28,9 @@ Check the build/dist folder for the required files to run the graphx analytics.
 HBSE is useful for detecting the critical points of a graph.
 
 ### Running HBSE
-
+```
 ./dga-graphx hbse -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
-
+```
 ## Weakly Connected Components
 
 ### About WCC
@@ -40,13 +40,13 @@ WCC is useful for detecting the individual components in a particular graph.
 ### Running WCC
 
 To run our implementation:
-
+```
 ./dga-graphx wcc -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
-
+```
 To run the graphx implementation:
-
+```
 ./dga-graphx wccGraphX -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
-
+```
 ## Leaf Compression
 
 ### About LC
@@ -54,9 +54,9 @@ To run the graphx implementation:
 LC is useful for compressing the graph into a smaller subset of the graph that only contains nodes with multiple edges.
 
 ### Running LC
-
+```
 ./dga-graphx lc -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
-
+```
 ## PageRank
 
 ### About PR
@@ -66,13 +66,13 @@ PageRank is useful for finding the nodes that carry the highest popularity in th
 ### Running PR
 
 To run our implementation:
-
+```
 ./dga-graphx pr -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
-
+```
 To run the graphx implementation:
-
+```
 ./dga-graphx prGraphX -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
-
+```
 ## Louvain Modularity
 
 ### About Louvain
@@ -86,9 +86,9 @@ Journal of Statistical Mechanics: Theory and Experiment 2008 (10), P10008 (12pp)
 In the original algorithm each vertex examines the communities of its neighbors and makes a chooses a new community based on a function to maximize the calculated change in modularity.  In the distributed version all vertices make this choice simultaneously rather than in serial order, updating the graph state after each change.  Because choices are made in parallel some choice will be incorrect and will not maximize modularity values, however after repeated iterations community choices become more stable and we get results that closely mirror the serial algorithm.
 
 ### Running Louvain
-
+```
 ./dga-graphx louvain -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
-
+```
 Spark produces alot of output, so sending stderr to a log file is recommended.  Examine the test_output folder. you should see
 
 ```
