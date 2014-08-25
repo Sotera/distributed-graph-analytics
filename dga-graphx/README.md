@@ -12,18 +12,70 @@ The dga-graphX package contains several pre-built executable graph algorithms bu
 
 ### build
 
-If necessary edit the build.gradle file to set your version of spark and graphX
+If necessary, edit the build.gradle and the dga-graphx run file to set your version of spark and graphx.
 
 > gradle clean dist
 
-Check the build/dist folder for dga-graphx-0.1.jar.   
+Check the build/dist folder for the required files to run the graphx analytics.   
 
 
 # Algorithms 
 
-## Louvain
+## High Betweenness Set Extraction
 
-### about louvain
+### About HBSE
+
+HBSE is useful for detecting the critical points of a graph.
+
+### Running HBSE
+
+./dga-graphx hbse -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
+
+## Weakly Connected Components
+
+### About WCC
+
+WCC is useful for detecting the individual components in a particular graph.
+
+### Running WCC
+
+To run our implementation:
+
+./dga-graphx wcc -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
+
+To run the graphx implementation:
+
+./dga-graphx wccGraphX -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
+
+## Leaf Compression
+
+### About LC
+
+LC is useful for compressing the graph into a smaller subset of the graph that only contains nodes with multiple edges.
+
+### Running LC
+
+./dga-graphx lc -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
+
+## PageRank
+
+### About PR
+
+PageRank is useful for finding the nodes that carry the highest popularity in the graph.
+
+### Running PR
+
+To run our implementation:
+
+./dga-graphx pr -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
+
+To run the graphx implementation:
+
+./dga-graphx prGraphX -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
+
+## Louvain Modularity
+
+### About Louvain
 
 Louvain distributed community detection is a parallelized version of this work:
 ```
@@ -33,44 +85,9 @@ Journal of Statistical Mechanics: Theory and Experiment 2008 (10), P10008 (12pp)
 ```
 In the original algorithm each vertex examines the communities of its neighbors and makes a chooses a new community based on a function to maximize the calculated change in modularity.  In the distributed version all vertices make this choice simultaneously rather than in serial order, updating the graph state after each change.  Because choices are made in parallel some choice will be incorrect and will not maximize modularity values, however after repeated iterations community choices become more stable and we get results that closely mirror the serial algorithm.
 
-### running louvain
+### Running Louvain
 
-After building the package (See above) you can execute the lovain algorithm against an edge list using the provided script
-
-```
-bin/louvain
-
-Usage: class com.soteradefense.dga.graphx.louvain.Main$ [options] [<property>=<value>....]
-
-  -i <value> | --input <value>
-        input file or path  Required.
-  -o <value> | --output <value>
-        output path Required
-  -m <value> | --master <value>
-        spark master, local[N] or spark://host:port default=local
-  -h <value> | --sparkhome <value>
-        SPARK_HOME Required to run on cluster
-  -n <value> | --jobname <value>
-        job name
-  -p <value> | --parallelism <value>
-        sets spark.default.parallelism and minSplits on the edge file. default=based on input partitions
-  -x <value> | --minprogress <value>
-        Number of vertices that must change communites for the algorithm to consider progress. default=2000
-  -y <value> | --progresscounter <value>
-        Number of times the algorithm can fail to make progress before exiting. default=1
-  -d <value> | --edgedelimiter <value>
-        specify input file edge delimiter. default=","
-  -j <value> | --jars <value>
-        comma seperated list of jars
-  -z <value> | --ipaddress <value>
-        Set to true to convert ipaddresses to Long ids. Defaults to false
-  <property>=<value>....
-```
-
-To run a small local example execute:
-```
-bin/louvain -i examples/small_edges.tsv -o test_output --edgedelimiter "\t" 2> stderr.txt
-```
+./dga-graphx louvain -i /path/to/input/example.csv -o /path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
 
 Spark produces alot of output, so sending stderr to a log file is recommended.  Examine the test_output folder. you should see
 
@@ -106,12 +123,12 @@ cat test_output/qvalues/part-00000
 Note: the output is laid out as if you were in hdfs even when running local.  For each level you see an edges directory and a vertices directory.   The "level" refers to the number of times the graph has been "community compressed".  At level 1 all of the level 0 vertices in community X are represented by a single vertex with the VertexID: X.  For the small example all modulairyt was maximized with no community compression so only level 0 was computed.  The vertices show the state of each vertex while the edges file specify the graph structure.   The qvalues directory lists the modularity of the graph at each level of compression.  For this example you should be able to see all of vertices splitting off into two distinct communities (community 4 and 8 ) with a final qvalue of ~ 0.413
 
 
-### running louvain on a cluster
+### Running dga on a cluster
 
 To run on a cluster be sure your input and output paths are of the form "hdfs://<namenode>/path" and ensure you provide the --master and --sparkhome options.  The --jars option is already coded into the 
 default config options
 
-### parallelism
+### Parallelism
 
 To change the level of parallelism use the --ca parallelism=400.  If this option is not set parallelism will be based on the layout of the input data in HDFS.  The number of partitions
  of the input file sets the level of parallelism.   
@@ -120,7 +137,6 @@ To change the level of parallelism use the --ca parallelism=400.  If this option
 
 ./dga-graphx wcc -i hdfs://spark.hostname:8020/path/to/input/example.csv -o hdfs://spark.hostname:8020/path/to/output/ -s /opt/spark -n NameGoesHere -m spark://spark.hostname:7077
 
-### advanced
+### Advanced
 
-If you would like to include the louvain algorithm in your own compute pipeline or create a custom output format, etc you can easily do so by extending the com.soteradefense.dga.graphx.louvain.LouvainHarness class.  See HDFSLouvainRunner which extends LouvainHarness and is called by Main for the example above
-
+If you would like to include any of these analytics in your own pipeline, then all you need to do is extend the abstract runner in either of the analytic packages.
