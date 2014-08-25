@@ -140,6 +140,69 @@ class PageRankCoreTest extends TestCase {
     assert(six._2 == eight._2)
   }
 
+  @Test
+  def testGraphWithMultipleComponents(): Unit = {
+    val data = Array(
+      "1,2", "2,3", "3,4", "4,5", "5,6", "25,6", "880,25",
+      "15,24", "655,24", "900,655", "400,15", "900,33",
+      "7,8", "8,9", "0,198", "435,44", "9,0", "44,8",
+      "10,11", "11,12", "12,10", "10,13", "13,14")
+    val rdd = sc.parallelize(data.toSeq)
+    val edgeRDD: RDD[Edge[Long]] = rdd.map(f => {
+      val tokens = f.split(",")
+      new Edge(tokens(0).toLong, tokens(1).toLong)
+    })
+    val graph = Graph.fromEdges(edgeRDD, None)
+    val runner = new PRTestRunner(0.001)
+    val result = runner.run(sc, graph)
+    val v15 = getVertex(15, result)
+    val v4 = getVertex(4, result)
+    val v1 = getVertex(1, result)
+    val v880 = getVertex(880, result)
+    val v900 = getVertex(900, result)
+    val v3 = getVertex(3, result)
+    val v7 = getVertex(7, result)
+    val v44 = getVertex(44, result)
+    val v400 = getVertex(400, result)
+    val v435 = getVertex(435, result)
+    val v5 = getVertex(5, result)
+    val v2 = getVertex(2, result)
+    val v8 = getVertex(8, result)
+    val v6 = getVertex(6, result)
+    val v9 = getVertex(9, result)
+    val v0 = getVertex(0, result)
+    val v198 = getVertex(198, result)
+    val v10 = getVertex(10, result)
+    val v14 = getVertex(14, result)
+    val v24 = getVertex(24, result)
+    val v12 = getVertex(12, result)
+    val v13 = getVertex(13, result)
+    val v11 = getVertex(11, result)
+    val v33 = getVertex(33, result)
+    val v655 = getVertex(655, result)
+    assert(v8._2 == v6._2)
+    assert(v9._2 > v0._2)
+    assert(v0._2 > v198._2)
+    assert(v198._2 > v10._2)
+    assert(v14._2 == v24._2)
+    assert(v14._2 == v12._2)
+    assert(v13._2 == v11._2)
+    assert(v13._2 == v33._2)
+    assert(v13._2 == v655._2)
+    assert(v15._2 == v4._2)
+    assert(v15._2 == v1._2)
+    assert(v15._2 == v880._2)
+    assert(v15._2 == v900._2)
+    assert(v15._2 == v3._2)
+    assert(v15._2 == v7._2)
+    assert(v15._2 == v44._2)
+    assert(v15._2 == v400._2)
+    assert(v15._2 == v435._2)
+    assert(v15._2 == v5._2)
+    assert(v15._2 == v2._2)
+
+  }
+
   def getVertex(id: Long, result: Graph[Double, Long]) = {
     result.vertices.filter(pred => pred._1 == id.asInstanceOf[VertexId]).first()
   }
