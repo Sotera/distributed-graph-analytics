@@ -29,12 +29,39 @@ dependencies {
     compile group: 'org.apache.spark', name: 'spark-core_2.10', version: '1.0.1'
     compile group: 'org.apache.spark', name: 'spark-graphx_2.10', version: '1.0.1'
     compile group: 'com.github.scopt', name: 'scopt_2.10', version: '3.2.0'
-    testCompile 'junit:junit:4.11'
     compile(
             [group: 'org.slf4j', name: 'slf4j-api', version: '1.6.6'],
             [group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.6.6']
     )
+    testCompile 'junit:junit:4.11'
 }
+
+def appendDoc(String path, String doc, StringBuilder builder) {
+    builder.append(path)
+    builder.append("#")
+    builder.append(doc)
+}
+
+task myScalaDocs(type: ScalaDoc) {
+    source sourceSets.main.allSource
+    classpath = sourceSets.main.compileClasspath
+    destinationDir = file("build/docs")
+    List<String> parameters = new LinkedList<String>()
+    File sparkJar = configurations.compile.files.find { file -> file.name.contains("spark") }
+    File scalaJar = configurations.compile.files.find { file -> file.name.contains("scala-library") }
+    File graphx = configurations.compile.files.find { file -> file.name.contains("spark-graphx") }
+    StringBuilder builder = new StringBuilder()
+    builder.append("-doc-external-doc:")
+    appendDoc(sparkJar.absolutePath, "http://spark.apache.org/docs/latest/api/scala/index.html", builder)
+    builder.append(",")
+    appendDoc(graphx.absolutePath, "http://spark.apache.org/docs/latest/api/scala/index.html", builder)
+    builder.append(",")
+    appendDoc(scalaJar.absolutePath, "http://www.scala-lang.org/api/2.10.4/index.html", builder)
+    String fullParam = builder.toString()
+    parameters.add(fullParam)
+    scalaDocOptions.additionalParameters = parameters
+}
+
 
 task distJars(dependsOn: 'distConf', type: Copy) {
     from configurations.runtime

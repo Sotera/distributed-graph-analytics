@@ -19,6 +19,7 @@ subprojects {
         options.links("http://giraph.apache.org/apidocs/")
         options.links("http://hadoop.apache.org/docs/r2.3.0/api/")
     }
+
     repositories {
         mavenLocal()
         mavenCentral()
