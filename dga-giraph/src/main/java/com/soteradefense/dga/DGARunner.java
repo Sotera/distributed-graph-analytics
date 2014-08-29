@@ -32,11 +32,13 @@ import com.soteradefense.dga.pr.PageRankMasterCompute;
 import com.soteradefense.dga.wcc.WeaklyConnectedComponentComputation;
 import org.apache.commons.cli.Options;
 import org.apache.giraph.GiraphRunner;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.security.PrivilegedAction;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -53,10 +55,8 @@ public class DGARunner {
         supportedAnalytics.add("lc");
         supportedAnalytics.add("pr");
     }
-
-    public static void main(String[] args) throws Exception {
+    public void run(String[] args) throws Exception {
         Options options = DGACommandLineUtil.generateOptions();
-
         if (args.length < 4)
             DGACommandLineUtil.printUsageAndExit(options);
 
@@ -161,8 +161,21 @@ public class DGARunner {
 
         } catch (Exception e) {
             logger.error("Unable to run analytic; ", e);
-            System.exit(1);
         }
+    }
+    public static void main(final String[] args) throws Exception {
+        UserGroupInformation.createRemoteUser("yarn").doAs(new PrivilegedAction<Void>() {
+            @Override
+            public Void run() {
+                try {
+                    DGARunner runner = new DGARunner();
+                    runner.run(args);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        });
     }
 
 }
