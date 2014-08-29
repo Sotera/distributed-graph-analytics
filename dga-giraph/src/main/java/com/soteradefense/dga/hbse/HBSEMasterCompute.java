@@ -481,6 +481,6 @@ public class HBSEMasterCompute extends DefaultMasterCompute {
         if (pivots.getPivots().size() > numberOfPivots) {
             pivots.trim(numberOfPivots);
         }
-        return pivots.getPivots().size() == numberOfPivots || pivots.getPivots().size() == getTotalNumVertices();
+        return pivots.getPivots().size() == numberOfPivots || getTotalNumVertices() <= numberOfPivots;
     }
 }
