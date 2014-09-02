@@ -34,6 +34,7 @@ import org.apache.commons.cli.Options;
 import org.apache.giraph.GiraphRunner;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +56,7 @@ public class DGARunner {
         supportedAnalytics.add("lc");
         supportedAnalytics.add("pr");
     }
+
     public void run(String[] args) throws Exception {
         Options options = DGACommandLineUtil.generateOptions();
         if (args.length < 4)
@@ -163,19 +165,25 @@ public class DGARunner {
             logger.error("Unable to run analytic; ", e);
         }
     }
+
     public static void main(final String[] args) throws Exception {
-        UserGroupInformation.createRemoteUser("yarn").doAs(new PrivilegedAction<Void>() {
-            @Override
-            public Void run() {
-                try {
-                    DGARunner runner = new DGARunner();
-                    runner.run(args);
-                } catch (Exception e) {
-                    e.printStackTrace();
+        if (!UserGroupInformation.isSecurityEnabled()) {
+            UserGroupInformation.createRemoteUser(YarnConfiguration.DEFAULT_NM_NONSECURE_MODE_LOCAL_USER).doAs(new PrivilegedAction<Void>() {
+                @Override
+                public Void run() {
+                    try {
+                        DGARunner runner = new DGARunner();
+                        runner.run(args);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return null;
                 }
-                return null;
-            }
-        });
+            });
+        } else {
+            DGARunner runner = new DGARunner();
+            runner.run(args);
+        }
     }
 
 }
