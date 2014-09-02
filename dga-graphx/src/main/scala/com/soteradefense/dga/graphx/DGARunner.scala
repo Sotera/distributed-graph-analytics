@@ -27,6 +27,7 @@ import com.soteradefense.dga.graphx.louvain.HDFSLouvainRunner
 import com.soteradefense.dga.graphx.parser.CommandLineParser
 import com.soteradefense.dga.graphx.pr.HDFSPRRunner
 import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
+import com.typesafe.config.ConfigFactory
 import org.apache.spark.graphx.Graph
 import org.apache.spark.serializer.KryoSerializer
 import org.apache.spark.{SparkConf, SparkContext}
@@ -64,15 +65,16 @@ object DGARunner {
     val analytic = args(0)
     println(s"Analytic: $analytic")
     val newArgs = args.slice(1, args.length)
+    val applicationConfig = ConfigFactory.load()
     val commandLineConfig: Config = CommandLineParser.parseCommandLine(newArgs)
     commandLineConfig.systemProperties.foreach({
       case (systemPropertyKey, systemPropertyValue) =>
         System.setProperty(systemPropertyKey, systemPropertyValue)
     })
     val conf = new SparkConf()
-      .setMaster(commandLineConfig.sparkMasterUrl)
+      .setMaster(applicationConfig.getString("spark.master.url"))
       .setAppName(commandLineConfig.sparkAppName)
-      .setSparkHome(commandLineConfig.sparkHome)
+      .setSparkHome(applicationConfig.getString("spark.home"))
       .setJars(commandLineConfig.sparkJars.split(DefaultJarSplitDelimiter))
     conf.setAll(commandLineConfig.customArguments)
     if (commandLineConfig.useKryoSerializer) {
@@ -80,29 +82,32 @@ object DGARunner {
       conf.set("spark.kryo.registrator", classOf[DGAKryoRegistrator].getCanonicalName)
     }
     val sparkContext = new SparkContext(conf)
-    val parallelism = Integer.parseInt(commandLineConfig.customArguments.getOrElse(ParallelismConfiguration, ParallelismDefaultConfiguration))
+    val parallelism = Integer.parseInt(commandLineConfig.customArguments.getOrElse(ParallelismConfiguration, applicationConfig.getString("parallelism")))
     var inputFormat: EdgeInputFormat = null
+    val hdfsUrl = applicationConfig.getString("hdfs.url")
+    val inputPath = hdfsUrl + commandLineConfig.inputPath
+    val outputPath = hdfsUrl + commandLineConfig.outputPath
     if (parallelism != -1)
-      inputFormat = new EdgeInputFormat(commandLineConfig.inputPath, commandLineConfig.edgeDelimiter, parallelism)
+      inputFormat = new EdgeInputFormat(inputPath, commandLineConfig.edgeDelimiter, parallelism)
     else
-      inputFormat = new EdgeInputFormat(commandLineConfig.inputPath, commandLineConfig.edgeDelimiter)
+      inputFormat = new EdgeInputFormat(inputPath, commandLineConfig.edgeDelimiter)
     val edgeRDD = inputFormat.getEdgeRDD(sparkContext)
     val initialGraph = Graph.fromEdges(edgeRDD, None)
     var runner: Harness = null
     analytic match {
       case WeaklyConnectedComponents | WeaklyConnectedComponentsGraphX =>
-        runner = new HDFSWCCRunner(commandLineConfig.outputPath, commandLineConfig.edgeDelimiter)
+        runner = new HDFSWCCRunner(outputPath, commandLineConfig.edgeDelimiter)
       case HighBetweennessSetExtraction =>
-        runner = new HDFSHBSERunner(commandLineConfig.outputPath, commandLineConfig.edgeDelimiter)
+        runner = new HDFSHBSERunner(outputPath, commandLineConfig.edgeDelimiter)
       case LouvainModularity =>
         val minProgress = commandLineConfig.customArguments.getOrElse(MinProgressConfiguration, MinProgressDefaultConfiguration).toInt
         val progressCounter = commandLineConfig.customArguments.getOrElse(ProgressCounterConfiguration, ProgressCounterDefaultConfiguration).toInt
-        runner = new HDFSLouvainRunner(minProgress, progressCounter, commandLineConfig.outputPath)
+        runner = new HDFSLouvainRunner(minProgress, progressCounter, outputPath)
       case LeafCompression =>
-        runner = new HDFSLCRunner(commandLineConfig.outputPath, commandLineConfig.edgeDelimiter)
+        runner = new HDFSLCRunner(outputPath, commandLineConfig.edgeDelimiter)
       case PageRank | PageRankGraphX =>
         val delta = commandLineConfig.customArguments.getOrElse(DeltaConvergenceConfiguration, DeltaConvergenceDefaultConfiguration).toDouble
-        runner = new HDFSPRRunner(commandLineConfig.outputPath, commandLineConfig.edgeDelimiter, delta)
+        runner = new HDFSPRRunner(outputPath, commandLineConfig.edgeDelimiter, delta)
       case _  =>
         throw new IllegalArgumentException(s"$analytic is not supported")
     }
