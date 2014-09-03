@@ -28,7 +28,10 @@ import com.soteradefense.dga.graphx.parser.CommandLineParser
 import com.soteradefense.dga.graphx.pr.HDFSPRRunner
 import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
 import com.typesafe.config.ConfigFactory
+import org.apache.hadoop.fs.Path
+import org.apache.hadoop.mapred.TextInputFormat
 import org.apache.spark.graphx.Graph
+import org.apache.spark.scheduler.InputFormatInfo
 import org.apache.spark.serializer.KryoSerializer
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -72,9 +75,7 @@ object DGARunner {
         System.setProperty(systemPropertyKey, systemPropertyValue)
     })
     val conf = new SparkConf()
-      .setMaster(applicationConfig.getString("spark.master.url"))
       .setAppName(commandLineConfig.sparkAppName)
-      .setSparkHome(applicationConfig.getString("spark.home"))
       .setJars(commandLineConfig.sparkJars.split(DefaultJarSplitDelimiter))
     conf.setAll(commandLineConfig.customArguments)
     if (commandLineConfig.useKryoSerializer) {
