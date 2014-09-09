@@ -1,0 +1,11 @@
+#! /bin/bash
+
+export DGA_CLASSPATH=lib/*:conf/
+export SPARK_JARS_ASSEMBLY=/opt/spark-1.0.1/lib_managed/jars/*:/opt/spark-1.0.1/assembly/target/scala-2.10/*
+
+T="$(date +%s)"
+
+java -cp $DGA_CLASSPATH:$SPARK_JARS_ASSEMBLY com.soteradefense.dga.graphx.DGARunner "$@" --jars "lib/dga-graphx-0.1.jar,lib/dga-core-0.0.1.jar,lib/config-1.2.1.jar"
+
+T="$(($(date +%s)-T))"
+echo "Time in seconds: ${T}"

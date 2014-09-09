@@ -28,10 +28,7 @@ import com.soteradefense.dga.graphx.parser.CommandLineParser
 import com.soteradefense.dga.graphx.pr.HDFSPRRunner
 import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
 import com.typesafe.config.ConfigFactory
-import org.apache.hadoop.fs.Path
-import org.apache.hadoop.mapred.TextInputFormat
 import org.apache.spark.graphx.Graph
-import org.apache.spark.scheduler.InputFormatInfo
 import org.apache.spark.serializer.KryoSerializer
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -74,15 +71,8 @@ object DGARunner {
       case (systemPropertyKey, systemPropertyValue) =>
         System.setProperty(systemPropertyKey, systemPropertyValue)
     })
-    val conf = new SparkConf()
-      .setAppName(commandLineConfig.sparkAppName)
-      .setJars(commandLineConfig.sparkJars.split(DefaultJarSplitDelimiter))
-    conf.setAll(commandLineConfig.customArguments)
-    if (commandLineConfig.useKryoSerializer) {
-      conf.set("spark.serializer", classOf[KryoSerializer].getCanonicalName)
-      conf.set("spark.kryo.registrator", classOf[DGAKryoRegistrator].getCanonicalName)
-    }
-    val sparkContext = new SparkContext(conf)
+    val sparkConf = buildSparkConf(commandLineConfig, applicationConfig)
+    val sparkContext = new SparkContext(sparkConf)
     val parallelism = Integer.parseInt(commandLineConfig.customArguments.getOrElse(ParallelismConfiguration, applicationConfig.getString("parallelism")))
     var inputFormat: EdgeInputFormat = null
     val hdfsUrl = applicationConfig.getString("hdfs.url")
@@ -109,7 +99,7 @@ object DGARunner {
       case PageRank | PageRankGraphX =>
         val delta = commandLineConfig.customArguments.getOrElse(DeltaConvergenceConfiguration, DeltaConvergenceDefaultConfiguration).toDouble
         runner = new HDFSPRRunner(outputPath, commandLineConfig.edgeDelimiter, delta)
-      case _  =>
+      case _ =>
         throw new IllegalArgumentException(s"$analytic is not supported")
     }
     analytic match {
@@ -120,5 +110,21 @@ object DGARunner {
       case WeaklyConnectedComponentsGraphX =>
         runner.asInstanceOf[HDFSWCCRunner].runGraphXImplementation(initialGraph)
     }
+  }
+
+  private def buildSparkConf(commandLineConfig: Config, applicationConfig: com.typesafe.config.Config): SparkConf = {
+    val sparkConf = new SparkConf()
+      .setAppName(commandLineConfig.sparkAppName)
+      .setJars(commandLineConfig.sparkJars.split(DefaultJarSplitDelimiter))
+    if(applicationConfig.hasPath("spark.master.url"))
+      sparkConf.setMaster(applicationConfig.getString("spark.master.url"))
+    if(applicationConfig.hasPath("spark.home"))
+      sparkConf.setSparkHome(applicationConfig.getString("spark.home"))
+    sparkConf.setAll(commandLineConfig.customArguments)
+    if (commandLineConfig.useKryoSerializer) {
+      sparkConf.set("spark.serializer", classOf[KryoSerializer].getCanonicalName)
+      sparkConf.set("spark.kryo.registrator", classOf[DGAKryoRegistrator].getCanonicalName)
+    }
+    sparkConf
   }
 }

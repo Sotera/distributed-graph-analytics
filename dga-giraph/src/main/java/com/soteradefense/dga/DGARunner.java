@@ -32,14 +32,11 @@ import com.soteradefense.dga.pr.PageRankMasterCompute;
 import com.soteradefense.dga.wcc.WeaklyConnectedComponentComputation;
 import org.apache.commons.cli.Options;
 import org.apache.giraph.GiraphRunner;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.security.PrivilegedAction;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -166,24 +163,9 @@ public class DGARunner {
         }
     }
 
-    public static void main(final String[] args) throws Exception {
-        if (!UserGroupInformation.isSecurityEnabled()) {
-            UserGroupInformation.createRemoteUser(YarnConfiguration.DEFAULT_NM_NONSECURE_MODE_LOCAL_USER).doAs(new PrivilegedAction<Void>() {
-                @Override
-                public Void run() {
-                    try {
-                        DGARunner runner = new DGARunner();
-                        runner.run(args);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                }
-            });
-        } else {
-            DGARunner runner = new DGARunner();
-            runner.run(args);
-        }
+    public static void main(String[] args) throws Exception {
+        DGARunner runner = new DGARunner();
+        runner.run(args);
     }
 
 }
