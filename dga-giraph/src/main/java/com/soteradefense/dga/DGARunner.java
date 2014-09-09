@@ -54,9 +54,8 @@ public class DGARunner {
         supportedAnalytics.add("pr");
     }
 
-    public static void main(String[] args) throws Exception {
+    public void run(String[] args) throws Exception {
         Options options = DGACommandLineUtil.generateOptions();
-
         if (args.length < 4)
             DGACommandLineUtil.printUsageAndExit(options);
 
@@ -161,8 +160,12 @@ public class DGARunner {
 
         } catch (Exception e) {
             logger.error("Unable to run analytic; ", e);
-            System.exit(1);
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        DGARunner runner = new DGARunner();
+        runner.run(args);
     }
 
 }

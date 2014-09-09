@@ -1,5 +1,4 @@
 #!/bin/bash
-
 CWD=$(pwd)
 
 LIB_DIR=$CWD/lib/

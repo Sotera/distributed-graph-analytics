@@ -7,6 +7,8 @@ description = 'dga-giraph'
 sourceSets {
     main {
         resources {
+            exclude 'dga-mr1-giraph'
+            exclude 'dga-yarn-giraph'
             exclude 'dga-config.xml'
             exclude 'dga'
         }
@@ -47,6 +49,8 @@ task distConf(dependsOn: 'assemble', type: Copy) {
 }
 
 task dist(dependsOn: 'distJars', type: Copy) {
-    from project.file("src/main/resources/dga-giraph")
+    from "src/main/resources/"
+    include "dga-mr1-giraph"
+    include "dga-yarn-giraph"
     into "${buildDir}/dist/bin"
 }

@@ -1,0 +1,12 @@
+#! /bin/bash
+
+for i in `ls -d /opt/spark/lib_managed/jars/*`;
+do
+    export JARS="$JARS,$i"
+done
+
+T="$(date +%s)"
+spark-submit --executor-cores 10 --num-executors 10 --executor-memory 60G --class com.soteradefense.dga.graphx.DGARunner --master yarn-cluster --jars "lib/dga-core-0.0.1.jar,lib/config-1.2.1.jar$JARS" lib/dga-graphx-0.1.jar "$@"
+
+T="$(($(date +%s)-T))"
+echo "Time in seconds: ${T}"
