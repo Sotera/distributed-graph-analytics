@@ -25,8 +25,8 @@ import org.apache.giraph.graph.AbstractComputation;
 import org.apache.giraph.graph.GraphState;
 import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
-import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.apache.giraph.worker.WorkerContext;
+import org.apache.giraph.worker.WorkerGlobalCommUsage;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -36,11 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Performs the BSP portion of the distributed louvain algorithm.
@@ -48,15 +44,15 @@ import java.util.Map;
  * The computation is completed as a series of repeated steps, movement is restricted to approximately half of the nodes on each cycle so a full pass requires two cycles
  * <p/>
  * <ol>
- *     <li>
- *         Each vertex receives community values from its community hub and sends its own community to its neighbors
- *     </li>
- *     <li>
- *         Each vertex determines if it should move to a neighboring community or not and sends its information to its community hub
- *     </li>
- *     <li>
- *         Each community hub re-calculates community totals and sends the updates to each community member
- *     </li>
+ * <li>
+ * Each vertex receives community values from its community hub and sends its own community to its neighbors
+ * </li>
+ * <li>
+ * Each vertex determines if it should move to a neighboring community or not and sends its information to its community hub
+ * </li>
+ * <li>
+ * Each community hub re-calculates community totals and sends the updates to each community member
+ * </li>
  * </ol>
  * <p/>
  * When the number of nodes that change communities stops decreasing for four (4) cycles or when the number of nodes that change reaches 0 the computation ends
@@ -80,10 +76,9 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
     }
 
     @Override
-    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, LouvainNodeState, LongWritable> workerClientRequestProcessor, GraphTaskManager<Text, LouvainNodeState, LongWritable> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
-        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, LouvainNodeState, LongWritable> workerClientRequestProcessor, GraphTaskManager<Text, LouvainNodeState, LongWritable> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage, workerContext);
         DGALoggingUtil.setDGALogLevel(this.getConf());
-        //logger = LoggerFactory.getLogger(LouvainComputation.class);
     }
 
     @Override
@@ -106,8 +101,7 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
                 vertexValue.setNodeWeight(edgeWeightAggregation);
             }
             aggregate(TOTAL_EDGE_WEIGHT_AGG, new LongWritable(vertexValue.getNodeWeight() + vertexValue.getInternalWeight()));
-        }
-        else if(vertexValue.getCommunity().equals("")){
+        } else if (vertexValue.getCommunity().equals("")) {
             vertexValue.setCommunity(vertex.getId().toString());
             vertexValue.setNodeWeight(0L);
         }
@@ -166,6 +160,7 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
         }
 
     }
+
 
     /**
      * Get the total edge weight of the graph.

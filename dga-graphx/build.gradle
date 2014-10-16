@@ -20,15 +20,15 @@ sourceSets {
         resources {
             exclude 'dga-graphx'
             exclude 'log4j.properties'
-            //exclude 'application.conf'
+            exclude 'application.conf'
         }
     }
 }
 
 dependencies {
     compile project(':dga-core')
-    compile group: 'org.apache.spark', name: 'spark-core_2.10', version: '1.0.2'
-    compile group: 'org.apache.spark', name: 'spark-graphx_2.10', version: '1.0.2'
+    compile group: 'org.apache.spark', name: 'spark-core_2.10', version: '1.1.0'
+    compile group: 'org.apache.spark', name: 'spark-graphx_2.10', version: '1.1.0'
     compile group: 'com.github.scopt', name: 'scopt_2.10', version: '3.2.0'
     compile group: 'com.typesafe', name:'config', version:'1.2.1'
     compile(
@@ -71,6 +71,8 @@ task distJars(dependsOn: 'distConf', type: Copy) {
     include "dga-core*.jar"
     include "dga-graphx*.jar"
     include "config*.jar"
+    include "*graphx*.jar"
+    include "scopt*.jar"
     into "${buildDir}/dist/lib"
 }
 

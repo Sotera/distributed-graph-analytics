@@ -22,10 +22,7 @@ package com.soteradefense.dga;
 import com.soteradefense.dga.hbse.HBSEComputation;
 import com.soteradefense.dga.hbse.HBSEConfigurationConstants;
 import com.soteradefense.dga.hbse.HBSEMasterCompute;
-import com.soteradefense.dga.io.formats.DGAEdgeTDTOutputFormat;
-import com.soteradefense.dga.io.formats.DGAEdgeTTTOutputFormat;
-import com.soteradefense.dga.io.formats.DGATextEdgeValueInputFormat;
-import com.soteradefense.dga.io.formats.HBSEOutputFormat;
+import com.soteradefense.dga.io.formats.*;
 import com.soteradefense.dga.lc.LeafCompressionComputation;
 import com.soteradefense.dga.pr.PageRankComputation;
 import com.soteradefense.dga.pr.PageRankMasterCompute;
@@ -88,6 +85,7 @@ public class DGARunner {
                 requiredConf.setDGAGiraphProperty("-eof", DGAEdgeTTTOutputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
+                requiredConf.setDGAGiraphProperty("-esd", outputPath);
                 DGAConfiguration minimalDefaults = new DGAConfiguration();
                 minimalDefaults.setCustomProperty(DGAEdgeTTTOutputFormat.WRITE_VERTEX_VALUE, "true");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
@@ -105,6 +103,7 @@ public class DGARunner {
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-mc", HBSEMasterCompute.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
+                requiredConf.setDGAGiraphProperty("-vsd", outputPath);
                 DGAConfiguration minimalDefaults = new DGAConfiguration();
                 minimalDefaults.setCustomProperty(HBSEConfigurationConstants.BETWEENNESS_SET_MAX_SIZE, "10");
                 minimalDefaults.setCustomProperty(HBSEConfigurationConstants.BETWEENNESS_OUTPUT_DIR, outputPath);
@@ -145,10 +144,11 @@ public class DGARunner {
                 logger.info("Analytic: PageRank");
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", DGATextEdgeValueInputFormat.class.getCanonicalName());
-                requiredConf.setDGAGiraphProperty("-eof", DGAEdgeTDTOutputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-vof", DGAVertexOutputFormat.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-mc", PageRankMasterCompute.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
+                requiredConf.setDGAGiraphProperty("-vsd", outputPath);
                 requiredConf.setCustomProperty(DGAEdgeTDTOutputFormat.WRITE_VERTEX_VALUE, "true");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(fileConf, commandLineConf, requiredConf);
 

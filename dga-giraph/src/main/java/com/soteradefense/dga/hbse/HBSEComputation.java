@@ -26,6 +26,7 @@ import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.apache.giraph.worker.WorkerContext;
+import org.apache.giraph.worker.WorkerGlobalCommUsage;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
@@ -54,8 +55,8 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
     private static final Logger logger = LoggerFactory.getLogger(HBSEComputation.class);
 
     @Override
-    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, VertexData, Text> workerClientRequestProcessor, GraphTaskManager<Text, VertexData, Text> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
-        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, VertexData, Text> workerClientRequestProcessor, GraphTaskManager<Text, VertexData, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage, workerContext);
         DGALoggingUtil.setDGALogLevel(this.getConf());
     }
 

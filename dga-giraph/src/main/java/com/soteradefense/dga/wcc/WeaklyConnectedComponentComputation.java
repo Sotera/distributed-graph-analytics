@@ -24,8 +24,8 @@ import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.GraphState;
 import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
-import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.apache.giraph.worker.WorkerContext;
+import org.apache.giraph.worker.WorkerGlobalCommUsage;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +40,8 @@ public class WeaklyConnectedComponentComputation extends BasicComputation<Text, 
     private static final Logger logger = LoggerFactory.getLogger(WeaklyConnectedComponentComputation.class);
 
     @Override
-    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, Text, Text> workerClientRequestProcessor, GraphTaskManager<Text, Text, Text> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
-        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, Text, Text> workerClientRequestProcessor, GraphTaskManager<Text, Text, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage, workerContext);
         DGALoggingUtil.setDGALogLevel(this.getConf());
     }
 
@@ -65,6 +65,7 @@ public class WeaklyConnectedComponentComputation extends BasicComputation<Text, 
             System.err.print(e.toString());
         }
     }
+
 
     /**
      * Only called during the first superstep.

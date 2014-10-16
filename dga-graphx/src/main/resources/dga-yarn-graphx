@@ -6,7 +6,15 @@ do
 done
 
 T="$(date +%s)"
-spark-submit --executor-cores 10 --num-executors 10 --executor-memory 60G --class com.soteradefense.dga.graphx.DGARunner --master yarn-cluster --jars "lib/dga-core-0.0.1.jar,lib/config-1.2.1.jar$JARS" lib/dga-graphx-0.1.jar "$@"
+spark-submit \
+--executor-cores 18 \
+--num-executors 21 \
+--executor-memory 62G \
+--class com.soteradefense.dga.graphx.DGARunner \
+--master yarn-cluster \
+--jars "lib/dga-core-0.0.1.jar,lib/config-1.2.1.jar,lib/scopt_2.10-3.2.0.jar" \
+--files "conf/application.conf,conf/log4j.properties" \
+lib/dga-graphx-0.1.jar "$@"
 
 T="$(($(date +%s)-T))"
 echo "Time in seconds: ${T}"

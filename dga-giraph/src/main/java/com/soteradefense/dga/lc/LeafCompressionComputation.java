@@ -26,6 +26,7 @@ import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.apache.giraph.worker.WorkerContext;
+import org.apache.giraph.worker.WorkerGlobalCommUsage;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +44,8 @@ public class LeafCompressionComputation extends BasicComputation<Text, Text, Tex
     private static Logger logger = LoggerFactory.getLogger(LeafCompressionComputation.class);
 
     @Override
-    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, Text, Text> workerClientRequestProcessor, GraphTaskManager<Text, Text, Text> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
-        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, Text, Text> workerClientRequestProcessor, GraphTaskManager<Text, Text, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage, workerContext);
         DGALoggingUtil.setDGALogLevel(getConf());
     }
 

@@ -24,8 +24,8 @@ import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.GraphState;
 import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
-import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.apache.giraph.worker.WorkerContext;
+import org.apache.giraph.worker.WorkerGlobalCommUsage;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
@@ -42,8 +42,8 @@ public class PageRankComputation extends BasicComputation<Text, DoubleWritable, 
     public static final float DAMPING_FACTOR_DEFAULT_VALUE = 0.85f;
 
     @Override
-    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, DoubleWritable, Text> workerClientRequestProcessor, GraphTaskManager<Text, DoubleWritable, Text> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
-        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, DoubleWritable, Text> workerClientRequestProcessor, GraphTaskManager<Text, DoubleWritable, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage, workerContext);
         DGALoggingUtil.setDGALogLevel(this.getConf());
     }
 
@@ -73,6 +73,7 @@ public class PageRankComputation extends BasicComputation<Text, DoubleWritable, 
         }
         distributeRank(vertex);
     }
+
 
     private void distributeRank(Vertex<Text, DoubleWritable, Text> vertex) {
         double rank = vertex.getValue().get() / vertex.getNumEdges();

@@ -40,17 +40,15 @@ class PageRankCore extends Logging with Serializable {
       .outerJoinVertices(graph.outDegrees) {
       (vertexId, pageRankData, degree) => degree.getOrElse(0)
     }
-      .mapTriplets(triplet => 1 / triplet.srcAttr)
+      .mapTriplets(triplet => triplet.srcAttr)
       .mapVertices((vertexId, vertexData) => (0.0, 0.0))
       .cache()
 
     def vertexProgram(vertexId: VertexId, pageRankData: (Double, Double), messageSum: Double) = {
       val (previousPageRank, previousDelta) = pageRankData
       val rank = ((1.0 - dampingFactor) / numberOfVertices) + (dampingFactor * messageSum)
-      var delta = 0.0
-      val rankDifference = Math.abs(rank - previousPageRank)
-      delta = rankDifference / previousPageRank
-      (rank, delta)
+      val rankDifference = Math.abs(rank - previousPageRank) / previousPageRank
+      (rank, rankDifference)
     }
 
     def messageCombiner(a: Double, b: Double): Double = a + b
@@ -58,7 +56,7 @@ class PageRankCore extends Logging with Serializable {
     def sendMessage(triplet: EdgeTriplet[(Double, Double), Int]) = {
       val (pageRank, pageRankDifference) = triplet.srcAttr
       if (delta < pageRankDifference) {
-        Iterator((triplet.dstId, pageRank * triplet.attr))
+        Iterator((triplet.dstId, pageRank / triplet.attr))
       }
       else {
         Iterator.empty
