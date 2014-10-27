@@ -17,6 +17,8 @@
  */
 package com.soteradefense.dga.graphx
 
+import java.util.Date
+
 import com.soteradefense.dga.graphx.config.Config
 import com.soteradefense.dga.graphx.harness.Harness
 import com.soteradefense.dga.graphx.hbse.HDFSHBSERunner
@@ -24,6 +26,7 @@ import com.soteradefense.dga.graphx.io.formats.EdgeInputFormat
 import com.soteradefense.dga.graphx.kryo.DGAKryoRegistrator
 import com.soteradefense.dga.graphx.lc.HDFSLCRunner
 import com.soteradefense.dga.graphx.louvain.HDFSLouvainRunner
+import com.soteradefense.dga.graphx.neighboringcommunity.HDFSNeighboringCommunityRunner
 import com.soteradefense.dga.graphx.parser.CommandLineParser
 import com.soteradefense.dga.graphx.pr.HDFSPRRunner
 import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
@@ -45,6 +48,7 @@ object DGARunner {
   val LeafCompression = "lc"
   val PageRankGraphX = "prGraphX"
   val WeaklyConnectedComponentsGraphX = "wccGraphX"
+  val NeighboringCommunities = "neighboringCommunities"
 
   val MinProgressConfiguration = "minProgress"
   val MinProgressDefaultConfiguration = "2000"
@@ -55,6 +59,8 @@ object DGARunner {
   val ParallelismConfiguration = "parallelism"
   val ParallelismDefaultConfiguration = "-1"
   val DefaultJarSplitDelimiter = ","
+  val CommunitySplitConfiguration = "community.split"
+  val CommunitySplitDefaultDelimiter = ":"
 
 
   /**
@@ -77,7 +83,9 @@ object DGARunner {
     var inputFormat: EdgeInputFormat = null
     val hdfsUrl = applicationConfig.getString("hdfs.url")
     val inputPath = hdfsUrl + commandLineConfig.inputPath
-    val outputPath = hdfsUrl + commandLineConfig.outputPath
+    var outputPath = hdfsUrl + commandLineConfig.outputPath
+    outputPath = if (outputPath.endsWith("/")) outputPath else outputPath + "/"
+    outputPath = outputPath + (new Date).getTime
     if (parallelism != -1)
       inputFormat = new EdgeInputFormat(inputPath, commandLineConfig.edgeDelimiter, parallelism)
     else
@@ -99,11 +107,21 @@ object DGARunner {
       case PageRank | PageRankGraphX =>
         val delta = commandLineConfig.customArguments.getOrElse(DeltaConvergenceConfiguration, DeltaConvergenceDefaultConfiguration).toDouble
         runner = new HDFSPRRunner(outputPath, commandLineConfig.edgeDelimiter, delta)
+      case NeighboringCommunities =>
+        val minProgress = commandLineConfig.customArguments.getOrElse(MinProgressConfiguration, MinProgressDefaultConfiguration).toInt
+        val progressCounter = commandLineConfig.customArguments.getOrElse(ProgressCounterConfiguration, ProgressCounterDefaultConfiguration).toInt
+        val communitySplit = commandLineConfig.customArguments.getOrElse(CommunitySplitConfiguration, CommunitySplitDefaultDelimiter)
+        runner = new HDFSNeighboringCommunityRunner(minProgress, progressCounter, outputPath, commandLineConfig.edgeDelimiter, communitySplit)
       case _ =>
         throw new IllegalArgumentException(s"$analytic is not supported")
     }
     analytic match {
-      case WeaklyConnectedComponents | HighBetweennessSetExtraction | LouvainModularity | LeafCompression | PageRank =>
+      case WeaklyConnectedComponents |
+           HighBetweennessSetExtraction |
+           LouvainModularity |
+           LeafCompression |
+           PageRank |
+           NeighboringCommunities =>
         runner.run(sparkContext, initialGraph)
       case PageRankGraphX =>
         runner.asInstanceOf[HDFSPRRunner].runGraphXImplementation(initialGraph)
@@ -116,9 +134,9 @@ object DGARunner {
     val sparkConf = new SparkConf()
       .setAppName(commandLineConfig.sparkAppName)
       .setJars(commandLineConfig.sparkJars.split(DefaultJarSplitDelimiter))
-    if(applicationConfig.hasPath("spark.master.url"))
+    if (applicationConfig.hasPath("spark.master.url"))
       sparkConf.setMaster(applicationConfig.getString("spark.master.url"))
-    if(applicationConfig.hasPath("spark.home"))
+    if (applicationConfig.hasPath("spark.home"))
       sparkConf.setSparkHome(applicationConfig.getString("spark.home"))
     sparkConf.setAll(commandLineConfig.customArguments)
     if (commandLineConfig.useKryoSerializer) {

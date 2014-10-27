@@ -25,7 +25,7 @@ import scala.reflect.ClassTag
 
 class PageRankCore extends Logging with Serializable {
 
-  private final val dampingFactor = 0.85f
+  private final val dampingFactor = 0.85
 
   def runPageRankGraphX[VD: ClassTag](graph: Graph[VD, Long], delta: Double): (Graph[Double, Double]) = {
     graph.pageRank(delta)
@@ -41,13 +41,13 @@ class PageRankCore extends Logging with Serializable {
       (vertexId, pageRankData, degree) => degree.getOrElse(0)
     }
       .mapTriplets(triplet => triplet.srcAttr)
-      .mapVertices((vertexId, vertexData) => (0.0, 0.0))
+      .mapVertices((vertexId, vertexData) => (initialVertexValue, 0.0))
       .cache()
 
     def vertexProgram(vertexId: VertexId, pageRankData: (Double, Double), messageSum: Double) = {
       val (previousPageRank, previousDelta) = pageRankData
-      val rank = ((1.0 - dampingFactor) / numberOfVertices) + (dampingFactor * messageSum)
-      val rankDifference = Math.abs(rank - previousPageRank) / previousPageRank
+      val rank = previousPageRank + (dampingFactor * messageSum)
+      val rankDifference: Double = rank - previousPageRank
       (rank, rankDifference)
     }
 
@@ -56,7 +56,8 @@ class PageRankCore extends Logging with Serializable {
     def sendMessage(triplet: EdgeTriplet[(Double, Double), Int]) = {
       val (pageRank, pageRankDifference) = triplet.srcAttr
       if (delta < pageRankDifference) {
-        Iterator((triplet.dstId, pageRank / triplet.attr))
+        val message: Double = pageRankDifference / triplet.attr
+        Iterator((triplet.dstId, message))
       }
       else {
         Iterator.empty
