@@ -14,14 +14,11 @@ Currently, DGA supports the following analytics:
 
 ###### GraphX
 - Louvain Modularity (initial stage)
-
-Eventually, the following analytics will be supported:
-
 - Weakly Connected Components
 - High Betweenness Set Extraction
 - Leaf Compression
 - Page Rank
-
+- Neighboring Communities
 
 ###### dga-giraph
 dga-giraph is the project that contains our Giraph implementation of DGA.  For more information, go here: [dga-giraph README.md](https://github.com/Sotera/distributed-graph-analytics/tree/master/dga-giraph)
