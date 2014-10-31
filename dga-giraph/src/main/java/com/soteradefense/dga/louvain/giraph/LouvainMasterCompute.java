@@ -151,7 +151,8 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
     private void markPipeLineComplete(String message) {
         String outputPath = getConf().get("mapred.output.dir", getConf().get("mapreduce.output.fileoutputformat.outputdir"));
         String dir = outputPath.substring(0, outputPath.lastIndexOf("/"));
-        String filename = getConf().get("fs.defaultFS") + dir + "/_COMPLETE";
+        String filename = dir + "/_COMPLETE";
+//        String filename = getConf().get("fs.defaultFS") + dir + "/_COMPLETE";
         logger.debug("Writing {}", filename);
         writeFile(filename, message);
     }
@@ -163,7 +164,7 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
         String dir = outputPath.substring(0, lastIndexOfSlash);
         String stage = outputPath.substring(lastIndexOfSlash + 1);
         String stagenumber = stage.substring(stage.lastIndexOf("_") + 1);
-        String filename = getConf().get("fs.defaultFS") + dir + "/_q_" + stagenumber;
+        String filename = dir + "/_q_" + stagenumber;
         writeFile(filename, message);
 
     }
@@ -179,7 +180,7 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
         if (previousStageNumber < 1) {
             return 0.0;
         } else {
-            String filename = getConf().get("fs.defaultFS") + dir + "/_q_" + previousStageNumber;
+            String filename = dir + "/_q_" + previousStageNumber;
             String result = this.readFile(filename).trim();
             return Double.parseDouble(result);
         }
