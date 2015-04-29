@@ -25,3 +25,15 @@ dga-giraph is the project that contains our Giraph implementation of DGA.  For m
 
 ###### documentation
 [http://sotera.github.io/distributed-graph-analytics](http://sotera.github.io/distributed-graph-analytics/)
+
+###### Scala 
+Supported Scala version: 2.11.1
+Supported Scala installation location: /opt/scala
+
+wget http://downloads.typesafe.com/scala/2.11.1/scala-2.11.1.tgz
+tar xvf scala-2.11.1.tgz
+sudo mv scala-2.11.1 /opt/scala
+
+###### Spark Core and GraphX
+Supported Spark Core and GraphX version: 1.3.0
+Supported Spark installation location: /opt/spark
