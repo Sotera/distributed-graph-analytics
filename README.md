@@ -28,7 +28,6 @@ dga-giraph is the project that contains our Giraph implementation of DGA.  For m
 
 
 
-
 ### Steps to run Louvain GraphX
 #### Download The CentOS VM
 https://github.com/Sotera/seam-team-6-vm
