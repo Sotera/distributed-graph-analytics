@@ -1,7 +1,7 @@
 #! /bin/bash
 
-export DGA_CLASSPATH=lib/*:conf/
-export SPARK_JARS_ASSEMBLY=/opt/spark-1.0.1/lib_managed/jars/*:/opt/spark-1.0.1/assembly/target/scala-2.10/*
+export DGA_CLASSPATH=/vagrant/distributed-graph-analytics/dga-graphx/build/dist/lib/*:conf/
+export SPARK_JARS_ASSEMBLY=/opt/spark/lib/*:/opt/scala/*
 
 T="$(date +%s)"
 
