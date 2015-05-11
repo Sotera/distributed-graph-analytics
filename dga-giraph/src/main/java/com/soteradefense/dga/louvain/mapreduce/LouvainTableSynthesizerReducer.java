@@ -40,7 +40,13 @@ public class LouvainTableSynthesizerReducer extends Reducer<Text, Text, Text, Nu
         for (Text item : values) {
             String valueItem = item.toString();
             String[] tokens = valueItem.split(":");
-            int side = Integer.parseInt(tokens[1]);
+            int side;
+            try {
+                side = Integer.parseInt(tokens[1]);
+            }
+            catch (NumberFormatException nfe) {
+                throw new NumberFormatException("valueItem: " + valueItem);
+            }
             if (side == 1) {
                 rightText = tokens[0];
             } else {
