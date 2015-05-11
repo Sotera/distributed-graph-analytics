@@ -51,21 +51,23 @@ public class LouvainTableSynthesizer extends Configured implements Tool {
 
 
     @Override
-    public int run(String[] args) throws Exception {
+	public int run(String[] args) throws Exception {
         Job job = null;
         try {
             int iteration = 0;
-            boolean nextFileExists = true;
             if (!basePath.endsWith("/"))
                 basePath = basePath + "/";
             String inputPath = basePath + GIRAPH_FOLDER_BASE_NAME + FILE_NAME_SEPARATOR + iteration;
             String joinPath = basePath + GIRAPH_FOLDER_BASE_NAME + FILE_NAME_SEPARATOR + (iteration + 1);
             String outputPath = basePath + TABLE_BASE_NAME + FILE_NAME_SEPARATOR + iteration;
+            Configuration mrConf = this.getConf();
+            job = Job.getInstance(mrConf);
+            for(Map.Entry<String,String> entry : dgaConfiguration.getSystemProperties().entrySet()){
+                mrConf.set(entry.getKey(), entry.getValue());
+            }
+            FileSystem fs = FileSystem.get(job.getConfiguration());
+            boolean nextFileExists = fs.exists(new Path(joinPath));
             while (nextFileExists) {
-                Configuration mrConf = this.getConf();
-                for(Map.Entry<String,String> entry : dgaConfiguration.getSystemProperties().entrySet()){
-                    mrConf.set(entry.getKey(), entry.getValue());
-                }
                 System.out.println("Processing " + inputPath + " and " + joinPath);
                 job = Job.getInstance(mrConf);
                 job.setJobName("Louvain Table Synthesizer " + iteration);
@@ -86,7 +88,6 @@ public class LouvainTableSynthesizer extends Configured implements Tool {
                 job.setOutputValueClass(NullWritable.class);
 
                 //Add both input folders
-                FileSystem fs = FileSystem.get(job.getConfiguration());
                 Path in = new Path(inputPath);
                 Path joinIn = new Path(joinPath);
                 Path out = new Path(outputPath);
