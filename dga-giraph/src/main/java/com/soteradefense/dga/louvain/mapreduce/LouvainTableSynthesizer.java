@@ -51,7 +51,7 @@ public class LouvainTableSynthesizer extends Configured implements Tool {
 
 
     @Override
-    public int run(String[] args) throws Exception {
+	public int run(String[] args) throws Exception {
         Job job = null;
         try {
             int iteration = 0;
