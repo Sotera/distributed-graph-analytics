@@ -52,6 +52,12 @@ public class DGARunner {
     }
 
     public void run(String[] args) throws Exception {
+	    System.out.println("command line args: ");
+	    for (String arg: args)
+            System.out.print(arg + " ");
+
+        System.out.println();
+
         Options options = DGACommandLineUtil.generateOptions();
         if (args.length < 4)
             DGACommandLineUtil.printUsageAndExit(options);

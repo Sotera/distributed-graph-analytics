@@ -1,3 +1,4 @@
+.gitignore
 *.class
 .DS_Store
 # Package Files #
@@ -13,3 +14,6 @@ gradle/
 .gradle/
 example.log*
 _site/
+.classpath
+.project
+main1.eml

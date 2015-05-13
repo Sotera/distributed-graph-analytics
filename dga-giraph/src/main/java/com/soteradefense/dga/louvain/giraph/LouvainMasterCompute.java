@@ -72,11 +72,12 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
         int currentMinorstep = (int) (currentSuperstep % 3);
         int currentIteration = (int) (currentSuperstep / 3);
 
+        logger.info("currentSuperstep: " + currentSuperstep + " currentMinorstep: " + currentMinorstep + " currentIteration: " + currentIteration); 
+
         if (currentSuperstep == 0) {
             previousQ = this.getPreviousQvalue();
             logger.info("Previous Q value: {}", previousQ);
         }
-
 
         if (currentSuperstep == 1) {
             long m = ((LongWritable) getAggregatedValue(LouvainComputation.TOTAL_EDGE_WEIGHT_AGG)).get();
@@ -94,7 +95,6 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
             double actualQ = getActualQ();
             logger.info("superstep: {} ACTUAL Q: {}", currentSuperstep, actualQ);
             this.haltComputation();
-
 
             writeQvalue(Double.toString(actualQ));
             int clippedQ = (int) (actualQ * 10000);

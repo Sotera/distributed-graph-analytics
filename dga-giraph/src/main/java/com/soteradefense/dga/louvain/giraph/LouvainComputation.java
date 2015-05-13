@@ -88,6 +88,8 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
         int currentMinorstep = (int) (currentSuperstep % 3); // the step in this iteration
         int currentIteration = (int) (currentSuperstep / 3); // the current iteration, two iterations make a full pass.
 
+        //logger.info("currentSuperstep: " + currentSuperstep + " currentMinorstep: " + currentMinorstep + "currentIteration: " + currentIteration);
+        
         LouvainNodeState vertexValue = vertex.getValue();
 
         // count the total edge weight of the graph on the first super step only

@@ -104,6 +104,12 @@ public class LouvainRunner {
                 logger.debug("Running Giraph step {} with configuration: {}", iteration, confForStep);
                 dgaArguments = confForStep.convertToCommandLineArguments(LouvainComputation.class.getCanonicalName());
             }
+
+            System.out.println("dgaArguments: ");
+            for (String arg: dgaArguments)
+                System.out.print(arg + " ");
+            System.out.println();
+
             status = ToolRunner.run(new GiraphRunner(), dgaArguments);
             if (status != 0)
                 return status;

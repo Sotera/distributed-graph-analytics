@@ -5,9 +5,9 @@ The dga-giraph project is a giraph implementation of the DGA library.
 ###### Pre-requisites
 - Git
 - Java 7
-- CDH 5.0.0 (MRv1)
-- Gradle 1.12 (or use the gradlew wrapper included with this project)
-- Giraph 1.1.0-SNAPSHOT built for CDH 5.0.0 [(instructions)](https://github.com/Sotera/distributed-graph-analytics/wiki/Building-Giraph-1.1.0-For-CDH-5.0.0)
+- CDH 5.4.0 (MRv1)
+- Gradle 2.2.1 (or use the gradlew wrapper included with this project)
+- Giraph 1.1.0-SNAPSHOT built for CDH 5.4.0 [(instructions)](https://github.com/Sotera/distributed-graph-analytics/wiki/Building-Giraph-1.1.0-For-CDH-5.0.0)
 
 ###### Build Instructions
 Assuming you have built giraph and installed it into your local maven repository (mvn clean install [other options])
