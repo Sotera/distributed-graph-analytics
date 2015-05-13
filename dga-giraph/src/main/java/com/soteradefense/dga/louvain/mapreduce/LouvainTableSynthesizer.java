@@ -49,7 +49,6 @@ public class LouvainTableSynthesizer extends Configured implements Tool {
         this.dgaConfiguration = dgaConfiguration;
     }
 
-
     @Override
 	public int run(String[] args) throws Exception {
         Job job = null;
@@ -62,9 +61,11 @@ public class LouvainTableSynthesizer extends Configured implements Tool {
             String outputPath = basePath + TABLE_BASE_NAME + FILE_NAME_SEPARATOR + iteration;
             Configuration mrConf = this.getConf();
             job = Job.getInstance(mrConf);
+
             for(Map.Entry<String,String> entry : dgaConfiguration.getSystemProperties().entrySet()){
                 mrConf.set(entry.getKey(), entry.getValue());
             }
+
             FileSystem fs = FileSystem.get(job.getConfiguration());
             boolean nextFileExists = fs.exists(new Path(joinPath));
             while (nextFileExists) {
