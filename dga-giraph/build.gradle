@@ -27,7 +27,7 @@ dependencies {
         exclude module: 'zookeeper'
     }
     hadoopProvided group: 'org.apache.hadoop', name: 'hadoop-client', version: cdh_version
-    testCompile 'org.apache.giraph:giraph-core:1.2.0-SNAPSHOT'
+    testCompile 'org.apache.giraph:giraph-core:1.2.0'
     testCompile "org.mockito:mockito-core:1.9.5"
     testCompile 'junit:junit:4.11'
     testCompile 'commons-httpclient:commons-httpclient:3.0.1'
@@ -50,7 +50,6 @@ task distConf(dependsOn: 'assemble', type: Copy) {
 
 task dist(dependsOn: 'distJars', type: Copy) {
     from "src/main/resources/"
-    include "dga-mr1-giraph"
-    include "dga-yarn-giraph"
+    include "dga-*-giraph"
     into "${buildDir}/dist/bin"
 }

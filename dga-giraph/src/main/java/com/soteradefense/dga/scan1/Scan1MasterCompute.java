@@ -41,7 +41,7 @@ import java.util.Arrays;
  *  The master compute class simple collects the aggreated max value and writes to an empty with
  *  the name _vertex_vertexId_value_maxNeighborhoodSize
  *  An empty file with data in the filename is used to avoid consuming an entire block in hdfs for a few bytes of storage.
- *  
+ *
  */
 public class Scan1MasterCompute extends DefaultMasterCompute {
 
