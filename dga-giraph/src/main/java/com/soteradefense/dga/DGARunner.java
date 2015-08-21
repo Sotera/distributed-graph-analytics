@@ -26,9 +26,12 @@ import com.soteradefense.dga.io.formats.*;
 import com.soteradefense.dga.lc.LeafCompressionComputation;
 import com.soteradefense.dga.pr.PageRankComputation;
 import com.soteradefense.dga.pr.PageRankMasterCompute;
+import com.soteradefense.dga.scan1.Scan1Computation;
+import com.soteradefense.dga.scan1.Scan1MasterCompute;
 import com.soteradefense.dga.wcc.WeaklyConnectedComponentComputation;
 import org.apache.commons.cli.Options;
 import org.apache.giraph.GiraphRunner;
+import org.apache.giraph.io.formats.IntNullReverseTextEdgeInputFormat;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +52,7 @@ public class DGARunner {
         supportedAnalytics.add("hbse");
         supportedAnalytics.add("lc");
         supportedAnalytics.add("pr");
+        supportedAnalytics.add("scan1");
     }
 
     public void run(String[] args) throws Exception {
@@ -162,6 +166,26 @@ public class DGARunner {
 
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(PageRankComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
+            } else if (analytic.equals("scan1")){
+                logger.info("Analytic: Scan1");
+                DGAConfiguration requiredConf = new DGAConfiguration();
+                requiredConf.setDGAGiraphProperty("-eif", UndirectedIntCsvEdgeInputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-vof", IntVertexOutputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-eip", inputPath);
+                requiredConf.setDGAGiraphProperty("-op", outputPath);
+                requiredConf.setDGAGiraphProperty("-vsd", outputPath);
+                requiredConf.setDGAGiraphProperty("-mc", Scan1MasterCompute.class.getCanonicalName());
+                requiredConf.setCustomProperty("io.edge.reverse.duplicator","true");
+                DGAConfiguration minimalDefaults = new DGAConfiguration();
+                minimalDefaults.setCustomProperty(DGAEdgeTTTOutputFormat.WRITE_VERTEX_VALUE, "true");
+                DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
+
+                finalConf.setLibDir(libDir);
+
+                String[] giraphArgs = finalConf.convertToCommandLineArguments(Scan1Computation.class.getCanonicalName());
+                System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
+
+
             }
 
         } catch (Exception e) {
