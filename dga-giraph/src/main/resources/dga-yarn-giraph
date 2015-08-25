@@ -5,6 +5,8 @@ CWD=$(pwd)
 LIB_DIR=$CWD/lib/
 
 ZK_LIST=locahost:2181
+WORKER_MEMORY=1024
+WORKER_CORES=1
 
 export HADOOP_USER_CLASSPATH_FIRST=true
 export HADOOP_CLASSPATH=lib/*:conf/
@@ -14,4 +16,5 @@ do
     export JARS="$JARS,$i"
 done
 
-hadoop jar lib/dga-giraph-0.0.1.jar com.soteradefense.dga.DGAYarnRunner $LIB_DIR "${@:1}" -yj "$JARS" -Dmapred.job.tracker=yarnRM -Dgiraph.zkList="$ZK_LIST"
+hadoop jar lib/dga-giraph-0.0.1.jar com.soteradefense.dga.DGAYarnRunner $LIB_DIR "${@:1}" -yj "$JARS" -Dmapred.job.tracker=yarnRM -Dgiraph.zkList="$ZK_LIST" -Dmapreduce.map.memory.mb=$WORKER_MEMORY -Dmapreduce.map.cpu.vcores=$WORKER_CORES
+

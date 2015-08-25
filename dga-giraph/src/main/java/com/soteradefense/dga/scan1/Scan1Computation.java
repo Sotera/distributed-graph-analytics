@@ -109,8 +109,8 @@ public class Scan1Computation extends BasicComputation<IntWritable, IntWritable,
         for (Edge<IntWritable, NullWritable> edge : vertex.getEdges()) {
             neighbors[i++] = edge.getTargetVertexId().get();
         }
-        logger.debug("First Superstep for {}: Sending {} to all my edges.", vertex.getId(), neighbors);
         sendMessageToAllEdges(vertex,new ArrayPrimitiveWritable(neighbors));
+
     }
 
 
