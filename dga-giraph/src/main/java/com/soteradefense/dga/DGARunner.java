@@ -28,6 +28,8 @@ import com.soteradefense.dga.pr.NormalizedPageRankComputation;
 import com.soteradefense.dga.pr.PageRankComputation;
 import com.soteradefense.dga.pr.PageRankMasterCompute;
 import com.soteradefense.dga.scan1.Scan1Computation;
+import com.soteradefense.dga.triangles.TriangleCountComputation;
+import com.soteradefense.dga.triangles.TriangleCountMasterCompute;
 import com.soteradefense.dga.wcc.WeaklyConnectedComponentComputation;
 import org.apache.commons.cli.Options;
 import org.apache.giraph.GiraphRunner;
@@ -53,6 +55,7 @@ public class DGARunner {
         supportedAnalytics.add("pr");
         supportedAnalytics.add("pr-norm");
         supportedAnalytics.add("scan1");
+        supportedAnalytics.add("tricount");
     }
 
     public void run(String[] args) throws Exception {
@@ -166,7 +169,7 @@ public class DGARunner {
 
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(PageRankComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
-            }  else if (analytic.equals("pr-norm")) {
+            } else if (analytic.equals("pr-norm")) {
 
                 logger.info("Analytic: PageRank-Normalized");
                 DGAConfiguration requiredConf = new DGAConfiguration();
@@ -176,7 +179,6 @@ public class DGARunner {
                 requiredConf.setDGAGiraphProperty("-mc", PageRankMasterCompute.class.getCanonicalName());
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
                 requiredConf.setDGAGiraphProperty("-vsd", outputPath);
-                requiredConf.setCustomProperty("io.edge.reverse.duplicator", "true");
                 requiredConf.setCustomProperty(DGAEdgeTDTOutputFormat.WRITE_VERTEX_VALUE, "true");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(fileConf, commandLineConf, requiredConf);
 
@@ -185,7 +187,7 @@ public class DGARunner {
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(NormalizedPageRankComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
 
-            }else if (analytic.equals("scan1")){
+            } else if (analytic.equals("scan1")) {
                 logger.info("Analytic: Scan1");
                 DGAConfiguration requiredConf = new DGAConfiguration();
                 requiredConf.setDGAGiraphProperty("-eif", UndirectedIntCsvEdgeInputFormat.class.getCanonicalName());
@@ -203,8 +205,28 @@ public class DGARunner {
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(Scan1Computation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
 
+            } else if (analytic.equals("tricount")) {
+                logger.info("Analytic: Triangle Counting");
+                DGAConfiguration requiredConf = new DGAConfiguration();
+                requiredConf.setDGAGiraphProperty("-eif", UndirectedIntCsvEdgeInputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-vof", IntVertexOutputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-mc", TriangleCountMasterCompute.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-eip", inputPath);
+                requiredConf.setDGAGiraphProperty("-op", outputPath);
+                requiredConf.setDGAGiraphProperty("-vsd", outputPath);
+                DGAConfiguration minimalDefaults = new DGAConfiguration();
+                minimalDefaults.setCustomProperty(DGAEdgeTTTOutputFormat.WRITE_VERTEX_VALUE, "true");
+                DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
 
-            }
+                finalConf.setLibDir(libDir);
+
+                String[] giraphArgs = finalConf.convertToCommandLineArguments(TriangleCountComputation.class.getCanonicalName());
+                System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
+        }
+
+
+
+
 
         } catch (Exception e) {
             logger.error("Unable to run analytic; ", e);
