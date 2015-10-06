@@ -19,6 +19,9 @@
 package com.soteradefense.dga;
 
 
+import com.soteradefense.dga.BfsTree.BfsTreeComputation;
+import com.soteradefense.dga.BfsTree.BfsTreeMasterCompute;
+import com.soteradefense.dga.combiners.IntIntMaxMessageCombiner;
 import com.soteradefense.dga.hbse.HBSEComputation;
 import com.soteradefense.dga.hbse.HBSEConfigurationConstants;
 import com.soteradefense.dga.hbse.HBSEMasterCompute;
@@ -28,6 +31,7 @@ import com.soteradefense.dga.pr.NormalizedPageRankComputation;
 import com.soteradefense.dga.pr.PageRankComputation;
 import com.soteradefense.dga.pr.PageRankMasterCompute;
 import com.soteradefense.dga.scan1.Scan1Computation;
+import com.soteradefense.dga.triangles.TriangleCountCombiner;
 import com.soteradefense.dga.triangles.TriangleCountComputation;
 import com.soteradefense.dga.triangles.TriangleCountMasterCompute;
 import com.soteradefense.dga.wcc.WeaklyConnectedComponentComputation;
@@ -56,6 +60,7 @@ public class DGARunner {
         supportedAnalytics.add("pr-norm");
         supportedAnalytics.add("scan1");
         supportedAnalytics.add("tricount");
+        supportedAnalytics.add("bfstree");
     }
 
     public void run(String[] args) throws Exception {
@@ -214,6 +219,7 @@ public class DGARunner {
                 requiredConf.setDGAGiraphProperty("-eip", inputPath);
                 requiredConf.setDGAGiraphProperty("-op", outputPath);
                 requiredConf.setDGAGiraphProperty("-vsd", outputPath);
+                //requiredConf.setCustomProperty("giraph.messageCombinerClass", TriangleCountCombiner.class.getCanonicalName());
                 DGAConfiguration minimalDefaults = new DGAConfiguration();
                 minimalDefaults.setCustomProperty(DGAEdgeTTTOutputFormat.WRITE_VERTEX_VALUE, "true");
                 DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
@@ -222,7 +228,26 @@ public class DGARunner {
 
                 String[] giraphArgs = finalConf.convertToCommandLineArguments(TriangleCountComputation.class.getCanonicalName());
                 System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
-        }
+
+            } else if (analytic.equals("bfstree")) {
+                logger.info("Analytic: BFS Tree");
+                DGAConfiguration requiredConf = new DGAConfiguration();
+                requiredConf.setDGAGiraphProperty("-eif", DirectedIntCsvEdgeInputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-vof", IntVertexOutputFormat.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-mc", BfsTreeMasterCompute.class.getCanonicalName());
+                requiredConf.setDGAGiraphProperty("-eip", inputPath);
+                requiredConf.setDGAGiraphProperty("-op", outputPath);
+                requiredConf.setDGAGiraphProperty("-vsd", outputPath);
+                requiredConf.setCustomProperty("giraph.messageCombinerClass", IntIntMaxMessageCombiner.class.getCanonicalName());
+                DGAConfiguration minimalDefaults = new DGAConfiguration();
+                minimalDefaults.setCustomProperty(DGAEdgeTTTOutputFormat.WRITE_VERTEX_VALUE, "true");
+                DGAConfiguration finalConf = DGAConfiguration.coalesce(minimalDefaults, fileConf, commandLineConf, requiredConf);
+
+                finalConf.setLibDir(libDir);
+
+                String[] giraphArgs = finalConf.convertToCommandLineArguments(BfsTreeComputation.class.getCanonicalName());
+                System.exit(ToolRunner.run(new GiraphRunner(), giraphArgs));
+            }
 
 
 

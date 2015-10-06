@@ -15,6 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.ArrayList;
+
+
 
 /**
  * Created by ekimbrel on 9/22/15.
@@ -42,9 +45,6 @@ import java.util.HashSet;
 /**
  * Counts the number of triangles (or loops of length 3) in the Graph.  Assumes an undirected Graph.
  *
- * This Algorithim will work for directed graph triangle counting, except that the number of triangles is diveded by two for each node
- * in the final super step of this computation.   This is because for undireted graphs each triangle is counted twice.
- *
  *
  * <I,V,E,M>
  * I - Vertex id
@@ -53,7 +53,7 @@ import java.util.HashSet;
  * M - Message type
  *
  */
-public class TriangleCountComputation extends BasicComputation<IntWritable, IntWritable, NullWritable, IntWritable> {
+public class TriangleCountComputationWithCombiner extends BasicComputation<IntWritable, IntWritable, NullWritable, ArrayPrimitiveWritable> {
 
     private static final Logger logger = LoggerFactory.getLogger(TriangleCountComputation.class);
 
@@ -65,7 +65,7 @@ public class TriangleCountComputation extends BasicComputation<IntWritable, IntW
     }
 
     @Override
-    public void compute(Vertex<IntWritable, IntWritable, NullWritable> vertex, Iterable<IntWritable> messages) throws IOException {
+    public void compute(Vertex<IntWritable, IntWritable, NullWritable> vertex, Iterable<ArrayPrimitiveWritable> messages) throws IOException {
 
 
         long step = getSuperstep();
@@ -82,24 +82,30 @@ public class TriangleCountComputation extends BasicComputation<IntWritable, IntW
 
         // step 0, send vertex.id to all neighbors
         if (step == 0L) {
+            ArrayPrimitiveWritable outMessage = new ArrayPrimitiveWritable( new int[] {thisVertexId.get()});
             for (int target: neighbors){
-                sendMessage(new IntWritable(target),thisVertexId);
+                sendMessage(new IntWritable(target),outMessage);
             }
         }
 
 
+
         // step 1, for each message "sourceId" forward the message to all neighbors except the source
         else if (step == 1L) {
-            for (IntWritable source : messages) {
-                // create a new outMessage instead of reusing the input message because giraph does some funny business with object reuse of the input messages
-                IntWritable outMessage = new IntWritable(source.get());
-                for (int target: neighbors){
-                    IntWritable destination = new IntWritable(target);
-                    if ( source.get() != target ) {  // ignore edges to the source
-                        sendMessage(destination, outMessage);
-                    }
-                }
+            ArrayList<Integer> sources = new ArrayList<Integer>();
+            for (ArrayPrimitiveWritable message : messages) {
+                int[] messageArray = ((int[]) message.get());
+                for (int source: messageArray) sources.add(source);
             }
+            int[] primitiveArray = new int[sources.size()];
+            int i = 0;
+            for (int source: sources) primitiveArray[i++] = source;
+            ArrayPrimitiveWritable outMessage = new ArrayPrimitiveWritable(primitiveArray);
+            for (int target: neighbors) {
+                IntWritable destination = new IntWritable(target);
+                sendMessage(destination, outMessage);
+            }
+
         }
 
 
@@ -107,10 +113,21 @@ public class TriangleCountComputation extends BasicComputation<IntWritable, IntW
         // if this vertex as an edge to the source
         else if (step == 2L) {
 
-            for (IntWritable message : messages) {
-                int source = message.get();
+            // collect all sources recieved in a single array
+            int thisId = thisVertexId.get();
+            ArrayList<Integer> sources = new ArrayList<Integer>();
+            for (ArrayPrimitiveWritable message : messages) {
+                int[] messageArray = ((int[]) message.get());
+                for (int sourceId: messageArray){
+                    if (sourceId != thisId) {
+                        sources.add(sourceId);
+                    }
+                }
+            }
+
+            for (int source: sources) {
                 if (neighbors.contains(source)){
-                    sendMessage(new IntWritable(source),new IntWritable(source));
+                    sendMessage(new IntWritable(source),new ArrayPrimitiveWritable(new int[]{source}));
                 }
             }
         }
@@ -118,9 +135,12 @@ public class TriangleCountComputation extends BasicComputation<IntWritable, IntW
 
         // step 3, count messages and aggregate total triangle count
         else if (step == 3L) {
+
             int numTriangles = 0;
-            for (IntWritable source : messages) {
-                numTriangles++;
+
+            for (ArrayPrimitiveWritable message : messages) {
+                int[] messageArray = ((int[]) message.get());
+                numTriangles += messageArray.length;
             }
 
             // because messages go in both directions we'll have counted each triangle twice at each node
