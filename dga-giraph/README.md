@@ -14,7 +14,7 @@ Assuming you have built giraph and installed it into your local maven repository
 ```bash
 git clone https://github.com/Sotera/distributed-graph-analytics.git
 cd distributed-graph-analytics
-gradle clean distDGA
+gradle clean dist
 cp -r dga-giraph/build/dist /path/of/your/choosing
 ```
 
