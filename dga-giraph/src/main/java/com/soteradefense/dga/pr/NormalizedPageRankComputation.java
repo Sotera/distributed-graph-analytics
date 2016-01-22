@@ -18,6 +18,7 @@
 
 package com.soteradefense.dga.pr;
 
+import com.kenai.jffi.Array;
 import com.soteradefense.dga.DGALoggingUtil;
 import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.graph.BasicComputation;
@@ -26,58 +27,63 @@ import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.worker.WorkerContext;
 import org.apache.giraph.worker.WorkerGlobalCommUsage;
+import org.apache.hadoop.io.ArrayPrimitiveWritable;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import java.util.Arrays;
 import java.io.IOException;
 
-public class PageRankComputation extends BasicComputation<Text, DoubleWritable, Text, DoubleWritable> {
+
+/**
+ * Normalized Pagerank implementaiton to match as closely as possible the built in graphX algorithm
+ */
+public class NormalizedPageRankComputation extends BasicComputation<Text, PageRankData, Text, DoubleWritable> {
 
     private static final Logger logger = LoggerFactory.getLogger(PageRankComputation.class);
 
     public static final String MAX_EPSILON = "com.soteradefense.dga.max.epsilon";
     public static final String DAMPING_FACTOR = "damping.factor";
-    public static final float DAMPING_FACTOR_DEFAULT_VALUE = 0.85f;
+    public static final double DAMPING_FACTOR_DEFAULT_VALUE = 0.85;
 
     @Override
-    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, DoubleWritable, Text> workerClientRequestProcessor, GraphTaskManager<Text, DoubleWritable, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, PageRankData, Text> workerClientRequestProcessor, GraphTaskManager<Text, PageRankData, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
         super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage, workerContext);
         DGALoggingUtil.setDGALogLevel(this.getConf());
     }
 
     @Override
-    public void compute(Vertex<Text, DoubleWritable, Text> vertex, Iterable<DoubleWritable> messages) throws IOException {
+    public void compute(Vertex<Text, PageRankData, Text> vertex, Iterable<DoubleWritable> messages) throws IOException {
 
-        float dampingFactor = this.getConf().getFloat(DAMPING_FACTOR, DAMPING_FACTOR_DEFAULT_VALUE);
+        double dampingFactor = this.getConf().getDouble(DAMPING_FACTOR, DAMPING_FACTOR_DEFAULT_VALUE);
 
         long step = getSuperstep();
 
         if (step == 0) {
-            //set initial value
-            logger.debug("Superstep is 0: Setting the default value.");
-            vertex.setValue(new DoubleWritable(1.0 / getTotalNumVertices()));
-        } else { // go until no one votes to continue
+            // initialize the starting page rank and pagerank delta values
+            vertex.setValue(new PageRankData(1.0,1.0));
+        } else {
 
-            double rank = 0;
-            for (DoubleWritable partial : messages) {
-                rank += partial.get();
-            }
-            rank = ((1 - dampingFactor) / getTotalNumVertices()) + (dampingFactor * rank);
+            PageRankData state = vertex.getValue();
+            //if (state.delta > PageRankMasterCompute.EPSILON){
+                double rank = 0;
+                for (DoubleWritable partial : messages) {
+                    rank += partial.get();
+                }
+                rank = ((1 - dampingFactor) ) + (dampingFactor * rank);
+                double delta = Math.abs(rank - state.rank);
+                aggregate(MAX_EPSILON, new DoubleWritable(delta));
+                vertex.setValue(new PageRankData(rank,delta));
+            //}
 
-            double vertexValue = vertex.getValue().get();
-            double delta = Math.abs(rank - vertexValue) / vertexValue;
-            aggregate(MAX_EPSILON, new DoubleWritable(delta));
-            vertex.setValue(new DoubleWritable(rank));
-            logger.debug("{} is calculated {} for a PageRank.", vertex.getId(), rank);
         }
         distributeRank(vertex);
     }
 
 
-    private void distributeRank(Vertex<Text, DoubleWritable, Text> vertex) {
-        double rank = vertex.getValue().get() / vertex.getNumEdges();
+    private void distributeRank(Vertex<Text, PageRankData, Text> vertex) {
+        double rank = vertex.getValue().rank / vertex.getNumEdges();
         sendMessageToAllEdges(vertex, new DoubleWritable(rank));
     }
 

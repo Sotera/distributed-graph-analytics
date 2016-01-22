@@ -43,7 +43,9 @@ public class DGACommandLineUtil {
                 "\t\thbse - High Betweenness Set Extraction\n" +
                 "\t\twcc - Weakly Connected Components\n" +
                 "\t\tlc - Leaf Compression\n" +
-                "\t\tpr - Page Rank\n";
+                "\t\tpr - Page Rank\n" +
+                "\t\ttricount - Triangle Counting\n" +
+                "\t\tbfstree - BFS Tree\n";
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp(commandLine, options);
         System.exit(exitCode);
