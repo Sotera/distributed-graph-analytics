@@ -59,7 +59,7 @@ public class LouvainRunner {
         minimalDefaultConfiguration = new DGAConfiguration();
         minimalDefaultConfiguration.setSystemProperty("giraph.useSuperstepCounters", "false");
         minimalDefaultConfiguration.setCustomProperty("actual.Q.aggregators", "1");
-        minimalDefaultConfiguration.setCustomProperty("minimum.progress", "2000");
+        minimalDefaultConfiguration.setCustomProperty("minimum.progress", "0");
         minimalDefaultConfiguration.setCustomProperty("progress.tries", "1");
         configuration = new Configuration();
     }
