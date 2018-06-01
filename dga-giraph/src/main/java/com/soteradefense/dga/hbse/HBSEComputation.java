@@ -18,14 +18,13 @@
 package com.soteradefense.dga.hbse;
 
 import com.soteradefense.dga.DGALoggingUtil;
+
+import org.apache.giraph.bsp.CentralizedServiceWorker;
 import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.AbstractComputation;
 import org.apache.giraph.graph.GraphState;
-import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
-import org.apache.giraph.worker.WorkerAggregatorUsage;
-import org.apache.giraph.worker.WorkerContext;
 import org.apache.giraph.worker.WorkerGlobalCommUsage;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -55,8 +54,8 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
     private static final Logger logger = LoggerFactory.getLogger(HBSEComputation.class);
 
     @Override
-    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, VertexData, Text> workerClientRequestProcessor, GraphTaskManager<Text, VertexData, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
-        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage, workerContext);
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, VertexData, Text> workerClientRequestProcessor, CentralizedServiceWorker<Text, VertexData, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage);
         DGALoggingUtil.setDGALogLevel(this.getConf());
     }
 

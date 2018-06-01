@@ -19,12 +19,12 @@
 package com.soteradefense.dga.pr;
 
 import com.soteradefense.dga.DGALoggingUtil;
+
+import org.apache.giraph.bsp.CentralizedServiceWorker;
 import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.GraphState;
-import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
-import org.apache.giraph.worker.WorkerContext;
 import org.apache.giraph.worker.WorkerGlobalCommUsage;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
@@ -42,8 +42,8 @@ public class PageRankComputation extends BasicComputation<Text, DoubleWritable, 
     public static final float DAMPING_FACTOR_DEFAULT_VALUE = 0.85f;
 
     @Override
-    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, DoubleWritable, Text> workerClientRequestProcessor, GraphTaskManager<Text, DoubleWritable, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
-        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage, workerContext);
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, DoubleWritable, Text> workerClientRequestProcessor, CentralizedServiceWorker<Text, DoubleWritable, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage);
         DGALoggingUtil.setDGALogLevel(this.getConf());
     }
 

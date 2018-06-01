@@ -18,14 +18,14 @@
 package com.soteradefense.dga.louvain.giraph;
 
 import com.soteradefense.dga.DGALoggingUtil;
+
+import org.apache.giraph.bsp.CentralizedServiceWorker;
 import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.edge.EdgeFactory;
 import org.apache.giraph.graph.AbstractComputation;
 import org.apache.giraph.graph.GraphState;
-import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
-import org.apache.giraph.worker.WorkerContext;
 import org.apache.giraph.worker.WorkerGlobalCommUsage;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -76,8 +76,8 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
     }
 
     @Override
-    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, LouvainNodeState, LongWritable> workerClientRequestProcessor, GraphTaskManager<Text, LouvainNodeState, LongWritable> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
-        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage, workerContext);
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, LouvainNodeState, LongWritable> workerClientRequestProcessor, CentralizedServiceWorker<Text, LouvainNodeState, LongWritable> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage);
         DGALoggingUtil.setDGALogLevel(this.getConf());
     }
 
