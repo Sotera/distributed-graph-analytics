@@ -22,7 +22,7 @@ configurations {
 
 dependencies {
     compile project(':dga-core')
-    compile('org.apache.giraph:giraph-core:1.1.0-hadoop2') {
+    compile('org.apache.giraph:giraph-core:1.2.0-hadoop2') {
         exclude module: 'guava'
         exclude module: 'zookeeper'
     }
