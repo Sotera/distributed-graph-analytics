@@ -10,6 +10,10 @@
             <name>giraph.useSuperstepCounters</name>
             <value>false</value>
         </property>
+        <property>
+            <name>giraph.SplitMasterWorker</name>
+            <value>false</value>
+        </property>
     </system>
     <custom>
         <property>
