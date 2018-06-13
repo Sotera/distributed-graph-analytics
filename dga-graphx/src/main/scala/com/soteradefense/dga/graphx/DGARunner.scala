@@ -23,7 +23,6 @@ import com.soteradefense.dga.graphx.config.Config
 import com.soteradefense.dga.graphx.harness.Harness
 import com.soteradefense.dga.graphx.hbse.HDFSHBSERunner
 import com.soteradefense.dga.graphx.io.formats.EdgeInputFormat
-import com.soteradefense.dga.graphx.kryo.DGAKryoRegistrator
 import com.soteradefense.dga.graphx.lc.HDFSLCRunner
 import com.soteradefense.dga.graphx.louvain.HDFSLouvainRunner
 import com.soteradefense.dga.graphx.neighboringcommunity.HDFSNeighboringCommunityRunner
@@ -32,9 +31,9 @@ import com.soteradefense.dga.graphx.pr.HDFSPRRunner
 import com.soteradefense.dga.graphx.wcc.HDFSWCCRunner
 import com.typesafe.config.ConfigFactory
 import org.apache.spark.graphx.Graph
+import org.apache.spark.graphx.GraphXUtils
 import org.apache.spark.serializer.KryoSerializer
 import org.apache.spark.{SparkConf, SparkContext}
-
 
 /**
  * Object for kicking off analytics.
@@ -61,7 +60,6 @@ object DGARunner {
   val DefaultJarSplitDelimiter = ","
   val CommunitySplitConfiguration = "community.split"
   val CommunitySplitDefaultDelimiter = ":"
-
 
   /**
    * Main method for parsing arguments and running analytics.
@@ -90,9 +88,11 @@ object DGARunner {
       inputFormat = new EdgeInputFormat(inputPath, commandLineConfig.edgeDelimiter, parallelism)
     else
       inputFormat = new EdgeInputFormat(inputPath, commandLineConfig.edgeDelimiter)
-    val edgeRDD = inputFormat.getEdgeRDD(sparkContext)
-    val initialGraph = Graph.fromEdges(edgeRDD, None)
+//    val edgeRDD = inputFormat.getEdgeRDD(sparkContext)
+//    val initialGraph = Graph.fromEdges(edgeRDD, None)
+    val initialGraph = inputFormat.getGraphFromStringEdgeList(sparkContext)
     var runner: Harness = null
+
     analytic match {
       case WeaklyConnectedComponents | WeaklyConnectedComponentsGraphX =>
         runner = new HDFSWCCRunner(outputPath, commandLineConfig.edgeDelimiter)
@@ -139,10 +139,9 @@ object DGARunner {
     if (applicationConfig.hasPath("spark.home"))
       sparkConf.setSparkHome(applicationConfig.getString("spark.home"))
     sparkConf.setAll(commandLineConfig.customArguments)
-    if (commandLineConfig.useKryoSerializer) {
-      sparkConf.set("spark.serializer", classOf[KryoSerializer].getCanonicalName)
-      sparkConf.set("spark.kryo.registrator", classOf[DGAKryoRegistrator].getCanonicalName)
-    }
+    if (commandLineConfig.useKryoSerializer)
+      GraphXUtils.registerKryoClasses(sparkConf)
+
     sparkConf
   }
 }
