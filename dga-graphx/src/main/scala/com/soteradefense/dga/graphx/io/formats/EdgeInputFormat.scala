@@ -20,8 +20,9 @@ package com.soteradefense.dga.graphx.io.formats
 import com.esotericsoftware.kryo.KryoSerializable
 import com.twitter.chill._
 import org.apache.spark.SparkContext
-import org.apache.spark.graphx.Edge
+import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
+
 
 /**
  * Input format for reading an edge lists into an RDD of Edges
@@ -45,6 +46,43 @@ class EdgeInputFormat(var inputFile: String, var delimiter: String, var parallel
         case _ => throw new IllegalArgumentException("invalid input line: " + row)
       }
     })
+  }
+  
+  /**
+   * Reads in an edge list from the class variable inputFile containing edge list using String ids
+   * @param sc The spark context to use to read in the file.
+   * @param 
+   * @return Graph.
+   */  
+  def getGraphFromStringEdgeList(sc: SparkContext): Graph[String, Long] = {
+    val rdd = sc.textFile(inputFile, parallelism).map(row => {
+      val tokens = row.split(delimiter).map(_.trim())
+      tokens.length match {
+        case 2 => (tokens(0), tokens(1), 1L)
+        case 3 => (tokens(0), tokens(1), tokens(2).toLong)
+        case _ => throw new IllegalArgumentException("invalid input line: " + row)
+      }
+    }).cache()
+    
+    val distinctNodes = rdd.flatMap({case (src, dst, weight) => Seq((src, 0),(dst, 0)) })
+      .reduceByKey(_+_)
+      .map({case (name,count) => name})
+      .cache()
+    
+    // Invoke count to materialize the distinctNodes rdd
+    println("*** found " + distinctNodes.count() + " nodes")
+    
+    val nodesWithId = distinctNodes.zipWithUniqueId()
+    val nodeIdMap = nodesWithId.collectAsMap
+    val edges = rdd.map( x =>
+      Edge(nodeIdMap.get(x._1).get, nodeIdMap.get(x._2).get, x._3.asInstanceOf[Long])
+    ).cache()
+    val vertices = nodesWithId.map({case (name, id)=> (id, name)}).cache()
+    
+    rdd.unpersist(blocking = false)
+    distinctNodes.unpersist(blocking = false)
+    
+    Graph(vertices,edges).partitionBy(PartitionStrategy.EdgePartition2D)
   }
 
   override def write(kryo: Kryo, output: Output): Unit = {
