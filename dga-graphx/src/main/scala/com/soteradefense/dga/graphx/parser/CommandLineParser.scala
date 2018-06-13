@@ -34,7 +34,18 @@ object CommandLineParser {
       head("dga-graphx", "0.1")
       opt[String]('i', "inputPath") required() action { (x, c) => c.copy(inputPath = x)} text "Input path in HDFS"
       opt[String]('o', "outputPath") required() action { (x, c) => c.copy(outputPath = x)} text "Output path in HDFS"
-      opt[String]('d', "delimiter") action { (x, c: Config) => c.copy(edgeDelimiter = x)} text "Input Delimiter"
+      opt[String]('d', "delimiter") action { (x, c: Config) => 
+          // Check if the delimiter is a control character that starts with 0x with a hex value
+          val y = {
+            if (x.length() > 1 && x.charAt(0) == 92 && x.charAt(1) == 120)
+              // Convert the hex value to decimal and then get the corresponding ASCII character
+              Character.toString(Integer.parseInt(x.substring(2), 16).asInstanceOf[Char])
+            else
+              x
+          }
+          println("****delimiter: " + y)
+          c.copy(edgeDelimiter = y)
+        } text "Input Delimiter"
       opt[String]('m', "master") action { (x, c) => c.copy(sparkMasterUrl = x)} text "Spark Master, local[N] or spark://host:port default=local"
       opt[String]('s', "sparkHome") action { (x, c) => c.copy(sparkHome = x)} text "SPARK_HOME Required to run on a cluster"
       opt[String]('n', "jobName") action { (x, c) => c.copy(sparkAppName = x)} text "Job Name"
