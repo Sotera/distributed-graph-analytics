@@ -1,19 +1,23 @@
 #! /bin/bash
 
-for i in `ls -d /opt/spark/lib_managed/jars/*`;
+for i in `ls -d ./lib/*`;
 do
     export JARS="$JARS,$i"
 done
 
+echo "JARS: ${JARS}"
+
 T="$(date +%s)"
-spark-submit \
---executor-cores 18 \
---num-executors 21 \
---executor-memory 62G \
---driver-memory 20G \
+spark2-submit \
+--master yarn \
+--deploy-mode cluster \
+--name GraphX \
 --class com.soteradefense.dga.graphx.DGARunner \
---master yarn-cluster \
---jars "lib/spark-graphx_2.10-1.1.0.jar,lib/dga-core-0.0.1.jar,lib/config-1.2.1.jar,lib/scopt_2.10-3.2.0.jar" \
+--executor-cores 1 \
+--num-executors 21 \
+--executor-memory 32G \
+--driver-memory 20G \
+--jars ${JARS} \
 --files "conf/application.conf,conf/log4j.properties" \
 lib/dga-graphx-0.1.jar "$@"
 
