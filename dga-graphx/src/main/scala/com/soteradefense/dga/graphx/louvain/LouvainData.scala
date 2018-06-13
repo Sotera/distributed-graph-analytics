@@ -24,16 +24,18 @@ import com.esotericsoftware.kryo.{Kryo, KryoSerializable}
  * Louvain vertex state
  * Contains all information needed for louvain community detection
  */
-class LouvainData(var community: Long, var communitySigmaTot: Long, var internalWeight: Long, var nodeWeight: Long, var changed: Boolean) extends Serializable with KryoSerializable {
+class LouvainData(var name: String, var community: Long, var communityName: String, var communitySigmaTot: Long, var internalWeight: Long, var nodeWeight: Long, var changed: Boolean) extends Serializable with KryoSerializable {
 
-  def this() = this(-1L, 0L, 0L, 0L, false)
+  def this() = this(null, -1L, null, 0L, 0L, 0L, false)
 
 
-  override def toString: String = s"{community:$community,communitySigmaTot:$communitySigmaTot,internalWeight:$internalWeight,nodeWeight:$nodeWeight}"
+  override def toString: String = s"{name:$name,community:$community,communityName:$communityName,communitySigmaTot:$communitySigmaTot,internalWeight:$internalWeight,nodeWeight:$nodeWeight}"
 
 
   override def write(kryo: Kryo, output: Output): Unit = {
+    kryo.writeObject(output, this.name)
     kryo.writeObject(output, this.community)
+    kryo.writeObject(output, this.communityName)
     kryo.writeObject(output, this.communitySigmaTot)
     kryo.writeObject(output, this.internalWeight)
     kryo.writeObject(output, this.nodeWeight)
@@ -41,7 +43,9 @@ class LouvainData(var community: Long, var communitySigmaTot: Long, var internal
   }
 
   override def read(kryo: Kryo, input: Input): Unit = {
+    this.name = kryo.readObject(input, classOf[String])
     this.community = kryo.readObject(input, classOf[Long])
+    this.communityName = kryo.readObject(input, classOf[String])
     this.communitySigmaTot = kryo.readObject(input, classOf[Long])
     this.internalWeight = kryo.readObject(input, classOf[Long])
     this.nodeWeight = kryo.readObject(input, classOf[Long])
