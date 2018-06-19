@@ -276,19 +276,21 @@ class LouvainCore extends Logging with Serializable {
     // WARNING  can not use graph.mapReduceTriplets because we are mapping to new vertexIds
     val internalEdgeWeights = graph.triplets.flatMap(et => {
       if (et.srcAttr.community == et.dstAttr.community) {
-        Iterator((et.srcAttr.community, 2 * et.attr)) // count the weight from both nodes  // count the weight from both nodes
+        Iterator(((et.srcAttr.community, et.srcAttr.communityName), 2 * et.attr)) // count the weight from both nodes
       }
       else Iterator.empty
     }).reduceByKey(_ + _)
 
     // aggregate the internal weights of all nodes in each community
-    val internalWeights = graph.vertices.values.map(vdata => (vdata.community, vdata.internalWeight)).reduceByKey(_ + _)
+    val internalWeights = graph.vertices.values.map(vdata => ((vdata.community, vdata.communityName), vdata.internalWeight)).reduceByKey(_ + _)
 
-    // join internal weights and self edges to find new interal weight of each community
-    val newVertices = internalWeights.leftOuterJoin(internalEdgeWeights).map({ case (vid, (weight1, weight2Option)) =>
+    // join internal weights and self edges to find new internal weight of each community
+    val newVertices = internalWeights.leftOuterJoin(internalEdgeWeights).map({ case ((vid, communityName), (weight1, weight2Option)) =>
       val weight2 = weight2Option.getOrElse(0L)
       val state = new LouvainData()
+      state.name = communityName
       state.community = vid
+      state.communityName = communityName
       state.changed = false
       state.communitySigmaTot = 0L
       state.internalWeight = weight1 + weight2
@@ -335,6 +337,7 @@ class LouvainCore extends Logging with Serializable {
 
     newVertices.unpersist(blocking = false)
     edges.unpersist(blocking = false)
+
     louvainGraph
   }
 
