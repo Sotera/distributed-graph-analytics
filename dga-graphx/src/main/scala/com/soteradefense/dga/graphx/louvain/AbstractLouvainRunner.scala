@@ -55,13 +55,13 @@ abstract class AbstractLouvainRunner(var minimumCompressionProgress: Int, var pr
       val (currentQModularityValue, currentGraph, numberOfPasses) = louvainCore.louvain(sc, louvainGraph, minimumCompressionProgress, progressCounter)
       louvainGraph.unpersistVertices(blocking = false)
       louvainGraph = currentGraph
-
-      saveLevel(sc, compressionLevel, currentQModularityValue, louvainGraph)
-
+      
       // If modularity was increased by at least 0.001 compress the graph and repeat
       // halt immediately if the community labeling took less than 3 passes
       //println(s"if ($passes > 2 && $currentQ > $q + 0.001 )")
-      if (numberOfPasses > 2 && currentQModularityValue > q_modularityValue + 0.001) {
+      //if (numberOfPasses > 2 && currentQModularityValue > q_modularityValue + 0.001) {
+      if (currentQModularityValue > q_modularityValue + 0.001) {
+        saveLevel(sc, compressionLevel, currentQModularityValue, louvainGraph)
         q_modularityValue = currentQModularityValue
         louvainGraph = louvainCore.compressGraph(louvainGraph)
       }
