@@ -90,6 +90,12 @@ public abstract class DGAAbstractEdgeInputFormat<E extends Writable> extends Tex
         public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
             super.initialize(inputSplit, context);
             delimiter = getContext().getConfiguration().get(LINE_TOKENIZE_VALUE, LINE_TOKENIZE_VALUE_DEFAULT);
+            
+            // Check if the delimiter is a control character that starts with 0x with a hex value
+            if (delimiter.length() > 1 && delimiter.charAt(0) == 92 && delimiter.charAt(1) == 120)
+                // Convert the hex value to decimal and then get the corresponding ASCII character
+                delimiter = Character.toString((char) Integer.parseInt(delimiter.substring(2), 16));
+
             defaultEdgeValue = getContext().getConfiguration().get(EDGE_VALUE, getDefaultEdgeValue());
             ignoreThirdColumn = Boolean.parseBoolean(getContext().getConfiguration().get(IO_IGNORE_THIRD, IGNORE_THIRD_DEFAULT));
             DGALoggingUtil.setDGALogLevel(getContext().getConfiguration());

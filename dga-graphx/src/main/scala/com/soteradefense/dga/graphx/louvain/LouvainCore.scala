@@ -24,15 +24,13 @@ import org.apache.spark.{Logging, SparkContext}
 
 import scala.reflect.ClassTag
 
-
 /**
  * Provides low level louvain community detection algorithm functions.  Generally used by LouvainHarness
- * to coordinate the correct execution of the algorithm though its several stages.
+ * to coordinate the correct execution of the algorithm through its several stages.
  *
  * For details on the sequential algorithm see:  Fast unfolding of communities in large networks, Blondel 2008
  */
 class LouvainCore extends Logging with Serializable {
-
 
   /**
    * Generates a new graph of type Graph[VertexState,Long] based on an input graph of type.
@@ -55,7 +53,8 @@ class LouvainCore extends Logging with Serializable {
 
     graph.outerJoinVertices(nodeWeights)((vid, data, weightOption) => {
       val weight = weightOption.getOrElse(0L)
-      new LouvainData(vid, weight, 0L, weight, false)
+      val name = data.asInstanceOf[String]
+      new LouvainData(name, vid, name, weight, 0L, weight, false)
     }).partitionBy(PartitionStrategy.EdgePartition2D).groupEdges(_ + _)
   }
 
@@ -67,7 +66,6 @@ class LouvainCore extends Logging with Serializable {
     val louvainGraph = createLouvainGraph(graph)
     louvain(sc, louvainGraph, minProgress, progressCounter)
   }
-
 
   /**
    * For a graph of type Graph[VertexState,Long] label each vertex with a community to maximize global modularity. 
@@ -83,7 +81,7 @@ class LouvainCore extends Logging with Serializable {
     println("totalEdgeWeight: " + totalGraphWeight.value)
 
     // gather community information from each vertex's local neighborhood
-    //var communityRDD = louvainGraph.mapReduceTriplets(sendCommunityData, mergeCommunityMessages)
+    // var communityRDD = louvainGraph.mapReduceTriplets(sendCommunityData, mergeCommunityMessages)
     var communityRDD = louvainGraph.aggregateMessages(sendCommunityData,mergeCommunityMessages)
 
     var activeMessages = communityRDD.count() //materializes the msgRDD and caches it in memory
@@ -100,6 +98,8 @@ class LouvainCore extends Logging with Serializable {
 
       // label each vertex with its best community based on neighboring community information
       val labeledVertices = louvainVertJoin(louvainGraph, communityRDD, totalGraphWeight, even).cache()
+      println("***labeledVertices:")
+      labeledVertices.collect().foreach(println)
 
       // calculate new sigma total value for each community (total weight of each community)
       val communityUpdate = labeledVertices
@@ -107,7 +107,6 @@ class LouvainCore extends Logging with Serializable {
         .reduceByKey(_ + _).cache()
 
       // map each vertex ID to its updated community information
-
       val communityMapping = labeledVertices
         .map({ case (vid, vdata) => (vdata.community, vid)})
         .join(communityUpdate)
@@ -121,7 +120,7 @@ class LouvainCore extends Logging with Serializable {
         louvainData.communitySigmaTot = communitySigmaTot
         (vertexId, louvainData)
       }).cache()
-      updatedVertices.count()
+
       labeledVertices.unpersist(blocking = false)
       communityUpdate.unpersist(blocking = false)
       communityMapping.unpersist(blocking = false)
@@ -140,21 +139,19 @@ class LouvainCore extends Logging with Serializable {
       updatedVertices.unpersist(blocking = false)
       prevG.unpersistVertices(blocking = false)
 
-      // half of the communites can swtich on even cycles
+      // half of the communities can switch on even cycles
       // and the other half on odd cycles (to prevent deadlocks)
-      // so we only want to look for progess on odd cycles (after all vertcies have had a chance to move)
+      // so we only want to look for progress on odd cycles (after all vertices have had a chance to move)
       if (even) updated = 0
       updated = updated + louvainGraph.vertices.filter(_._2.changed).count
+      
       if (!even) {
         println("  # vertices moved: " + java.text.NumberFormat.getInstance().format(updated))
         if (updated >= updatedLastPhase - minProgress) stop += 1
         updatedLastPhase = updated
       }
-
-
     } while (stop <= progressCounter && (even || (updated > 0 && count < maxIter)))
     println("\nCompleted in " + count + " cycles")
-
 
     // Use each vertex's neighboring community data to calculate the global modularity of the graph
     val newVertices = louvainGraph.vertices.innerJoin(communityRDD)((vertexId, louvainData, communityMap) => {
@@ -162,7 +159,7 @@ class LouvainCore extends Logging with Serializable {
       val community = louvainData.community
       var accumulatedInternalWeight = louvainData.internalWeight
       val sigmaTot = louvainData.communitySigmaTot.toDouble
-      def accumulateTotalWeight(totalWeight: Long, item: ((Long, Long), Long)) = {
+      def accumulateTotalWeight(totalWeight: Long, item: ((Long, (String, Long)), Long)) = {
         val ((communityId, sigmaTotal), communityEdgeWeight) = item
         if (louvainData.community == communityId)
           totalWeight + communityEdgeWeight
@@ -184,38 +181,23 @@ class LouvainCore extends Logging with Serializable {
     // return the modularity value of the graph along with the 
     // graph. vertices are labeled with their community
     (actualQ, louvainGraph, count / 2)
-
   }
-
 
   /**
    * Creates the messages passed between each vertex to convey neighborhood community data.
    */
-  /*
-  private def sendCommunityData(et: EdgeTriplet[LouvainData, Long]) = {
-    if (et.dstAttr == null)
-      et.dstAttr = new LouvainData(et.dstId, 0L, 0L, 0L, false)
-    if (et.srcAttr == null)
-      et.srcAttr = new LouvainData(et.srcId, 0L, 0L, 0L, false)
-    val m1 = (et.dstId, Map((et.srcAttr.community, et.srcAttr.communitySigmaTot) -> et.attr))
-    val m2 = (et.srcId, Map((et.dstAttr.community, et.dstAttr.communitySigmaTot) -> et.attr))
-    Iterator(m1, m2)
-  }
-  */
-
-  private def sendCommunityData(e: EdgeContext[LouvainData, Long, Map[(Long, Long), Long]]) = {
-    val m1 = (Map((e.srcAttr.community, e.srcAttr.communitySigmaTot) -> e.attr))
-    val m2 = (Map((e.dstAttr.community, e.dstAttr.communitySigmaTot) -> e.attr))
+  private def sendCommunityData(e: EdgeContext[LouvainData, Long, Map[(Long, (String, Long)), Long]]) = {
+    val m1 = (Map((e.srcAttr.community, (e.srcAttr.communityName, e.srcAttr.communitySigmaTot)) -> e.attr))
+    val m2 = (Map((e.dstAttr.community, (e.dstAttr.communityName, e.dstAttr.communitySigmaTot)) -> e.attr))
     e.sendToSrc(m2)
     e.sendToDst(m1)
   }
 
-
   /**
    * Merge neighborhood community data into a single message for each vertex
    */
-  private def mergeCommunityMessages(m1: Map[(Long, Long), Long], m2: Map[(Long, Long), Long]) = {
-    val newMap = scala.collection.mutable.HashMap[(Long, Long), Long]()
+  private def mergeCommunityMessages(m1: Map[(Long, (String, Long)), Long], m2: Map[(Long, (String, Long)), Long]) = {
+    val newMap = scala.collection.mutable.HashMap[(Long, (String, Long)), Long]()
     m1.foreach({ case (k, v) =>
       if (newMap.contains(k)) newMap(k) = newMap(k) + v
       else newMap(k) = v
@@ -227,30 +209,32 @@ class LouvainCore extends Logging with Serializable {
     newMap.toMap
   }
 
-
   /**
-   * Join vertices with community data form their neighborhood and select the best community for each vertex to maximize change in modularity.
+   * Join vertices with community data from their neighborhood and select the best community for each vertex to maximize change in modularity.
    * Returns a new set of vertices with the updated vertex state.
    */
-  private def louvainVertJoin(louvainGraph: Graph[LouvainData, Long], msgRDD: VertexRDD[Map[(Long, Long), Long]], totalEdgeWeight: Broadcast[Long], even: Boolean) = {
+  private def louvainVertJoin(louvainGraph: Graph[LouvainData, Long], msgRDD: VertexRDD[Map[(Long, (String, Long)), Long]], totalEdgeWeight: Broadcast[Long], even: Boolean) = {
     louvainGraph.vertices.innerJoin(msgRDD)((vid, louvainData, communityMessages) => {
       var bestCommunity = louvainData.community
+      var bestCommunityName = louvainData.communityName
       val startingCommunityId = bestCommunity
       var maxDeltaQ = BigDecimal(0.0);
       var bestSigmaTot = 0L
-      communityMessages.foreach({ case ((communityId, sigmaTotal), communityEdgeWeight) =>
+      communityMessages.foreach({ case ((communityId, (communityName, sigmaTotal)), communityEdgeWeight) =>
         val deltaQ = q(startingCommunityId, communityId, sigmaTotal, communityEdgeWeight, louvainData.nodeWeight, louvainData.internalWeight, totalEdgeWeight.value)
         //println("   communtiy: "+communityId+" sigma:"+sigmaTotal+" edgeweight:"+communityEdgeWeight+"  q:"+deltaQ)
         if (deltaQ > maxDeltaQ || (deltaQ > 0 && (deltaQ == maxDeltaQ && communityId > bestCommunity))) {
           maxDeltaQ = deltaQ
           bestCommunity = communityId
+          bestCommunityName = communityName
           bestSigmaTot = sigmaTotal
         }
       })
-      // only allow changes from low to high communties on even cyces and high to low on odd cycles
+      // only allow changes from low to high communities on even cycles and high to low on odd cycles
       if (louvainData.community != bestCommunity && ((even && louvainData.community > bestCommunity) || (!even && louvainData.community < bestCommunity))) {
         //println("  "+vid+" SWITCHED from "+vdata.community+" to "+bestCommunity)
         louvainData.community = bestCommunity
+        louvainData.communityName = bestCommunityName
         louvainData.communitySigmaTot = bestSigmaTot
         louvainData.changed = true
       }
@@ -262,7 +246,6 @@ class LouvainCore extends Logging with Serializable {
       louvainData
     })
   }
-
 
   /**
    * Returns the change in modularity that would result from a vertex moving to a specified community.
@@ -283,7 +266,6 @@ class LouvainCore extends Logging with Serializable {
     deltaQ
   }
 
-
   /**
    * Compress a graph by its communities, aggregate both internal node weights and edge
    * weights within communities.
@@ -294,27 +276,27 @@ class LouvainCore extends Logging with Serializable {
     // WARNING  can not use graph.mapReduceTriplets because we are mapping to new vertexIds
     val internalEdgeWeights = graph.triplets.flatMap(et => {
       if (et.srcAttr.community == et.dstAttr.community) {
-        Iterator((et.srcAttr.community, 2 * et.attr)) // count the weight from both nodes  // count the weight from both nodes
+        Iterator(((et.srcAttr.community, et.srcAttr.communityName), 2 * et.attr)) // count the weight from both nodes
       }
       else Iterator.empty
     }).reduceByKey(_ + _)
 
-
     // aggregate the internal weights of all nodes in each community
-    val internalWeights = graph.vertices.values.map(vdata => (vdata.community, vdata.internalWeight)).reduceByKey(_ + _)
+    val internalWeights = graph.vertices.values.map(vdata => ((vdata.community, vdata.communityName), vdata.internalWeight)).reduceByKey(_ + _)
 
-    // join internal weights and self edges to find new interal weight of each community
-    val newVertices = internalWeights.leftOuterJoin(internalEdgeWeights).map({ case (vid, (weight1, weight2Option)) =>
+    // join internal weights and self edges to find new internal weight of each community
+    val newVertices = internalWeights.leftOuterJoin(internalEdgeWeights).map({ case ((vid, communityName), (weight1, weight2Option)) =>
       val weight2 = weight2Option.getOrElse(0L)
       val state = new LouvainData()
+      state.name = communityName
       state.community = vid
+      state.communityName = communityName
       state.changed = false
       state.communitySigmaTot = 0L
       state.internalWeight = weight1 + weight2
       state.nodeWeight = 0L
       (vid, state)
     }).cache()
-
 
     // translate each vertex edge to a community edge
     val edges = graph.triplets.flatMap(et => {
@@ -323,7 +305,6 @@ class LouvainCore extends Logging with Serializable {
       if (src != dst) Iterator(new Edge(src, dst, et.attr))
       else Iterator.empty
     }).cache()
-
 
     // generate a new graph where each community of the previous
     // graph is now represented as a single vertex
@@ -356,11 +337,9 @@ class LouvainCore extends Logging with Serializable {
 
     newVertices.unpersist(blocking = false)
     edges.unpersist(blocking = false)
+
     louvainGraph
-
-
   }
-
 
   // debug printing
   private def printlouvain(graph: Graph[LouvainData, Long]) = {
@@ -368,12 +347,9 @@ class LouvainCore extends Logging with Serializable {
     graph.vertices.mapValues((vid, vdata) => (vdata.community, vdata.communitySigmaTot)).collect().foreach(f => println(" " + f))
   }
 
-
   // debug printing
   private def printedgetriplets(graph: Graph[LouvainData, Long]) = {
     print("\ncommunity label snapshot FROM TRIPLETS\n(vid,community,sigmaTot)\n")
     graph.triplets.flatMap(e => Iterator((e.srcId, e.srcAttr.community, e.srcAttr.communitySigmaTot), (e.dstId, e.dstAttr.community, e.dstAttr.communitySigmaTot))).collect().foreach(f => println(" " + f))
   }
-
-
 }

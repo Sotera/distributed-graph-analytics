@@ -18,6 +18,7 @@
 package com.soteradefense.dga.hbse;
 
 import com.soteradefense.dga.DGALoggingUtil;
+
 import org.apache.giraph.bsp.CentralizedServiceWorker;
 import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.edge.Edge;
@@ -53,8 +54,8 @@ public class HBSEComputation extends AbstractComputation<Text, VertexData, Text,
     private static final Logger logger = LoggerFactory.getLogger(HBSEComputation.class);
 
     @Override
-    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, VertexData, Text> workerClientRequestProcessor, CentralizedServiceWorker<Text, VertexData, Text> centralizedServiceWorker, WorkerGlobalCommUsage workerGlobalCommUsage) {
-        super.initialize(graphState, workerClientRequestProcessor, centralizedServiceWorker, workerGlobalCommUsage);
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, VertexData, Text> workerClientRequestProcessor, CentralizedServiceWorker<Text, VertexData, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage);
         DGALoggingUtil.setDGALogLevel(this.getConf());
     }
 

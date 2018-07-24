@@ -18,6 +18,7 @@
 package com.soteradefense.dga.lc;
 
 import com.soteradefense.dga.DGALoggingUtil;
+
 import org.apache.giraph.bsp.CentralizedServiceWorker;
 import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.edge.Edge;
@@ -42,8 +43,8 @@ public class LeafCompressionComputation extends BasicComputation<Text, Text, Tex
     private static Logger logger = LoggerFactory.getLogger(LeafCompressionComputation.class);
 
     @Override
-    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, Text, Text> workerClientRequestProcessor, CentralizedServiceWorker<Text, Text, Text> centralizedServiceWorker, WorkerGlobalCommUsage workerGlobalCommUsage) {
-        super.initialize(graphState, workerClientRequestProcessor, centralizedServiceWorker, workerGlobalCommUsage);
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, Text, Text> workerClientRequestProcessor, CentralizedServiceWorker<Text, Text, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage);
         DGALoggingUtil.setDGALogLevel(getConf());
     }
 

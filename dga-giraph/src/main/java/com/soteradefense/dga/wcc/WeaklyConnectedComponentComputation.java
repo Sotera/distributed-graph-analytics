@@ -18,6 +18,7 @@
 package com.soteradefense.dga.wcc;
 
 import com.soteradefense.dga.DGALoggingUtil;
+
 import org.apache.giraph.bsp.CentralizedServiceWorker;
 import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.edge.Edge;
@@ -39,8 +40,8 @@ public class WeaklyConnectedComponentComputation extends BasicComputation<Text, 
     private static final Logger logger = LoggerFactory.getLogger(WeaklyConnectedComponentComputation.class);
 
     @Override
-    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, Text, Text> workerClientRequestProcessor, CentralizedServiceWorker<Text, Text, Text> centralizedServiceWorker, WorkerGlobalCommUsage workerGlobalCommUsage) {
-        super.initialize(graphState, workerClientRequestProcessor, centralizedServiceWorker, workerGlobalCommUsage);
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, Text, Text> workerClientRequestProcessor, CentralizedServiceWorker<Text, Text, Text> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage);
         DGALoggingUtil.setDGALogLevel(this.getConf());
     }
 

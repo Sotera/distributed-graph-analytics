@@ -18,6 +18,7 @@
 package com.soteradefense.dga.louvain.giraph;
 
 import com.soteradefense.dga.DGALoggingUtil;
+
 import org.apache.giraph.bsp.CentralizedServiceWorker;
 import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.edge.Edge;
@@ -75,8 +76,8 @@ public class LouvainComputation extends AbstractComputation<Text, LouvainNodeSta
     }
 
     @Override
-	public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, LouvainNodeState, LongWritable> workerClientRequestProcessor, CentralizedServiceWorker<Text, LouvainNodeState, LongWritable> centralizedServiceWorker, WorkerGlobalCommUsage workerGlobalCommUsage) {
-        super.initialize(graphState, workerClientRequestProcessor, centralizedServiceWorker, workerGlobalCommUsage);
+    public void initialize(GraphState graphState, WorkerClientRequestProcessor<Text, LouvainNodeState, LongWritable> workerClientRequestProcessor, CentralizedServiceWorker<Text, LouvainNodeState, LongWritable> graphTaskManager, WorkerGlobalCommUsage workerGlobalCommUsage) {
+        super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerGlobalCommUsage);
         DGALoggingUtil.setDGALogLevel(this.getConf());
     }
 
