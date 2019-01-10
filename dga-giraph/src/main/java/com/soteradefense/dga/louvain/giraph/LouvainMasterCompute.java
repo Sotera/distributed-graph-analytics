@@ -191,7 +191,8 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
         Path pt = new Path(path);
         logger.debug("Writing file out to {}, message {}", path, message);
         try {
-            FileSystem fs = FileSystem.get(new Configuration());
+            //FileSystem fs = FileSystem.get(new Configuration());
+            FileSystem fs = FileSystem.get(getConf());
             BufferedWriter br = new BufferedWriter(new OutputStreamWriter(fs.create(pt, true)));
             br.write(message);
             br.close();
@@ -206,7 +207,8 @@ public class LouvainMasterCompute  extends DefaultMasterCompute {
         StringBuilder builder = new StringBuilder();
         try {
             Path pt = new Path(path);
-            FileSystem fs = FileSystem.get(new Configuration());
+            //FileSystem fs = FileSystem.get(new Configuration());
+            FileSystem fs = FileSystem.get(getConf());
             BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(pt)));
             String line;
             line = br.readLine();
